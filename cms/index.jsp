@@ -144,10 +144,12 @@
     private String getPathReference(String path, String value) {
         return new String("<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash +"'>" + value + "</a>");
     }
-    private String goUpside(String folderName) {
-        /*folderName =
-        return p.toUri().toString();*/
-        return null;
+    private String goUpside(String folderName) throws Exception{
+        if(folderName.endsWith(unixSlash)) {
+            folderName = folderName.substring(0, folderName.length() - 1);
+            folderName = folderName.substring(0, folderName.lastIndexOf(unixRootDir));
+        }
+        return folderName;
     }
     private void beginDiv(String className) throws Exception{ out.println("<div class='"+className+"'>"); }
     private void endDiv() throws Exception{ out.println("</div>"); }
@@ -166,21 +168,25 @@
     </style>
 </head>
 <body>
-<h1>Hello and welcome to the start page of our CMS system!</h1>
+<h1>Hello and welcome to the start page of our CMS!</h1>
 <%
     this.out = out;
     long enter_time = System.currentTimeMillis();
     initUser();
 
+
     String pathParam = getRequestParameter(request, PARAM_PATH, homeDirectoryUnix);
     String fileParam = getRequestParameter(request, PARAM_FILE);
     currentDirectory = pathParam;
+
     out.print(currentDirectory);
 
     try {
         beginDiv("explorer");
-        if(currentDirectory.equals(unixRootDir));
-        else { out.println(goUpside(currentDirectory)); out.print(nLine); }
+
+        if(currentDirectory.equals(unixRootDir)){out.println("Root directory"); out.print(nLine);}
+        else { out.print(getPathReference(goUpside(currentDirectory), "<-- Go back")); out.print(nLine); out.print(nLine); }
+
         File [] filesInDir = getFilesNames();
         for(File f : filesInDir){
             out.print(goToFile(f.getName()));

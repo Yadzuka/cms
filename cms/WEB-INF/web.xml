@@ -3,12 +3,13 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 		  http://java.sun.com/xml/ns/javaee/web-app_4_0.xsd"
-           version="4.0">
+           version="3.0">
     
     <servlet-mapping>
         <servlet-name>UploadServlet</servlet-name>
         <url-pattern>/upload</url-pattern>
-
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>DownloadServlet</servlet-name>
         <url-pattern>/download</url-pattern>
     </servlet-mapping>
@@ -16,7 +17,8 @@
     <servlet>
         <servlet-name>UploadServlet</servlet-name>
         <servlet-class>servlets.UploadServlet</servlet-class>
-
+    </servlet>
+    <servlet>
         <servlet-name>DownloadServlet</servlet-name>
         <servlet-class>servlets.DownloadServlet</servlet-class>
     </servlet>
