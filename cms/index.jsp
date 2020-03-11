@@ -5,8 +5,6 @@
     import="java.nio.file.Path"
     import="java.io.*"
 %>
-<%@ page import="java.net.URI" %>
-<%@ page import="java.util.Arrays" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index.jsp"; // Page domain name
@@ -19,10 +17,13 @@
 
     private final short elementsMargin = 7;
 
+    private String currentDirectory = "/";
     private String homeDirectoryUnix = "/home/";
+    private File [] currentDirectoryFiles = new File(currentDirectory).listFiles();
+    private String [] fileNames;
+
     private final String unixRootDir = "/";
     private final String staticHomeDirUnix = "/home/";
-    private final char dotForDownsideSlide = '.';
     private final String nLine = "<br/>";
     private final String tab = "&nbsp;";
     private final String windowsSlash = "\\";
@@ -32,8 +33,7 @@
     private final String [] fileTypes = { directory, file };
     private boolean fileOpenStatus = false;
 
-    private String currentDirectory = "/";
-    private File [] currentDirectoryFiles = new File(currentDirectory).listFiles();
+    private final char dotForDownsideSlide = '.';
 
     private final char directoryStatus = 'd';
     private final char linkStatus = 'l';
@@ -50,6 +50,11 @@
     private final String ACTION_CREATE_DIR = "create_dir";
     private final String ACTION_CREATE_FILE = "create_file";
     private final String ACTION_DELETE_FILE = "delete_file";
+
+    private final String ACTION_DOWNLOAD = "download";
+
+    private final String PARAM_FILENAME = "file";
+
 
     private void initUser() {
         if(System.getProperty("os.name").equals("Linux") | System.getProperty("os.name").equals("Unix"))
@@ -174,6 +179,8 @@
     long enter_time = System.currentTimeMillis();
     initUser();
 
+    String p_filename = request.getParameter(PARAM_FILENAME);
+    out.print(p_filename);
 
     String pathParam = getRequestParameter(request, PARAM_PATH, homeDirectoryUnix);
     String fileParam = getRequestParameter(request, PARAM_FILE);
@@ -185,11 +192,14 @@
         beginDiv("explorer");
 
         if(currentDirectory.equals(unixRootDir)){out.println("Root directory"); out.print(nLine);}
-        else { out.print(getPathReference(goUpside(currentDirectory), "<-- Go back")); out.print(nLine); out.print(nLine); }
+        else { out.print(getPathReference(goUpside(currentDirectory), "<- Go back")); out.print(nLine); out.print(nLine); }
 
         File [] filesInDir = getFilesNames();
-        for(File f : filesInDir){
-            out.print(goToFile(f.getName()));
+        fileNames = new String[filesInDir.length];
+
+        for(int i = 0; i < filesInDir.length; i++){
+            fileNames[i] = filesInDir[i].getName();
+            out.print(goToFile(filesInDir[i].getName()));
             out.print(nLine);
         }
         endDiv();
@@ -201,12 +211,18 @@
 
 <hr>
 
-<a href="download?path=<%=currentDirectory%>&file=javax.jar.zip">download</a>
+<form method="POST" action="download">
+    <input type="hidden" name="path" value="<%=currentDirectory%>">
+    <input type="text" name="file" value="">
+    <input type="submit" value="Скачать">
+</form>
+
 
 <form method="POST" enctype="multipart/form-data" action="upload">
+    <input type="hidden" name="path" value="<%=currentDirectory%>">
     File to upload: <input type="file" name="upfile" multiple><br/>
     <br/>
-    <input type="submit" value="Press"> to upload the file!
+    <input type="submit" value="Загрузить"> to upload the file!
 </form>
 
 <hr>

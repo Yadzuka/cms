@@ -16,24 +16,23 @@ import java.util.List;
 @MultipartConfig
 public class UploadServlet extends HttpServlet {
 
-    private String filePath = "/home/yadzuka/workspace/";
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        PrintWriter out = null;
+        response.setContentType("text/html");
+        String path = request.getParameter("path");
+        String file = request.getParameter("file");
+        response.setContentType("");
         try {
-            out = response.getWriter();
             DiskFileItemFactory factory = new DiskFileItemFactory();
-            File repository = new File(filePath);
+            File repository = new File(path);
             factory.setRepository(repository);
 
             ServletFileUpload upload = new ServletFileUpload(factory);
             List files = upload.parseRequest(request);
 
-            for (Object file : files) {
-                ((FileItem) file).write(new File(filePath + ((FileItem) file).getName()));
+            for (Object f : files) {
+                ((FileItem) f).write(new File(path + ((FileItem) f).getName()));
             }
-            out.println("File downloaded!");
-        }catch (Exception e){ out.println(""); }
+        }catch (Exception e){  }
 
     }
 
