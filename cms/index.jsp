@@ -180,7 +180,6 @@
     initUser();
 
     String p_filename = request.getParameter(PARAM_FILENAME);
-    out.print(p_filename);
 
     String pathParam = getRequestParameter(request, PARAM_PATH, homeDirectoryUnix);
     String fileParam = getRequestParameter(request, PARAM_FILE);
@@ -208,23 +207,18 @@
     }
 
 %>
-
 <hr>
-
 <form method="POST" action="download">
     <input type="hidden" name="path" value="<%=currentDirectory%>">
     <input type="text" name="file" value="">
     <input type="submit" value="Скачать">
 </form>
-
-
 <form method="POST" enctype="multipart/form-data" action="upload">
     <input type="hidden" name="path" value="<%=currentDirectory%>">
     File to upload: <input type="file" name="upfile" multiple><br/>
     <br/>
     <input type="submit" value="Загрузить"> to upload the file!
 </form>
-
 <hr>
 <i>timing : <%= ((System.currentTimeMillis() - enter_time) + " ms") %>
 </i>
