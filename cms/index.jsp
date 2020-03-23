@@ -208,12 +208,24 @@
     <input type="text" name="file" value="">
     <input type="submit" value="Скачать">
 </form>
+
+<h2>Apache commons version upload demonstration</h2>
 <form method="POST" enctype="multipart/form-data" action="upload">
     <input type="hidden" name="path" value="<%=currentDirectory%>">
-    File to upload: <input type="file" name="upfile" multiple><br/>
+    Выберите файл: <input type="file" name="upload_commons" multiple><br/>
     <br/>
-    <input type="submit" value="Загрузить"> to upload the file!
+    <input type="submit" value="Загрузить"> для загрузки файла!
 </form>
+
+<hr/>
+<h2>Servlet 3.0+ version upload demonstration</h2>
+<form method="POST" enctype="multipart/form-data" action="upload">
+    <input type="hidden" name="path" value="<%=currentDirectory%>">
+    Выберите файл: <input type="file" name="upload_servlet" multiple><br/>
+    <br/>
+    <input type="submit" value="Загрузить"> для загрузки файла!
+</form>
+
 <hr>
 <i>timing : <%= ((System.currentTimeMillis() - enter_time) + " ms") %>
 </i>
