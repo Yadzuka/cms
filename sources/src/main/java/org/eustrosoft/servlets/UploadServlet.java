@@ -1,19 +1,23 @@
-package servlets;
+package org.eustrosoft.servlets;
 
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.disk.*;
 import org.apache.commons.fileupload.servlet.*;
+import org.eustrosoft.providers.LogProvider;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.List;
-import java.util.logging.*;
 
 @MultipartConfig
 public class UploadServlet extends HttpServlet {
+
+    private LogProvider log;
+    private String className;
 
     private final static String UPLOAD_PATH = "/home/yadzuka/Downloads/";
     private final static String PATH_PARAMETER = "path";
@@ -26,31 +30,45 @@ public class UploadServlet extends HttpServlet {
     private ServletFileUpload uploadProcess;
     private List filesCollection;
 
+    private String user;
+
     private FileItem item;
     private InputStream inputStream;
     private String realPath; // real here means that it is the way, where customer wants to upload his file
 
     private PrintWriter out;
 
+    @Override
+    public void init() throws ServletException {
+        super.init();
+    }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
+            log = new LogProvider();
+            className = this.getClass().getName();
+            user = request.getRemoteUser();
             out = response.getWriter();
             filesCollection = initializeRepository(request);
 
-            if(filesCollection == null);
-                // Also throw new exception
+            if(filesCollection == null)
+                log.w("Files counter was null in " + className + " (" + user + ").");
             realPath = processRealPath();
 
             if(realPath == null);
-                // Exception
-
+                log.w("Real path was null in " + className + " (" + user + ").");
 
 
             for (int i = 1; i < filesCollection.size(); i++) {
                 Object f = filesCollection.get(i);
                 ((FileItem) f).write(new File(UPLOAD_PATH + ((FileItem) f).getName()));
+                log.i(((FileItem)f).getName() + " was uploaded by " + user + " from the " + repositoryPath);
             }
-        }catch (Exception e){ }
+            out.println(" was uploaded by " + user + " from the " + repositoryPath);
+        }catch (Exception e){
+            out.println(e.getMessage());
+            log.e(e.getMessage() + " (" + user + ").");
+        }
     }
 
     private List initializeRepository(HttpServletRequest request) {
@@ -61,9 +79,7 @@ public class UploadServlet extends HttpServlet {
             uploadProcess = new ServletFileUpload(diskFactory);
             return uploadProcess.parseRequest(request);
         } catch (FileUploadException ex) {
-            /*
-            Need to think about right way to throwing exceptions
-             */
+            log.e(ex.getMessage() + " (" + user + ").");
         }
         return null;
     }
@@ -80,7 +96,7 @@ public class UploadServlet extends HttpServlet {
             }
             return path.toString();
         } catch (IOException ex) {
-            // Also exception processing
+            log.e(ex.getMessage() + " (" + user + ").");
         }
         return null;
     }
