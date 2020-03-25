@@ -4,6 +4,7 @@ import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.disk.*;
 import org.apache.commons.fileupload.servlet.*;
 import org.eustrosoft.providers.LogProvider;
+import org.eustrosoft.tools.ZLog;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -35,6 +36,8 @@ public class UploadServlet extends HttpServlet {
     private FileItem item;
     private InputStream inputStream;
     private String realPath; // real here means that it is the way, where customer wants to upload his file
+
+    private OutputStream outputStream;
 
     private PrintWriter out;
 

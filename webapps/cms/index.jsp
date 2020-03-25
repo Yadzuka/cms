@@ -111,15 +111,17 @@
         String value = request.getParameter(param);
         if(value == null) value = default_value;
         if(value == null) return (null);
-        switch (param){
-            case PARAM_PATH:
-                if(!(value.endsWith(unixSlash)))
-                    value += unixSlash;
-                if(!value.startsWith(homeDirectory))
-                    value = homeDirectory;
-            case PARAM_FILE:
-                if(checkShellInjection(value))
-                    throw new RuntimeException("Shell injection");
+        if (PARAM_PATH.equals(value)) {
+            if (!(value.endsWith(unixSlash)))
+                value += unixSlash;
+            if (!value.startsWith(homeDirectory))
+                value = homeDirectory;
+
+            if (checkShellInjection(value))
+                throw new RuntimeException("Shell injection");
+        } else if (PARAM_FILE.equals(value)) {
+            if (checkShellInjection(value))
+                throw new RuntimeException("Shell injection");
         }
         return value;
     }
@@ -219,7 +221,7 @@
 
 <hr/>
 <h2>Servlet 3.0+ version upload demonstration</h2>
-<form method="POST" enctype="multipart/form-data" action="upload">
+<form method="POST" enctype="multipart/form-data" action="upload_new_version">
     <input type="hidden" name="path" value="<%=currentDirectory%>">
     Выберите файл: <input type="file" name="upload_servlet" multiple><br/>
     <br/>

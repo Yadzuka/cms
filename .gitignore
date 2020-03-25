@@ -1,6 +1,6 @@
 *.iml
 out
 .idea
-cms/WEB-INF/lib
+webapps/cms/WEB-INF/lib
 target
 

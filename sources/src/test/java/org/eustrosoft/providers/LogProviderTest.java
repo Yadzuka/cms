@@ -6,9 +6,7 @@ public class LogProviderTest {
 
     @Test
     public void i() {
-        LogProvider log = new LogProvider();
-        log.i("HELLO");
-        log.i("HELLO");
+
     }
 
     @Test
