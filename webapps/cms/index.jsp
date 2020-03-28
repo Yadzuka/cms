@@ -223,7 +223,7 @@
 <h2>Servlet 3.0+ version upload demonstration</h2>
 <form method="POST" enctype="multipart/form-data" action="upload_new_version">
     <input type="hidden" name="path" value="<%=currentDirectory%>">
-    Выберите файл: <input type="file" name="upload_servlet" multiple><br/>
+    Выберите файл: <input type="file" name="file" multiple><br/>
     <br/>
     <input type="submit" value="Загрузить"> для загрузки файла!
 </form>

@@ -24,8 +24,8 @@ public class DownloadServlet extends HttpServlet {
         try {
             log = new LogProvider();
             className = this.getClass().getName();
-
             user = req.getRemoteUser();
+
             resp.setContentType("text/html");
             out = resp.getWriter();
             String fileName = req.getParameter("file");

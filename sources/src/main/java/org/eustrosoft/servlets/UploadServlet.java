@@ -21,10 +21,6 @@ public class UploadServlet extends HttpServlet {
     private String className;
 
     private final static String UPLOAD_PATH = "/home/yadzuka/Downloads/";
-    private final static String PATH_PARAMETER = "path";
-
-    private final static char OPENED_BRACE = '(';
-    private final static char CLOSED_BRACE = ')';
 
     private DiskFileItemFactory diskFactory;
     private File repositoryPath;
@@ -34,10 +30,9 @@ public class UploadServlet extends HttpServlet {
     private String user;
 
     private FileItem item;
+    private OutputStream outputStream;
     private InputStream inputStream;
     private String realPath; // real here means that it is the way, where customer wants to upload his file
-
-    private OutputStream outputStream;
 
     private PrintWriter out;
 
@@ -55,22 +50,20 @@ public class UploadServlet extends HttpServlet {
             filesCollection = initializeRepository(request);
 
             if(filesCollection == null)
-                log.w("Files counter was null in " + className + " (" + user + ").");
+                log.w("Files counter was null in " + className + " user:" + user + ".");
             realPath = processRealPath();
 
             if(realPath == null);
-                log.w("Real path was null in " + className + " (" + user + ").");
+                log.w("Real path was null in " + className + " user:" + user + ".");
 
 
             for (int i = 1; i < filesCollection.size(); i++) {
                 Object f = filesCollection.get(i);
                 ((FileItem) f).write(new File(UPLOAD_PATH + ((FileItem) f).getName()));
-                log.i(((FileItem)f).getName() + " was uploaded by " + user + " from the " + repositoryPath);
+                log.i(((FileItem)f).getName() + " was uploaded by " + user + " to " + repositoryPath);
             }
-            out.println(" was uploaded by " + user + " from the " + repositoryPath);
         }catch (Exception e){
-            out.println(e.getMessage());
-            log.e(e.getMessage() + " (" + user + ").");
+            log.e(e.getMessage() + " user:" + user + ".");
         }
     }
 
@@ -82,7 +75,7 @@ public class UploadServlet extends HttpServlet {
             uploadProcess = new ServletFileUpload(diskFactory);
             return uploadProcess.parseRequest(request);
         } catch (FileUploadException ex) {
-            log.e(ex.getMessage() + " (" + user + ").");
+            log.e(ex.getMessage() + " user:" + user + ".");
         }
         return null;
     }
@@ -99,7 +92,7 @@ public class UploadServlet extends HttpServlet {
             }
             return path.toString();
         } catch (IOException ex) {
-            log.e(ex.getMessage() + " (" + user + ").");
+            log.e(ex.getMessage() + " user:" + user + ".");
         }
         return null;
     }
