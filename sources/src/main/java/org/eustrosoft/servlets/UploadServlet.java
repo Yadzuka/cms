@@ -36,11 +36,6 @@ public class UploadServlet extends HttpServlet {
 
     private PrintWriter out;
 
-    @Override
-    public void init() throws ServletException {
-        super.init();
-    }
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
             log = new LogProvider();
@@ -56,7 +51,6 @@ public class UploadServlet extends HttpServlet {
             if(realPath == null);
                 log.w("Real path was null in " + className + " user:" + user + ".");
 
-
             for (int i = 1; i < filesCollection.size(); i++) {
                 Object f = filesCollection.get(i);
                 ((FileItem) f).write(new File(UPLOAD_PATH + ((FileItem) f).getName()));
@@ -64,6 +58,11 @@ public class UploadServlet extends HttpServlet {
             }
         }catch (Exception e){
             log.e(e.getMessage() + " user:" + user + ".");
+        } finally {
+            try {
+                inputStream.close();
+                outputStream.close();
+            } catch (Exception ex) { log.e(ex.getMessage() + " user:" + user + "."); }
         }
     }
 

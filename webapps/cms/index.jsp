@@ -210,7 +210,6 @@
     <input type="text" name="file" value="">
     <input type="submit" value="Скачать">
 </form>
-
 <h2>Apache commons version upload demonstration</h2>
 <form method="POST" enctype="multipart/form-data" action="upload">
     <input type="hidden" name="path" value="<%=currentDirectory%>">
@@ -218,12 +217,11 @@
     <br/>
     <input type="submit" value="Загрузить"> для загрузки файла!
 </form>
-
 <hr/>
 <h2>Servlet 3.0+ version upload demonstration</h2>
 <form method="POST" enctype="multipart/form-data" action="upload_new_version">
     <input type="hidden" name="path" value="<%=currentDirectory%>">
-    Выберите файл: <input type="file" name="file" multiple><br/>
+    Выберите файл: <input type="file" name="file/" multiple><br/>
     <br/>
     <input type="submit" value="Загрузить"> для загрузки файла!
 </form>

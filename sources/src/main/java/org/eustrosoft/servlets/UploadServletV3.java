@@ -21,6 +21,9 @@ public class UploadServletV3 extends HttpServlet {
     private String className;
     private String user;
 
+    private InputStream is;
+    private OutputStream os;
+
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -40,20 +43,22 @@ public class UploadServletV3 extends HttpServlet {
 
             int read = -1;
             for (Part filePart : fileParts) {
-                InputStream is = filePart.getInputStream();
+                is = filePart.getInputStream();
                 String filePath = UPLOAD_PATH + filePart.getName();
-                OutputStream os = new FileOutputStream(filePath);
-                out.println(filePath);
+                os = new FileOutputStream(filePath);
                 while ((read = is.read()) != -1) {
                     os.write(read);
                 }
                 log.i(filePart.getName() + " was uploaded by " + user + " to " + filePath);
                 os.flush();
-                os.close();
-                is.close();
             }
         } catch (Exception ex) {
             log.e(ex.getMessage() + " user:" + user + ".");
+        } finally {
+            try {
+                os.close();
+                is.close();
+            } catch (Exception ex) { log.e(ex.getMessage() + " user:" + user + "."); }
         }
     }
 }
