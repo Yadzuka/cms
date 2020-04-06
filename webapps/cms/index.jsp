@@ -139,6 +139,10 @@
         return new String("<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash +"'>" + value + "</a>");
     }
 
+    private String getPathReference(String path) {
+        return new String(CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash);
+    }
+
     private String goUpside(String folderName) {
         if(folderName.endsWith(unixSlash)) {
             folderName = folderName.substring(0, folderName.length() - 1);
