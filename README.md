@@ -17,7 +17,9 @@
     <i>Примечание:</i><br/>
     В файле <code>web.xml</code>
     Необходимо поменять комтекстный параметр на параметр вашего имени/ника/прозвища
-    и создать папку по пути <code>/s/usersdb/CONTEXT-PARAM-NAME/</code>
+    и создать папку по пути <code>/s/usersdb/CONTEXT-PARAM-NAME/</code><br/>
+    Также необходимо создать папку <code>.pspn</code> по пути <code>/s/usersdb/CONTEXT-PARAM-NAME/.pspn/</code><br/>
+    Данная папка необходима для загрузки файлов на сервер (у каждого пользователя должна быть такая папка)
 <hr/>
 <p>2. Папка для логов по пути 
     <code>/home/USER-NAME/workspace/logging/CMSLoggingTests/test1.txt</code>

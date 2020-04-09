@@ -170,6 +170,7 @@
 </head>
 <body>
 <h1>Hello and welcome to the start page of our CMS!</h1>
+<h2><a href="index1.jsp">Улучшенный интерфейс</a></h2>
 <%
     this.out = out;
     long enter_time = System.currentTimeMillis();
