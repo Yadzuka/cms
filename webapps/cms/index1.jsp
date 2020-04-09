@@ -23,14 +23,17 @@
     // Files and directories manipulating
     private final static String PARAM_PATH = "path";
     private final static String PARAM_FILE = "file";
-    private final static String PARAM_STATUS = "status";
+    private final static String PARAM_ACTION = "status";
     private final static String FILE_TEXTAREA_NAME = "file_text";
 
     // File manipulating (view, save, update, delete)
-    private final static String STATUS_VIEW = "view";
-    private final static String STATUS_SAVE = "save";
-    private final static String STATUS_UPDATE = "update";
-    private final static String STATUS_DELETE = "delete";
+    private final static String ACTION_VIEW = "view";
+    private final static String ACTION_SAVE = "save";
+    private final static String ACTION_UPDATE = "update";
+    private final static String ACTION_DELETE = "delete";
+
+    // File differences class
+    private final diff_match_patch diffMatchPatch = new diff_match_patch();
 
     // User info
     private String userIP;
@@ -144,7 +147,7 @@
 
     private String getPathReference(String path) { return CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash; }
     private String getFileReference(String path, String file, String status) {
-        return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_STATUS + "=" + status;
+        return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_ACTION + "=" + status;
     }
 
     private String goUpside(String folderName) {
@@ -161,31 +164,57 @@
         return differences;
     }
 
-    private void printFileForm(String status, String fileText) {
-        if(status.equals(STATUS_VIEW)) {
-            startForm("POST", STATUS_VIEW);
-            printText(FILE_TEXTAREA_NAME, 72, 10, fileText);
+    private void printFileForm(String directory, String fileName, String status, String fileText) {
+        if(status.equals(ACTION_VIEW)) {
+            startForm("POST", getFileReference(directory, fileName, ACTION_SAVE));
+            printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
+            printFileEditButtons();
             endForm();
         }
-        if(status.equals(STATUS_DELETE));
-        if(status.equals(STATUS_SAVE));
-        if(status.equals(STATUS_UPDATE));
+        if(status.equals(ACTION_DELETE));
+        if(status.equals(ACTION_SAVE));
+        if(status.equals(ACTION_UPDATE));
     }
 
-    private void startForm(String method, String action) { try{ out.print("<form method=" + method +" action="+action + ">");} catch (Exception ex) {}}
+    private void printFileEditButtons() {
+        w("<input type=\"submit\" name=\""+ACTION_SAVE+"\" value=\"Сохранить\"/>&nbsp;");
+        w("<input type=\"submit\" name=\""+ACTION_DELETE+"\" value=\"Удалить\"/>&nbsp;");
+        w("<input type=\"submit\" name=\""+ACTION_UPDATE+"\" value=\"Обновить\"/>&nbsp;");
+    }
+
+    private void w(String s) {
+        boolean is_error = false;
+        try { out.print(s); }
+        catch (Exception e) { is_error = true; }
+    }
+    private void wln(String s){w(s);w("\n");}
+    private void wln(){w("\n");}
+    private void setReference(String reference, String insides) { w("<a href=\""+reference+"\">"); w(insides); w("</a>"); }
+
+    private void startForm(String method, String action) { try{ out.print("<form method='" + method +"' action='"+action + "'>");} catch (Exception ex) {}}
     private void endForm() {try{ out.print("</form>");}catch (Exception ex){}}
     private void printText(String name, int cols, int rows, String innerText) {
         try{
-            out.print("<textarea name=" + name + " cols=" + cols + " rows=" + rows + ">");
+            out.print("<textarea name='" + name + "' cols=" + cols + " rows=" + rows + ">");
                 if(innerText != null)
                     out.print(innerText);
             out.print("</textarea>");
         } catch (Exception ex){}
     }
     private void nLine() { try { out.print("<br/>");} catch (Exception ex) {}}
-    private void beginDiv(String className) { try{out.println("<div class='"+className+"'>");}catch (Exception ex) {}}
-    private void endDiv() throws Exception{ out.println("</div>"); }
 %>
+<!DOCTYPE HTML>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">  <!-- SIC! external-ref (см выше) -->
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="icon" href="img/user.png" type="image/png">
+    <title>Просмотр файлов </title>
+</head>
+<body>
 <%
     this.out = out;
     long enter_time = System.currentTimeMillis();
@@ -194,7 +223,7 @@
 
     String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
     String fileParam = getRequestParameter(request, PARAM_FILE);
-    String fileStatus = getRequestParameter(request, PARAM_STATUS);
+    String fileStatus = getRequestParameter(request, PARAM_ACTION);
 
     currentDirectory = pathParam;
 
@@ -213,10 +242,20 @@
         } catch (Exception ex) {
             out.print("cant read file");
         }
-        if(fileStatus.equals(STATUS_VIEW)) {
-            printFileForm(STATUS_VIEW, sb.toString());
+        if(fileStatus.equals(ACTION_VIEW)) {
+            printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
+            return;
+        } else if(fileStatus.equals(ACTION_SAVE)) {
+            /*FileWriter fileWriter = new FileWriter(currentDirectory + fileParam);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);*/
+            out.print("Saved");
+            /*String fileText = getRequestParameter(request, FILE_TEXTAREA_NAME);
+            bufferedWriter.write(fileText);
+            printFileForm(ACTION_VIEW, sb.toString());*/
             return;
         }
+        fileReader.close();
+        bufferedReader.close();
     }
 
     File actual = null;
@@ -224,18 +263,6 @@
     try {
      actual = new File(currentDirectory);
 %>
-<!DOCTYPE HTML>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-   <!-- Bootstrap CSS -->
-   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">  <!-- SIC! external-ref (см выше) -->
-   <link href="css/style.css" rel="stylesheet">
-   <link rel="icon" href="img/user.png" type="image/png">
-   <title>Просмотр файлов </title>
-</head>
-<body>
 <div class="container">
     <div class="row">
         <div class="col">
@@ -303,7 +330,7 @@
 <%
     if(f.isFile()&f.canRead()) {
 %>
-    <a href="<%=getFileReference(currentDirectory, f.getName(), STATUS_VIEW)%>">Просмотреть файл</a>
+    <a href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>">Просмотреть файл</a>
 <%
     }
 %>
