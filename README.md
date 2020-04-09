@@ -30,12 +30,11 @@
     <code>FileOutputStream("/home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt", true)</code>
     на путь, который указывает к вашему файлу, в который будут писаться кастомные логи приложения
 <hr/>
-<h2>Начало работы</h2>
-<p>1. Проект должен находится по пути <code>tomcat/webapps/cms/</code>, 
+<p>3. Проект должен находится по пути <code>tomcat/webapps/cms/</code>, 
 где tomcat - название директории tomcat сервера приложений.
 <code>cms/</code> папка находится в проекте по пути <code>CMSsystem/webapps/cms/</code>
 </p>
-<p>2. JAR архивы находятся по пути <code>tomcat/webapps/cms/WEB-INF/lib/</code>:</p>
+<p>4. JAR архивы находятся по пути <code>tomcat/webapps/cms/WEB-INF/lib/</code>:</p>
 <ul>
     <li>DiffPatchMatch.jar</li>
     <li>Sources-1.0.jar</li>
