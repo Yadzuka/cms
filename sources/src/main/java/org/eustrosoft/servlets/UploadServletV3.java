@@ -15,7 +15,8 @@ import java.util.List;
 @MultipartConfig
 public class UploadServletV3 extends HttpServlet {
 
-    private final static String UPLOAD_PATH = "/home/yadzuka/Downloads/";
+    private String UPLOAD_PATH;
+
     private PrintWriter out;
     private LogProvider log;
     private String className;
@@ -27,10 +28,11 @@ public class UploadServletV3 extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
+            UPLOAD_PATH = "/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
             out = response.getWriter();
             log = new LogProvider();
             className = this.getClass().getName();
-            user = request.getRemoteUser();
+            user = request.getRemoteAddr();
 
             List<Part> fileParts; // Retrieves <input type="file" name="file" multiple="true">
             List<Part> list = new ArrayList<Part>();
@@ -53,12 +55,12 @@ public class UploadServletV3 extends HttpServlet {
                 os.flush();
             }
         } catch (Exception ex) {
-            log.e(ex.getMessage() + " user:" + user + ".");
+            log.e(ex + " user:" + user + ".");
         } finally {
             try {
                 os.close();
                 is.close();
-            } catch (Exception ex) { log.e(ex.getMessage() + " user:" + user + "."); }
+            } catch (Exception ex) { log.e(ex + " user:" + user + "."); }
         }
     }
 }

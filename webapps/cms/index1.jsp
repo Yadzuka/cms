@@ -5,7 +5,9 @@
          import="java.nio.file.Path"
          import="java.nio.file.Files"
          import="org.eustrosoft.providers.LogProvider"
-%><%!
+         import="name.fraser.neil.plaintext.diff_match_patch"
+         import="java.util.List" %>
+<%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
     private final static String CGI_TITLE = "CMS system"; // Upper page info
@@ -13,17 +15,29 @@
     private final static LogProvider log = new LogProvider();
     private JspWriter out;
 
-    private final String PARAM_PATH = "path";
-    private final String PARAM_FILE = "file";
+    public static String[] HTML_UNSAFE_CHARACTERS = {"<",">","&","\n"};
+    public static String[] HTML_UNSAFE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","<br>\n"};
+    public final static String[] VALUE_CHARACTERS = { "<",">","&","\"","'" };
+    public final static String[] VALUE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","&quot;","&#039;"};
+
+    // Files and directories manipulating
+    private final static String PARAM_PATH = "path";
+    private final static String PARAM_FILE = "file";
+    private final static String PARAM_STATUS = "status";
+    private final static String FILE_TEXTAREA_NAME = "file_text";
+
+    // File manipulating (view, save, update, delete)
+    private final static String STATUS_VIEW = "view";
+    private final static String STATUS_SAVE = "save";
+    private final static String STATUS_UPDATE = "update";
+    private final static String STATUS_DELETE = "delete";
 
     // User info
     private String userIP;
-    private final String homeDirectory = "/s/usersdb/";
+    private final static String homeDirectory = "/s/usersdb/";
     private String currentDirectory = homeDirectory;
-    private File [] currentDirectoryFiles = new File(homeDirectory).listFiles();
 
-    private final String unixSlash = "/";
-    private final String PARAM_FILENAME = "file";
+    private final static String unixSlash = "/";
 
     private void initUser(HttpServletRequest request) {
         userIP = request.getRemoteAddr();
@@ -57,11 +71,6 @@
     private boolean deleteFile(String fileName) {
         File file = new File(fileName);
         return file.delete();
-    }
-
-    private File[] getFilesNames() {
-        currentDirectoryFiles = new File(currentDirectory).listFiles();
-        return currentDirectoryFiles;
     }
 
     private Path getPath(String pathToFile, String fileName) {
@@ -133,8 +142,9 @@
         return "<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash +"'>" + value + "</a>";
     }
 
-    private String getPathReference(String path) {
-        return CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash;
+    private String getPathReference(String path) { return CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash; }
+    private String getFileReference(String path, String file, String status) {
+        return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_STATUS + "=" + status;
     }
 
     private String goUpside(String folderName) {
@@ -145,8 +155,35 @@
         return folderName;
     }
 
+    private List diffFile(String text1, String text2) {
+        diff_match_patch diffMatchPatch = new diff_match_patch();
+        List<diff_match_patch.Diff> differences = diffMatchPatch.diff_main(text1, text2);
+        return differences;
+    }
+
+    private void printFileForm(String status, String fileText) {
+        if(status.equals(STATUS_VIEW)) {
+            startForm("POST", STATUS_VIEW);
+            printText(FILE_TEXTAREA_NAME, 72, 10, fileText);
+            endForm();
+        }
+        if(status.equals(STATUS_DELETE));
+        if(status.equals(STATUS_SAVE));
+        if(status.equals(STATUS_UPDATE));
+    }
+
+    private void startForm(String method, String action) { try{ out.print("<form method=" + method +" action="+action + ">");} catch (Exception ex) {}}
+    private void endForm() {try{ out.print("</form>");}catch (Exception ex){}}
+    private void printText(String name, int cols, int rows, String innerText) {
+        try{
+            out.print("<textarea name=" + name + " cols=" + cols + " rows=" + rows + ">");
+                if(innerText != null)
+                    out.print(innerText);
+            out.print("</textarea>");
+        } catch (Exception ex){}
+    }
     private void nLine() { try { out.print("<br/>");} catch (Exception ex) {}}
-    private void beginDiv(String className) throws Exception{ out.println("<div class='"+className+"'>"); }
+    private void beginDiv(String className) { try{out.println("<div class='"+className+"'>");}catch (Exception ex) {}}
     private void endDiv() throws Exception{ out.println("</div>"); }
 %>
 <%
@@ -155,17 +192,39 @@
     initUser(request);
     //-------------------------INIT SECTION ENDED------------------------//
 
-    String p_filename = request.getParameter(PARAM_FILENAME);
     String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
     String fileParam = getRequestParameter(request, PARAM_FILE);
+    String fileStatus = getRequestParameter(request, PARAM_STATUS);
+
     currentDirectory = pathParam;
+
+    if(fileParam != null) {
+        StringBuilder sb = new StringBuilder();
+        String fileBuffer = "";
+        FileReader fileReader = new FileReader(currentDirectory + fileParam);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+        try {
+            fileBuffer = bufferedReader.readLine();
+            while(fileBuffer != null) {
+                sb.append(fileBuffer).append('\n');
+                fileBuffer = bufferedReader.readLine();
+            }
+        } catch (Exception ex) {
+            out.print("cant read file");
+        }
+        if(fileStatus.equals(STATUS_VIEW)) {
+            printFileForm(STATUS_VIEW, sb.toString());
+            return;
+        }
+    }
 
     File actual = null;
 
     try {
      actual = new File(currentDirectory);
 %>
-<!Doctype HTML>
+<!DOCTYPE HTML>
 <html lang="ru">
 <head>
     <meta charset="utf-8">
@@ -216,6 +275,7 @@
             <th scope="col">Свойство</th>
             <th scope="col">Последняя модификация</th>
             <th scope="col">Размер,байт</th>
+            <th scope="col">Операции с файлом</th>
         </tr>
         </thead>
 <tbody>
@@ -235,10 +295,19 @@
 %>
 <tr>
     <td scope="row" class="viewer"><%out.println(ico + " " + goToFile(f.getName()));%></td>
-    <td scope="row"><%=f.getPath() %></td>
+    <td scope="row"><%=f.getPath()%></td>
     <td scope="row"><%out.println(readwrite);%></td>
     <td scope="row" align="center"><%=new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified())%></td>
     <td scope="row" align="right"><%=f.length()%></td>
+    <td scope="row">
+<%
+    if(f.isFile()&f.canRead()) {
+%>
+    <a href="<%=getFileReference(currentDirectory, f.getName(), STATUS_VIEW)%>">Просмотреть файл</a>
+<%
+    }
+%>
+    </td>
 </tr>
 <%
     } //for( File f : actual.listFiles())
@@ -248,19 +317,23 @@
 catch(Exception e) {
     out.println("Нераспознанная ошибка: " + e);
     out.println("попробуйте другую операцию" );
-
 }
 finally{ }
 %>
 </tbody>
 </table>
 </div>
+<div align="center">
+    <form method="post">
+        <textarea name="text1"></textarea>
+        <input type="submit"/>
+    </form>
+    </textarea>
+</div>
 <script>
 </script>
-<!--
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script> 
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
--->
 </body>
 </html>
