@@ -7,6 +7,8 @@
          import="org.eustrosoft.providers.LogProvider"
          import="name.fraser.neil.plaintext.diff_match_patch"
          import="java.util.List" %>
+<%@ page import="java.nio.charset.Charset" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -219,6 +221,7 @@
     this.out = out;
     long enter_time = System.currentTimeMillis();
     initUser(request);
+    request.setCharacterEncoding("UTF-8");
     //-------------------------INIT SECTION ENDED------------------------//
 
     String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
@@ -230,32 +233,37 @@
     if(fileParam != null) {
         StringBuilder sb = new StringBuilder();
         String fileBuffer = "";
-        FileReader fileReader = new FileReader(currentDirectory + fileParam);
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+        if(request.getParameter(ACTION_SAVE) != null) {
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
+                            (new FileOutputStream(currentDirectory + fileParam, false), StandardCharsets.UTF_8));
+            out.print("Saved");
+            String fileText = request.getParameter(FILE_TEXTAREA_NAME);
+            bufferedWriter.write(fileText);
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        }
+        if(request.getParameter(ACTION_DELETE) != null) {
+            deleteFile(currentDirectory + fileParam);
+        }
 
         try {
+            FileReader fileReader = new FileReader(currentDirectory + fileParam);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
             fileBuffer = bufferedReader.readLine();
             while(fileBuffer != null) {
                 sb.append(fileBuffer).append('\n');
                 fileBuffer = bufferedReader.readLine();
             }
+            fileReader.close();
+            bufferedReader.close();
         } catch (Exception ex) {
             out.print("cant read file");
         }
         if(fileStatus.equals(ACTION_VIEW)) {
             printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
-            return;
-        } else if(fileStatus.equals(ACTION_SAVE)) {
-            /*FileWriter fileWriter = new FileWriter(currentDirectory + fileParam);
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);*/
-            out.print("Saved");
-            /*String fileText = getRequestParameter(request, FILE_TEXTAREA_NAME);
-            bufferedWriter.write(fileText);
-            printFileForm(ACTION_VIEW, sb.toString());*/
-            return;
         }
-        fileReader.close();
-        bufferedReader.close();
     }
 
     File actual = null;
