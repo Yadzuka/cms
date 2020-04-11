@@ -148,6 +148,9 @@
     }
 
     private String getPathReference(String path) { return CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash; }
+    private String getFileReference(String path, String file) {
+        return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file;
+    }
     private String getFileReference(String path, String file, String status) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_ACTION + "=" + status;
     }
@@ -173,9 +176,6 @@
             printFileEditButtons();
             endForm();
         }
-        if(status.equals(ACTION_DELETE));
-        if(status.equals(ACTION_SAVE));
-        if(status.equals(ACTION_UPDATE));
     }
 
     private void printFileEditButtons() {
@@ -306,10 +306,9 @@
         <thead class="thead-light">
         <tr>
             <th scope="col">Имя</th>
-            <th scope="col">Путь</th>
+            <th scope="col">Размер,байт</th>
             <th scope="col">Свойство</th>
             <th scope="col">Последняя модификация</th>
-            <th scope="col">Размер,байт</th>
             <th scope="col">Операции с файлом</th>
         </tr>
         </thead>
@@ -330,18 +329,19 @@
 %>
 <tr>
     <td scope="row" class="viewer"><%out.println(ico + " " + goToFile(f.getName()));%></td>
-    <td scope="row"><%=f.getPath()%></td>
+    <td scope="row" align="right"><%=f.length()%></td>
     <td scope="row"><%out.println(readwrite);%></td>
     <td scope="row" align="center"><%=new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified())%></td>
-    <td scope="row" align="right"><%=f.length()%></td>
     <td scope="row">
-<%
-    if(f.isFile()&f.canRead()) {
-%>
-    <a href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>">Просмотреть файл</a>
-<%
-    }
-%>
+    <% if(f.isFile()&f.canRead()) { %>
+        <a href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>">Просмотреть файл</a>
+        <form method="POST" action="download">
+            <input type="hidden" name="path" value="<%=currentDirectory%>">
+            <input type="hidden" name="file" value="<%=f.getName()%>">
+            <input type="submit" value="Скачать">
+        </form>
+        <!--<a href="download?path=<%--=currentDirectory--%>&file=<%--=f.getName()--%>">Скачать файл</a>  Возможно внедрение вредоноского кода и скачка файлов из других директорий (потом переделаю)-->
+    <% } %>
     </td>
 </tr>
 <%
