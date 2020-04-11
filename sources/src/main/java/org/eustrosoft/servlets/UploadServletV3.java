@@ -34,25 +34,26 @@ public class UploadServletV3 extends HttpServlet {
             className = this.getClass().getName();
             user = request.getRemoteAddr();
 
-            List<Part> fileParts; // Retrieves <input type="file" name="file" multiple="true">
+            List<Part> fileParts;
             List<Part> list = new ArrayList<Part>();
             for (Part part : request.getParts()) {
                 if ("file".equals(part.getName()) && part.getSize() > 0) {
                     list.add(part);
                 }
             }
+
             fileParts = list;
 
             int read = -1;
             for (Part filePart : fileParts) {
                 is = filePart.getInputStream();
-                String filePath = UPLOAD_PATH + filePart.getName();
+                String filePath = UPLOAD_PATH + filePart.getSubmittedFileName();
                 os = new FileOutputStream(filePath);
                 while ((read = is.read()) != -1) {
                     os.write(read);
                 }
-                log.i(filePart.getName() + " was uploaded by " + user + " to " + filePath);
                 os.flush();
+                log.i(filePart.getName() + " was uploaded by " + user + " to " + filePath);
             }
         } catch (Exception ex) {
             log.e(ex + " user:" + user + ".");

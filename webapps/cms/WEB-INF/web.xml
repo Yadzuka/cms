@@ -20,16 +20,16 @@
     </servlet>
 
     <servlet-mapping>
+        <servlet-name>Upload</servlet-name>
+        <url-pattern>/upload_new_version</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>UploadServlet</servlet-name>
         <url-pattern>/upload</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>DownloadServlet</servlet-name>
         <url-pattern>/download</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>Upload</servlet-name>
-        <url-pattern>/upload_new_version</url-pattern>
     </servlet-mapping>
 
     <context-param>

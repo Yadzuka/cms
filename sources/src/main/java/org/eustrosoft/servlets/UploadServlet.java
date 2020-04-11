@@ -42,10 +42,12 @@ public class UploadServlet extends HttpServlet {
             className = this.getClass().getName();
             user = request.getRemoteAddr();
             out = response.getWriter();
+
             filesCollection = initializeRepository(request);
 
             if(filesCollection == null)
                 log.w("Files counter was null in " + className + " user:" + user + ".");
+
             realPath = processRealPath();
 
             if(realPath == null)

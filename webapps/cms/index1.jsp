@@ -284,7 +284,7 @@
               <div class="dropdown-divider"></div>
                 <form method="POST" enctype="multipart/form-data" action="upload">
                   <input type="hidden" name="path" value="<%=currentDirectory%>">
-                  <input class="dropdown-item" type="file" name="file/" multiple>
+                  <input class="dropdown-item" type="file" name="file" multiple>
                   <input class="dropdown-item" type="submit" value="Загрузить">
                 </form>
               <a class="dropdown-item" href="#">Скачать</a>
