@@ -38,7 +38,7 @@ public class UploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
             UPLOAD_PATH = "/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
-            log = new LogProvider();
+            log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = request.getRemoteAddr();
             out = response.getWriter();

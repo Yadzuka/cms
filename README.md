@@ -26,10 +26,8 @@
 </p>
 <hr/>
     <i>Примечание:</i><br/>
-    В классе 
-    <code>CMSsystem/sources/src/main/java/org/eustrosoft/providers/LogProvider</code>
-    изменить путь: <br/>
-    <code>FileOutputStream("/home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt", true)</code>
+    В файле <code>web.xml</code>
+    изменить путь: <code>"/home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt</code>
     на путь, который указывает к вашему файлу, в который будут писаться кастомные логи приложения
 <hr/>
 <p>3. Проект должен находится по пути <code>tomcat/webapps/cms/</code>, 

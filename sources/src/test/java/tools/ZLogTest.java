@@ -9,6 +9,6 @@ public class ZLogTest {
 
     @Test
     public void logMail() throws FileNotFoundException {
-        LogProvider provider = new LogProvider();
+        LogProvider provider = new LogProvider("/home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt");
     }
 }

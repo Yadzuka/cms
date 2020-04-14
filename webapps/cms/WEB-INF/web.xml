@@ -36,6 +36,11 @@
         <param-name>user</param-name>
         <param-value>yadzuka</param-value>
     </context-param>
+
+    <context-param>
+        <param-name>logFilePath</param-name>
+        <param-value>/home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt</param-value>
+    </context-param>
     
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>

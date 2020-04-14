@@ -10,14 +10,13 @@ public class LogProvider {
     private PrintWriter fileTarget;
     private PrintWriter consoleTarget;
 
-    public LogProvider() {
+    public LogProvider(String fileName) {
         try {
-            fileTarget = new PrintWriter(new FileOutputStream("/home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt", true), true);
+            fileTarget = new PrintWriter(new FileOutputStream(fileName , true), true);
         } catch (FileNotFoundException ex) {
             System.err.println("Fail with file finding." + new Date());
         }
-        consoleTarget = new PrintWriter(System.out, true);
-        logger = new ZLog(new PrintWriter[]{fileTarget, consoleTarget});
+        logger = new ZLog(new PrintWriter[]{fileTarget});
     }
 
     public void i(String message) { logger.writeLog(message, 0); } // INFO

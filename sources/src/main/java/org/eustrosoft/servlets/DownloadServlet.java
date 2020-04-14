@@ -22,7 +22,7 @@ public class DownloadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            log = new LogProvider();
+            log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = req.getRemoteAddr();
 

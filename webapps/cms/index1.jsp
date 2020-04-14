@@ -6,15 +6,15 @@
          import="java.nio.file.Files"
          import="org.eustrosoft.providers.LogProvider"
          import="name.fraser.neil.plaintext.diff_match_patch"
-         import="java.util.List" %>
-<%@ page import="java.nio.charset.Charset" %>
-<%@ page import="java.nio.charset.StandardCharsets" %>
+         import="java.util.List"
+         import="java.nio.charset.StandardCharsets"
+%>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
     private final static String CGI_TITLE = "CMS system"; // Upper page info
     private final static String JSP_VERSION = "$id$"; // Id for jsp version
-    private final static LogProvider log = new LogProvider();
+    private static LogProvider log;
     private JspWriter out;
 
     public static String[] HTML_UNSAFE_CHARACTERS = {"<",">","&","\n"};
@@ -222,6 +222,7 @@
     long enter_time = System.currentTimeMillis();
     initUser(request);
     request.setCharacterEncoding("UTF-8");
+    log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
     //-------------------------INIT SECTION ENDED------------------------//
 
     String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
