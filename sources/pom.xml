@@ -17,9 +17,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.2.0</version>
-                <configuration>
-                    <outputDirectory>/home/yadzuka/workspace/programming/Java_projects/Sources/Java_product_projects/CMSsystem/webapps/cms/WEB-INF/lib/</outputDirectory>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
