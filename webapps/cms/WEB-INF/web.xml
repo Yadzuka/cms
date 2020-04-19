@@ -5,41 +5,44 @@
 		  http://java.sun.com/xml/ns/javaee/web-app_4_0.xsd"
            version="3.0">
 
-
+    <!-- Servlet V3 Upload -->
     <servlet>
         <servlet-name>Upload</servlet-name>
         <servlet-class>org.eustrosoft.servlets.UploadServletV3</servlet-class>
     </servlet>
-    <servlet>
-        <servlet-name>UploadServlet</servlet-name>
-        <servlet-class>org.eustrosoft.servlets.UploadServlet</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>DownloadServlet</servlet-name>
-        <servlet-class>org.eustrosoft.servlets.DownloadServlet</servlet-class>
-    </servlet>
-
     <servlet-mapping>
         <servlet-name>Upload</servlet-name>
         <url-pattern>/upload_new_version</url-pattern>
     </servlet-mapping>
+    <!-- Apache Commons fileupload -->
+    <servlet>
+        <servlet-name>UploadServlet</servlet-name>
+        <servlet-class>org.eustrosoft.servlets.UploadServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>UploadServlet</servlet-name>
         <url-pattern>/upload</url-pattern>
     </servlet-mapping>
+    <!-- File downloading using simple byte stream -->
+    <servlet>
+        <servlet-name>DownloadServlet</servlet-name>
+        <servlet-class>org.eustrosoft.servlets.DownloadServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>DownloadServlet</servlet-name>
         <url-pattern>/download</url-pattern>
     </servlet-mapping>
 
+    <!-- PARAMETER FOR USER's DIRECTORY (Path - /s/usersdb/(user)/) -->
     <context-param>
         <param-name>user</param-name>
         <param-value>yadzuka</param-value>
     </context-param>
 
+    <!-- PARAMETER FOR LOGGING (file path) -->
     <context-param>
         <param-name>logFilePath</param-name>
-        <param-value>/home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt</param-value>
+        <param-value>/mnt/e/AllProjects/Java_projects/LogsFromCMS/logs.txt</param-value>
     </context-param>
     
     <welcome-file-list>

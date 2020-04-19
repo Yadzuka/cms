@@ -2,11 +2,17 @@
 
 <h2>Преднастройка</h2>
 <p>1. Целевая операционная система - *nix подобная.</p>
-<p>2. Используемый сервер приложений - Apache Tomcat </p>
+<p>2. Используемый сервер приложений - Apache Tomcat (c Servlet V 3.1+)</p>
 <p>3. Используемые сторонние библиотеки: </p>
     <ul>
         <li>Diff-Match-Patch by Google (Apache 2.0 Licence)<br/>
             Исходный код: <a href="https://github.com/google/diff-match-patch">клик!</a> 
+        </li>
+        <li>Apache Commons IO 2.6 (Apache 2.0 Licence)<br/>
+            JAR файл: <a href="https://mvnrepository.com/artifact/commons-io/commons-io/2.6">клик!</a>
+        </li>
+        <li>Apache Commons FileUpload 1.4 (Apache 2.0 Licence)<br/>
+            JAR файл: <a href="https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload/1.4">клик!</a>
         </li>
     </ul>
 <h2>Настройка компонентов</h2>
