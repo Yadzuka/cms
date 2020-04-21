@@ -294,9 +294,13 @@
                 <form method="POST" enctype="multipart/form-data" action="upload">
                   <input type="hidden" name="path" value="<%=currentDirectory%>">
                   <input class="dropdown-item" type="file" name="file" multiple>
-                  <input class="dropdown-item" type="submit" value="Загрузить">
+                  <input class="dropdown-item" type="submit" value="Загрузить (Apache Commons)">
                 </form>
-              <a class="dropdown-item" href="#">Скачать</a>
+                <form method="POST" enctype="multipart/form-data" action="upload_new_version">
+                    <input type="hidden" name="path" value="<%=currentDirectory%>">
+                    <input class="dropdown-item" type="file" name="file" multiple>
+                    <input class="dropdown-item" type="submit" value="Загрузить (Servlet V3.1)">
+                </form>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="#">Что-то ещё</a>
             </div>
@@ -335,13 +339,13 @@
     <td scope="row" align="center"><%=new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified())%></td>
     <td scope="row">
     <% if(f.isFile()&f.canRead()) { %>
-        <a href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>">Просмотреть файл</a>
-        <form method="POST" action="download">
-            <input type="hidden" name="path" value="<%=currentDirectory%>">
-            <input type="hidden" name="file" value="<%=f.getName()%>">
+        <a href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>">Просмотреть файл</a><br/>
+        <!-- <form method="POST" action="download">
+            <input type="hidden" name="path" value="<%--=currentDirectory--%>">
+            <input type="hidden" name="file" value="<%--=f.getName()--%>">
             <input type="submit" value="Скачать">
-        </form>
-        <!--<a href="download?path=<%--=currentDirectory--%>&file=<%--=f.getName()--%>">Скачать файл</a>  Возможно внедрение вредоноского кода и скачка файлов из других директорий (потом переделаю)-->
+        </form>-->
+        <a href="download?path=<%=currentDirectory%>&file=<%=f.getName()%>">Скачать файл</a>  <!-- Возможно внедрение вредоноского кода и скачка файлов из других директорий (потом переделаю) -->
     <% } %>
     </td>
 </tr>

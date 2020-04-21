@@ -20,6 +20,11 @@ public class DownloadServlet extends HttpServlet {
     private String user;
 
     @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+        doPost(req, resp);
+    }
+
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
