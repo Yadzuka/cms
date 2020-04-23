@@ -14,6 +14,8 @@ import java.io.PrintWriter;
 
 public class DownloadServlet extends HttpServlet {
 
+    private String HOME_DIRECTORY;
+
     private PrintWriter out;
     private LogProvider log;
     private String className;
@@ -27,6 +29,7 @@ public class DownloadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
+            HOME_DIRECTORY = "/s/usersdb/" + getServletContext().getInitParameter("user") + "/";
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = req.getRemoteAddr();
@@ -35,6 +38,12 @@ public class DownloadServlet extends HttpServlet {
             out = resp.getWriter();
             String fileName = req.getParameter("file");
             String pathName = req.getParameter("path");
+            if(checkForInjection(pathName));
+            else {
+                log.e("User wanted to download " + fileName + " from incorrect path " + pathName + " (" + user + ").");
+                return;
+            }
+
             File f = new File(pathName + fileName);
             if (!f.exists()) {
                 log.w(user + " wanted to download nonexistent file.");
@@ -53,5 +62,12 @@ public class DownloadServlet extends HttpServlet {
         } catch (Exception ex) {
             log.e(ex.getMessage() + " (" + user + ").");
         }
+    }
+
+    private boolean checkForInjection(String path) {
+        if(path.startsWith(HOME_DIRECTORY))
+            return true;
+        else
+            return false;
     }
 }
