@@ -111,7 +111,7 @@
         String value = request.getParameter(param);
         if(value == null) value = default_value;
         if(value == null) return (null);
-        if (PARAM_PATH.equals(value)) {
+        if (PARAM_PATH.equals(param)) {
             if (!(value.endsWith(unixSlash)))
                 value += unixSlash;
             if (!value.startsWith(homeDirectory))

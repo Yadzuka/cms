@@ -33,20 +33,21 @@
     private final static String ACTION_SAVE = "save";
     private final static String ACTION_UPDATE = "update";
     private final static String ACTION_DELETE = "delete";
+    private final static String ACTION_CREATE = "create";
 
     // File differences class
     private final diff_match_patch diffMatchPatch = new diff_match_patch();
 
     // User info
     private String userIP;
-    private final static String homeDirectory = "/s/usersdb/";
-    private String currentDirectory = homeDirectory;
+    private final static String HOME_DIRECTORY = "/s/usersdb/";
+    private String currentDirectory = HOME_DIRECTORY;
 
     private final static String unixSlash = "/";
 
     private void initUser(HttpServletRequest request) {
         userIP = request.getRemoteAddr();
-        currentDirectory = homeDirectory + getServletConfig().getServletContext().getInitParameter("user") + "/";
+        currentDirectory = HOME_DIRECTORY + getServletConfig().getServletContext().getInitParameter("user") + "/";
         try {
             if (!Files.exists(Paths.get(currentDirectory))) {
                 File newDir = new File(currentDirectory);
@@ -122,7 +123,7 @@
         if (PARAM_PATH.equals(param)) {
             if (!(value.endsWith(unixSlash)))
                 value += unixSlash;
-            if (!value.startsWith(homeDirectory))
+            if (!value.startsWith(HOME_DIRECTORY))
                 value = default_value;
 
             if (checkShellInjection(value))
@@ -235,6 +236,12 @@
         StringBuilder sb = new StringBuilder();
         String fileBuffer = "";
 
+        if(fileStatus.equals(ACTION_CREATE)) {
+            File newFile = new File(request.getParameter(PARAM_PATH) + request.getParameter(PARAM_FILE));
+            if(!newFile.exists())
+                newFile.createNewFile();
+        }
+
         if(request.getParameter(ACTION_SAVE) != null) {
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
                             (new FileOutputStream(currentDirectory + fileParam, false), StandardCharsets.UTF_8));
@@ -262,8 +269,10 @@
         } catch (Exception ex) {
             out.print("cant read file");
         }
-        if(fileStatus.equals(ACTION_VIEW)) {
-            printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
+        if(fileStatus != null) {
+            if (fileStatus.equals(ACTION_VIEW)) {
+                printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
+            }
         }
     }
 
@@ -301,6 +310,12 @@
                     <input class="dropdown-item" type="file" name="file" multiple>
                     <input class="dropdown-item" type="submit" value="Загрузить (Servlet V3.1)">
                 </form>
+                <div class="dropdown-divider"></div>
+                <form method="POST" action="index1.jsp?path=<%=currentDirectory%>&status=create">
+                    <input type="hidden" name="action" value="create">
+                    <input class="dropdown-item" type="text" placeholder="Введите имя файла" name="file">
+                    <input class="dropdown-item" type="submit" value="Создать файл">
+                </form>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="#">Что-то ещё</a>
             </div>
@@ -318,10 +333,12 @@
         </tr>
         </thead>
 <tbody>
+<% if(!currentDirectory.equals(HOME_DIRECTORY)) { %>
 <tr>
-    <td scope="row" class="viewer"><a href="<%=getPathReference(goUpside(currentDirectory))%>"><i class="icon-share"> . . . </i></a></td>
+    <td scope="row" class="viewer"><a href="<%=getPathReference(goUpside(currentDirectory))%>"><i class="icon-share">. . .</i></a></td>
 </tr>
-<%
+<% } else;
+
     String ico="";
     String readwrite="";
     for(File f : actual.listFiles()) {
