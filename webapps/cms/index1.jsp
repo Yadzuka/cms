@@ -275,6 +275,8 @@
         }
 
         if(fileStatus != null) {
+            out.print("<div align=\"center\" vertical-align=\"center\">");
+            out.println(getPathReference(pathParam.substring(0, pathParam.length() - 1), "Go back"));
             boolean showed = false;
             if (fileStatus.equals(ACTION_VIEW)) {
                 for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
@@ -286,6 +288,10 @@
                 if(!showed)
                     printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
             }
+            out.print("</div>");
+            out.println("</body>");
+            out.println("</html>");
+            return;
         }
     }
 
