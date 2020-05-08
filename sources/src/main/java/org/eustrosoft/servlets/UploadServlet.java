@@ -47,8 +47,8 @@ public class UploadServlet extends HttpServlet {
                 log.w("Real path was null in " + className + " user:" + user + ".");
 
             for (int i = 1; i < filesCollection.size(); i++) {
-                Object f = filesCollection.get(i);
-                ((FileItem) f).write(new File(UPLOAD_PATH + ((FileItem) f).getName()));
+                FileItem f = (FileItem)filesCollection.get(i);
+                f.write(new File(UPLOAD_PATH + ((FileItem) f).getName()));
                 log.i(((FileItem)f).getName() + " was uploaded by " + user + " to " + UPLOAD_PATH);
             }
         }catch (Exception e){
