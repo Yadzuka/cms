@@ -281,7 +281,7 @@
             if (fileStatus.equals(ACTION_VIEW)) {
                 for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
                     if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) {
-                        out.print("<img src=\"http:\\\\localhost:8080\\cms\\download?path=" + (currentDirectory + "&file=" + fileParam) + "\" alt=\"sample\" height=\"300\" wigth=\"500\">");
+                        out.print("<img src='download?path=" + currentDirectory + "&file=" + fileParam + "' alt='sample' height='300' wigth='500'>");
                         showed = true;
                     }
                 }

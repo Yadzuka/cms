@@ -3,6 +3,7 @@ package org.eustrosoft.servlets;
 import org.eustrosoft.providers.LogProvider;
 import org.eustrosoft.tools.ZLog;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -16,7 +17,7 @@ public class DownloadServlet extends HttpServlet {
 
     private String HOME_DIRECTORY;
 
-    private PrintWriter out;
+    private OutputStream out;
     private LogProvider log;
     private String className;
     private String user;
@@ -35,7 +36,7 @@ public class DownloadServlet extends HttpServlet {
             user = req.getRemoteAddr();
 
             resp.setContentType("text/html");
-            out = resp.getWriter();
+            out = resp.getOutputStream();
             String fileName = req.getParameter("file");
             String pathName = req.getParameter("path");
             if(checkForInjection(pathName));
@@ -48,13 +49,18 @@ public class DownloadServlet extends HttpServlet {
             if (!f.exists()) {
                 log.w(user + " wanted to download nonexistent file.");
             } else {
-                resp.setCharacterEncoding("UTF-8");
-                resp.setContentType("APPLICATION/OCTET-STREAM");
+                String mimeType = getServletContext().getMimeType(pathName + fileName);
+                if(mimeType == null) resp.setContentType("Application/Octet-Stream");
+                else resp.setContentType(mimeType);
+
                 resp.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+                resp.setHeader("Content-Length", String.format("%d",new File(pathName + fileName).length()));
                 FileInputStream fis = new FileInputStream(pathName + fileName);
-                int i = -1;
-                while ((i = fis.read()) != -1) {
-                    out.write(i);
+
+                byte[] buffer = new byte[4096];
+                int bytesRead = -1;
+                while ((bytesRead = fis.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
                 }
                 log.i(pathName+fileName + " was downloaded by " + user + ".");
                 fis.close();
