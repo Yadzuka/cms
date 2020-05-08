@@ -41,7 +41,7 @@ public class UploadServlet extends HttpServlet {
             if(filesCollection == null)
                 log.w("Files counter was null in " + className + " user:" + user + ".");
 
-            realPath = processRealPath();
+            realPath = processRealPath(filesCollection);
 
             if(realPath == null)
                 log.w("Real path was null in " + className + " user:" + user + ".");
