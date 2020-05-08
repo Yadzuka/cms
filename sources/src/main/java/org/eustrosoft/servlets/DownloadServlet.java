@@ -48,6 +48,7 @@ public class DownloadServlet extends HttpServlet {
             if (!f.exists()) {
                 log.w(user + " wanted to download nonexistent file.");
             } else {
+                resp.setCharacterEncoding("UTF-8");
                 resp.setContentType("APPLICATION/OCTET-STREAM");
                 resp.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
                 FileInputStream fis = new FileInputStream(pathName + fileName);

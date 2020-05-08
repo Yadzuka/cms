@@ -35,6 +35,7 @@
     private final static String ACTION_DELETE = "delete";
     private final static String ACTION_CREATE = "create";
 
+    private final static String [] IMAGE_DEFINITIONS = { "jpg", "jpeg", "png", "svg", "tiff", "bmp", "bat", "odg", "xps" };
     // File differences class
     private final diff_match_patch diffMatchPatch = new diff_match_patch();
 
@@ -148,7 +149,9 @@
         return "<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash +"'>" + value + "</a>";
     }
 
-    private String getPathReference(String path) { return CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash; }
+    private String getPathReference(String path) {
+        return CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash;
+    }
     private String getFileReference(String path, String file) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file;
     }
@@ -251,9 +254,6 @@
             bufferedWriter.flush();
             bufferedWriter.close();
         }
-        if(request.getParameter(ACTION_DELETE) != null) {
-            deleteFile(currentDirectory + fileParam);
-        }
 
         try {
             FileReader fileReader = new FileReader(currentDirectory + fileParam);
@@ -269,9 +269,22 @@
         } catch (Exception ex) {
             out.print("cant read file");
         }
+
+        if(request.getParameter(ACTION_DELETE) != null) {
+            deleteFile(currentDirectory + fileParam);
+        }
+
         if(fileStatus != null) {
+            boolean showed = false;
             if (fileStatus.equals(ACTION_VIEW)) {
-                printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
+                for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
+                    if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) {
+                        out.print("<img src=\"http:\\\\localhost:8080\\cms\\download?path=" + (currentDirectory + "&file=" + fileParam) + "\" alt=\"sample\" height=\"300\" wigth=\"500\">");
+                        showed = true;
+                    }
+                }
+                if(!showed)
+                    printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
             }
         }
     }
