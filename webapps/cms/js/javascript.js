@@ -21,5 +21,7 @@ function setParameters(path, availFiles) {
         refToDownload.href = "download?path=" + path + "&file=" + fileNameToDownload;
     else
         alert("There is no this file");
-
 }
+
+// td.viewer a
+

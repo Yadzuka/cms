@@ -146,7 +146,7 @@
     private String openFile(String href, String value){ return value; }
 
     private String getPathReference(String path, String value) {
-        return "<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash +"'>" + value + "</a>";
+        return "<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + "'>" + value + "</a>";
     }
 
     private String getPathReference(String path) {
@@ -218,7 +218,25 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">  <!-- SIC! external-ref (см выше) -->
     <link href="css/style.css" rel="stylesheet">
     <link rel="icon" href="img/user.png" type="image/png">
+    <script>
+       /* function shiftContainerLeft() {
+            let container = document.getElementById("main_block");
+            container.style.marginLeft = '0';
+        }*/
+    </script>
     <title>Просмотр файлов </title>
+    <style>
+        a:hover {
+            text-decoration: none;
+            color: deeppink;
+        }
+        a {
+            color: grey;
+        }
+        body {
+            display: flex;
+        }
+    </style>
 </head>
 <body>
 <%
@@ -235,72 +253,12 @@
 
     currentDirectory = pathParam;
 
-    if(fileParam != null) {
-        StringBuilder sb = new StringBuilder();
-        String fileBuffer = "";
-
-        if(fileStatus.equals(ACTION_CREATE)) {
-            File newFile = new File(request.getParameter(PARAM_PATH) + request.getParameter(PARAM_FILE));
-            if(!newFile.exists())
-                newFile.createNewFile();
-        }
-
-        if(request.getParameter(ACTION_SAVE) != null) {
-            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
-                            (new FileOutputStream(currentDirectory + fileParam, false), StandardCharsets.UTF_8));
-            out.print("Saved");
-            String fileText = request.getParameter(FILE_TEXTAREA_NAME);
-            bufferedWriter.write(fileText);
-            bufferedWriter.flush();
-            bufferedWriter.close();
-        }
-
-        try {
-            FileReader fileReader = new FileReader(currentDirectory + fileParam);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-            fileBuffer = bufferedReader.readLine();
-            while(fileBuffer != null) {
-                sb.append(fileBuffer).append('\n');
-                fileBuffer = bufferedReader.readLine();
-            }
-            fileReader.close();
-            bufferedReader.close();
-        } catch (Exception ex) {
-            out.print("cant read file");
-        }
-
-        if(request.getParameter(ACTION_DELETE) != null) {
-            deleteFile(currentDirectory + fileParam);
-        }
-
-        if(fileStatus != null) {
-            out.print("<div align=\"center\" vertical-align=\"center\">");
-            out.println(getPathReference(pathParam.substring(0, pathParam.length() - 1), "Go back"));
-            boolean showed = false;
-            if (fileStatus.equals(ACTION_VIEW)) {
-                for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
-                    if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) {
-                        out.print("<img src='download?path=" + currentDirectory + "&file=" + fileParam + "' alt='sample' height='300' wigth='500'>");
-                        showed = true;
-                    }
-                }
-                if(!showed)
-                    printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
-            }
-            out.print("</div>");
-            out.println("</body>");
-            out.println("</html>");
-            return;
-        }
-    }
-
     File actual = null;
 
     try {
      actual = new File(currentDirectory);
 %>
-<div class="container">
+<div id="main_block" class="container">
     <div class="row">
         <div class="col">
           <h3><%out.println("Содержание директории: "+ currentDirectory);%> </h3>
@@ -369,13 +327,18 @@
             else {readwrite="запись";}
 %>
 <tr>
-    <td scope="row" class="viewer"><%out.println(ico + " " + goToFile(f.getName()));%></td>
+    <td scope="row" class="viewer">
+        <% if(f.isFile()&f.canRead()) { %>
+            <a onclick="shiftContainerLeft()" href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>"><%=ico+" "+f.getName()%></a>
+        <% } else {
+            out.println(ico + " " + goToFile(f.getName()));
+        } %>
+    </td>
     <td scope="row" align="right"><%=f.length()%></td>
     <td scope="row"><%out.println(readwrite);%></td>
     <td scope="row" align="center"><%=new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified())%></td>
     <td scope="row">
     <% if(f.isFile()&f.canRead()) { %>
-        <a href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>">Просмотреть файл</a><br/>
         <!-- <form method="POST" action="download">
             <input type="hidden" name="path" value="<%--=currentDirectory--%>">
             <input type="hidden" name="file" value="<%--=f.getName()--%>">
@@ -399,6 +362,67 @@ finally{ }
 </tbody>
 </table>
 </div>
+<%
+    if(fileParam != null) {
+        StringBuilder sb = new StringBuilder();
+        String fileBuffer = "";
+
+        if(fileStatus.equals(ACTION_CREATE)) {
+            File newFile = new File(request.getParameter(PARAM_PATH) + request.getParameter(PARAM_FILE));
+            if(!newFile.exists())
+                newFile.createNewFile();
+        }
+
+        if(request.getParameter(ACTION_SAVE) != null) {
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
+                    (new FileOutputStream(currentDirectory + fileParam, false), StandardCharsets.UTF_8));
+            out.print("Saved");
+            String fileText = request.getParameter(FILE_TEXTAREA_NAME);
+            bufferedWriter.write(fileText);
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        }
+
+        try {
+            FileReader fileReader = new FileReader(currentDirectory + fileParam);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+            fileBuffer = bufferedReader.readLine();
+            while(fileBuffer != null) {
+                sb.append(fileBuffer).append('\n');
+                fileBuffer = bufferedReader.readLine();
+            }
+            fileReader.close();
+            bufferedReader.close();
+        } catch (Exception ex) {
+            out.print("cant read file");
+        }
+
+        if(request.getParameter(ACTION_DELETE) != null) {
+            deleteFile(currentDirectory + fileParam);
+        }
+
+        if(fileStatus != null) {
+            out.print("<style> #main_block { margin: 0; } #left_block { }</style>");
+            out.print("<div id='left_block' class='block' align='right'>");
+
+            out.print(getPathReference(pathParam, "Скрыть"));
+
+            boolean showed = false;
+            if (fileStatus.equals(ACTION_VIEW)) {
+                for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
+                    if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) {
+                        out.print("<img src='download?path=" + currentDirectory + "&file=" + fileParam + "' alt='sample' height='300' wigth='500'>");
+                        showed = true;
+                    }
+                }
+                if(!showed)
+                    printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
+            }
+            out.print("</div>");
+        }
+    }
+%>
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script> 
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>

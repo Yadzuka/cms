@@ -48,8 +48,8 @@ public class UploadServlet extends HttpServlet {
 
             for (int i = 1; i < filesCollection.size(); i++) {
                 FileItem f = (FileItem)filesCollection.get(i);
-                f.write(new File(UPLOAD_PATH + ((FileItem) f).getName()));
-                log.i(((FileItem)f).getName() + " was uploaded by " + user + " to " + UPLOAD_PATH);
+                f.write(new File(UPLOAD_PATH + f.getName()));
+                log.i(f.getName() + " was uploaded by " + user + " to " + UPLOAD_PATH);
             }
         }catch (Exception e){
             log.e(e + " user:" + user + ".");
@@ -73,7 +73,7 @@ public class UploadServlet extends HttpServlet {
     }
 
     private String processRealPath(List filesCollection) {
-     InputStream inputStream;
+     InputStream inputStream = null;
      FileItem item;
         try {
             item = (FileItem) filesCollection.get(0);
