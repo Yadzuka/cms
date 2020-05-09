@@ -36,6 +36,7 @@
     private final static String ACTION_CREATE = "create";
 
     private final static String [] IMAGE_DEFINITIONS = { "jpg", "jpeg", "png", "svg", "tiff", "bmp", "bat", "odg", "xps" };
+    private final static String [] VIDEO_DEFINITIONS = { "ogg", "mp4", "webm" };
     // File differences class
     private final diff_match_patch diffMatchPatch = new diff_match_patch();
 
@@ -329,7 +330,7 @@
 <tr>
     <td scope="row" class="viewer">
         <% if(f.isFile()&f.canRead()) { %>
-            <a onclick="shiftContainerLeft()" href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>"><%=ico+" "+f.getName()%></a>
+            <a href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>"><%=ico+" "+f.getName()%></a>
         <% } else {
             out.println(ico + " " + goToFile(f.getName()));
         } %>
@@ -403,7 +404,7 @@ finally{ }
         }
 
         if(fileStatus != null) {
-            out.print("<style> #main_block { margin: 0; } #left_block { }</style>");
+            out.print("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
             out.print("<div id='left_block' class='block' align='right'>");
 
             out.print(getPathReference(pathParam, "Скрыть"));
@@ -413,6 +414,17 @@ finally{ }
                 for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
                     if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) {
                         out.print("<img src='download?path=" + currentDirectory + "&file=" + fileParam + "' alt='sample' height='300' wigth='500'>");
+                        showed = true;
+                    }
+                }
+                for(int i = 0; i < VIDEO_DEFINITIONS.length; i++) {
+                    if (fileParam.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) {
+                        out.print("<video width='320' height='240' controls>" +
+                                "<source src='download?path=" + currentDirectory + "&file=" + fileParam + "' type='video/ogg'>" +
+                                "<source src='download?path=" + currentDirectory + "&file=" + fileParam + "' type='video/webm'>" +
+                                "<source src='download?path=" + currentDirectory + "&file=" + fileParam + "' type='video/mp4'> " +
+                                "Your browser does not support the video tag." +
+                                "</video>");
                         showed = true;
                     }
                 }
