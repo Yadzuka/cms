@@ -8,7 +8,9 @@
          import="name.fraser.neil.plaintext.diff_match_patch"
          import="java.util.List"
          import="java.nio.charset.StandardCharsets"
+         import="java.io.UnsupportedEncodingException"
 %>
+<%@ page import="java.net.URLEncoder" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -42,23 +44,32 @@
 
     // User info
     private String userIP;
-    private final static String HOME_DIRECTORY = "/s/usersdb/";
+    private String HOME_DIRECTORY = "/s/usersdb/";
     private String currentDirectory = HOME_DIRECTORY;
 
     private final static String unixSlash = "/";
 
     private void initUser(HttpServletRequest request) {
         userIP = request.getRemoteAddr();
-        currentDirectory = HOME_DIRECTORY + getServletConfig().getServletContext().getInitParameter("user") + "/";
+        HOME_DIRECTORY = "/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user") + "/";
+        currentDirectory = HOME_DIRECTORY;
         try {
-            if (!Files.exists(Paths.get(currentDirectory))) {
-                File newDir = new File(currentDirectory);
+            if (!Files.exists(Paths.get(HOME_DIRECTORY))) {
+                File newDir = new File(HOME_DIRECTORY);
                 newDir.mkdir();
             }
         } catch (Exception ex) {
             try {
                 out.print("Can't create directory!");
             } catch (Exception e) { log.e("Error in initUser(request) by user "+ userIP); }
+        }
+    }
+
+    private String encodeValue(String value) {
+        try {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex.getCause());
         }
     }
 
@@ -114,11 +125,11 @@
 
     private boolean checkShellInjection(String param){ return param.contains(".."); }
 
-    private String getRequestParameter(ServletRequest request, String param){
+    private String getRequestParameter(ServletRequest request, String param) throws IOException {
         return getRequestParameter(request, param, null);
     }
 
-    private String getRequestParameter(ServletRequest request, String param, String default_value){
+    private String getRequestParameter(ServletRequest request, String param, String default_value) throws IOException {
         String value = request.getParameter(param);
         if(value == null) value = default_value;
         if(value == null) return (null);
@@ -134,12 +145,13 @@
             if (checkShellInjection(value))
                 throw new RuntimeException("Shell injection");
         }
+
         return value;
     }
 
     private String goToFile(String fileName) {
         if(isDir(currentDirectory, fileName)) {
-            String targetPath = currentDirectory + fileName;
+            String targetPath = encodeValue(currentDirectory) + encodeValue(fileName);
             return getPathReference(targetPath, fileName);
         }
         return openFile(currentDirectory, fileName);
@@ -176,7 +188,7 @@
 
     private void printFileForm(String directory, String fileName, String status, String fileText) {
         if(status.equals(ACTION_VIEW)) {
-            startForm("POST", getFileReference(directory, fileName, ACTION_VIEW));
+            startForm("POST", getFileReference(encodeValue(directory), encodeValue(fileName), ACTION_VIEW));
             printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
             printFileEditButtons();
             endForm();
@@ -289,7 +301,7 @@
                     <input class="dropdown-item" type="submit" value="Загрузить (Servlet V3.1)">
                 </form>
                 <div class="dropdown-divider"></div>
-                <form method="POST" action="index1.jsp?path=<%=currentDirectory%>&status=create">
+                <form method="POST" action="index1.jsp?path=<%=encodeValue(currentDirectory)%>&status=create">
                     <input type="hidden" name="action" value="create">
                     <input class="dropdown-item" type="text" placeholder="Введите имя файла" name="file">
                     <input class="dropdown-item" type="submit" value="Создать файл">
@@ -325,12 +337,12 @@
             else ico="<i class=\"icon-link\" ></i>";
     if (f.canWrite()&f.canRead()) {readwrite="чтение/запись";}
         else if (!f.canWrite()&f.canRead()){readwrite="чтение";}
-            else {readwrite="запись";}
+            else {readwrite=" ";}
 %>
 <tr>
     <td scope="row" class="viewer">
         <% if(f.isFile()&f.canRead()) { %>
-            <a href="<%=getFileReference(currentDirectory, f.getName(), ACTION_VIEW)%>"><%=ico+" "+f.getName()%></a>
+            <a href="<%=getFileReference(encodeValue(currentDirectory), encodeValue(f.getName()), ACTION_VIEW)%>"><%=ico+" "+f.getName()%></a>
         <% } else {
             out.println(ico + " " + goToFile(f.getName()));
         } %>
@@ -345,7 +357,7 @@
             <input type="hidden" name="file" value="<%--=f.getName()--%>">
             <input type="submit" value="Скачать">
         </form>-->
-        <a href="download?path=<%=currentDirectory%>&file=<%=f.getName()%>">Скачать файл</a>  <!-- Возможно внедрение вредоноского кода и скачка файлов из других директорий (потом переделаю) -->
+        <a href="download?path=<%=encodeValue(currentDirectory)%>&file=<%=encodeValue(f.getName())%>">Скачать файл</a>  <!-- Возможно внедрение вредоноского кода и скачка файлов из других директорий (потом переделаю) -->
     <% } %>
     </td>
 </tr>
@@ -369,9 +381,10 @@ finally{ }
         String fileBuffer = "";
 
         if(fileStatus.equals(ACTION_CREATE)) {
-            File newFile = new File(request.getParameter(PARAM_PATH) + request.getParameter(PARAM_FILE));
+            File newFile = new File(pathParam + fileParam);
             if(!newFile.exists())
                 newFile.createNewFile();
+            response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
         }
 
         if(request.getParameter(ACTION_SAVE) != null) {
@@ -407,7 +420,7 @@ finally{ }
             out.print("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
             out.print("<div id='left_block' class='block' align='right'>");
 
-            out.print(getPathReference(pathParam, "Скрыть"));
+            out.print(getPathReference(encodeValue(pathParam), "Скрыть"));
 
             boolean showed = false;
             if (fileStatus.equals(ACTION_VIEW)) {

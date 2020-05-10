@@ -6,27 +6,25 @@ import org.apache.commons.fileupload.servlet.*;
 import org.eustrosoft.providers.LogProvider;
 import org.eustrosoft.tools.ZLog;
 
-import javax.servlet.ServletException;
+import java.io.*;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @MultipartConfig
 public class UploadServlet extends HttpServlet {
 
     private LogProvider log;
-
     private String user;
-    //private OutputStream outputStream;
-
     private PrintWriter out;
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
      List filesCollection;
-     String realPath; // real here means that it is the way, where customer wants to upload his file
+     String realPath = ""; // real here means that it is the way, where customer wants to upload his file
      String className;
      String UPLOAD_PATH;
         try {
@@ -45,14 +43,18 @@ public class UploadServlet extends HttpServlet {
 
             if(realPath == null)
                 log.w("Real path was null in " + className + " user:" + user + ".");
+            else if(!realPath.startsWith("/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user")))
+                return;
 
             for (int i = 1; i < filesCollection.size(); i++) {
                 FileItem f = (FileItem)filesCollection.get(i);
-                f.write(new File(UPLOAD_PATH + f.getName()));
+                f.write(new File(realPath + f.getName()));
                 log.i(f.getName() + " was uploaded by " + user + " to " + UPLOAD_PATH);
             }
         }catch (Exception e){
             log.e(e + " user:" + user + ".");
+        } finally {
+            response.sendRedirect("index1.jsp?path=" + URLEncoder.encode(realPath, StandardCharsets.UTF_8.toString()));
         }
     }
 

@@ -2,37 +2,40 @@ package org.eustrosoft.servlets;
 
 import org.eustrosoft.providers.LogProvider;
 
-import javax.servlet.ServletException;
+import java.net.URLEncoder;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 @MultipartConfig
 public class UploadServletV3 extends HttpServlet {
 
-    private String UPLOAD_PATH;
-
     private PrintWriter out;
-    private LogProvider log;
-    private String className;
     private String user;
+    private LogProvider log;
 
     private InputStream is;
     private OutputStream os;
-
+    String realPath;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
-            UPLOAD_PATH = "/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
+            String UPLOAD_PATH = "/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
             out = response.getWriter();
-            log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
-            className = this.getClass().getName();
-            user = request.getRemoteAddr();
+            LogProvider log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
+            String className = this.getClass().getName();
+            String user = request.getRemoteAddr();
+
+            realPath = request.getParameter("path");
+
+            if(!realPath.startsWith("/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user")))
+                return;
 
             List<Part> fileParts;
             List<Part> list = new ArrayList<Part>();
@@ -44,13 +47,14 @@ public class UploadServletV3 extends HttpServlet {
 
             fileParts = list;
 
-            int read = -1;
             for (Part filePart : fileParts) {
                 is = filePart.getInputStream();
-                String filePath = UPLOAD_PATH + filePart.getSubmittedFileName();
+                String filePath = realPath + filePart.getSubmittedFileName();
                 os = new FileOutputStream(filePath);
-                while ((read = is.read()) != -1) {
-                    os.write(read);
+                byte[] buffer = new byte[4096];
+                int bytesRead = -1;
+                while((bytesRead = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, bytesRead);
                 }
                 os.flush();
                 log.i(filePart.getName() + " was uploaded by " + user + " to " + filePath);
@@ -61,6 +65,7 @@ public class UploadServletV3 extends HttpServlet {
             try {
                 os.close();
                 is.close();
+                response.sendRedirect("index1.jsp?path=" + URLEncoder.encode(realPath, StandardCharsets.UTF_8.toString()));
             } catch (Exception ex) { log.e(ex + " user:" + user + "."); }
         }
     }
