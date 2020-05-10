@@ -61,7 +61,7 @@
         } catch (Exception ex) {
             try {
                 out.print("Can't create directory!");
-            } catch (Exception e) { log.e("Error in initUser(request) by user "+ userIP); }
+            } catch (Exception e) { log.e("Error in initUser(request) by user " + userIP); }
         }
     }
 
@@ -163,7 +163,7 @@
     }
 
     private String getPathReference(String path) {
-        return CGI_NAME + "?" + PARAM_PATH +"="+ path + unixSlash;
+        return CGI_NAME + "?" + PARAM_PATH +"="+ path;
     }
     private String getFileReference(String path, String file) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file;
@@ -244,7 +244,7 @@
             color: deeppink;
         }
         a {
-            color: grey;
+            color: dodgerblue;
         }
         body {
             display: flex;
@@ -265,6 +265,8 @@
     String fileStatus = getRequestParameter(request, PARAM_ACTION);
 
     currentDirectory = pathParam;
+    if(!currentDirectory.endsWith(unixSlash))
+        currentDirectory = currentDirectory + unixSlash;
 
     File actual = null;
 
@@ -325,7 +327,7 @@
 <tbody>
 <% if(!currentDirectory.equals(HOME_DIRECTORY)) { %>
 <tr>
-    <td scope="row" class="viewer"><a href="<%=getPathReference(goUpside(currentDirectory))%>"><i class="icon-share">. . .</i></a></td>
+    <td scope="row" class="viewer"><a href="<%=getPathReference(encodeValue(goUpside(currentDirectory)))%>"><i class="icon-share">. . .</i></a></td>
 </tr>
 <% } else;
 
