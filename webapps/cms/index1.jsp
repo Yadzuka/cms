@@ -9,8 +9,7 @@
          import="java.util.List"
          import="java.nio.charset.StandardCharsets"
          import="java.io.UnsupportedEncodingException"
-%>
-<%@ page import="java.net.URLEncoder" %>
+         import="java.net.URLEncoder" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -186,13 +185,146 @@
         return differences;
     }
 
-    private void printFileForm(String directory, String fileName, String status, String fileText) {
+    private void printFileForm(String directory, String fileName, String status, String fileText) throws IOException {
         if(status.equals(ACTION_VIEW)) {
             startForm("POST", getFileReference(encodeValue(directory), encodeValue(fileName), ACTION_VIEW));
             printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
             printFileEditButtons();
             endForm();
         }
+    }
+
+    private void process() {
+
+    }
+
+    private void printServerButton() throws IOException {
+        startDiv("col", "", "right");
+        startDiv("dropright");
+        printButton("btn btn-light btn-lg dropdown-toggle", "button", "dropdownMenuButton", "dropdown", "true", "false", getI("   Сервер", "icon-folder-open") );
+        startDiv("dropdown-menu", "", "", "dropdownMenuButton");
+        printH("Обращение к серверу", "dropdown-header", 5);
+        startDiv("dropdown-divider"); endDiv();
+
+        startForm("POST", "upload", "multipart/form-data");
+        printInput("hidden", "", "path", "", currentDirectory);
+        printInput("file", "dropdown-item", "file", "", true);
+        printSubmit("Загрузить (Apache Commons)", "dropdown-item");
+        endForm();
+
+        startForm("POST", "upload", "multipart/form-data");
+        printInput("hidden", "", "path", "", currentDirectory);
+        printInput("file", "dropdown-item", "file", "", true);
+        printSubmit("Загрузить (Apache Commons)", "dropdown-item");
+        endForm();
+
+        startDiv("dropdown-divider"); endDiv();
+
+        startForm("POST", "upload", "multipart/form-data");
+        printInput("hidden", "", "path", "", currentDirectory);
+        printInput("file", "dropdown-item", "file", "", true);
+        printSubmit("Загрузить (Apache Commons)", "dropdown-item");
+        endForm();
+
+        startDiv("dropdown-divider"); endDiv();
+        endDiv();
+        endDiv();
+        endDiv();
+    }
+
+    private void processFileRequest(String fileParam, String pathParam, String fileStatus, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if(fileParam != null) {
+            StringBuilder sb = new StringBuilder();
+            String fileBuffer = "";
+
+            if(fileStatus.equals(ACTION_CREATE)) {
+                File newFile = new File(pathParam + fileParam);
+                if(!newFile.exists())
+                    newFile.createNewFile();
+                response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
+            }
+
+            if(request.getParameter(ACTION_SAVE) != null) {
+                saveFile(fileParam, request);
+            }
+
+            try {
+                FileReader fileReader = new FileReader(currentDirectory + fileParam);
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+                fileBuffer = bufferedReader.readLine();
+                while(fileBuffer != null) {
+                    sb.append(fileBuffer).append('\n');
+                    fileBuffer = bufferedReader.readLine();
+                }
+                fileReader.close();
+                bufferedReader.close();
+            } catch (Exception ex) {
+                out.print("cant read file");
+            }
+
+            if(request.getParameter(ACTION_DELETE) != null) {
+                deleteFile(currentDirectory + fileParam);
+            }
+
+            if(fileStatus != null) {
+                out.print("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
+                out.print("<div id='left_block' class='block' align='right'>");
+
+                out.print(getPathReference(encodeValue(pathParam), "Скрыть"));
+
+                boolean showed = false;
+                if (fileStatus.equals(ACTION_VIEW)) {
+                    if(!(printImageFile(currentDirectory, fileParam)
+                            || printVideoFile(currentDirectory, fileParam)))
+                        printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
+                }
+                out.print("</div>");
+            }
+        }
+    }
+
+    private boolean printImageFile(String directory, String fileParam) throws IOException {
+        for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
+            if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) { printImage(directory, fileParam, 1280, 720); return true;}
+        }
+        return false;
+    }
+
+    private boolean printVideoFile(String directory, String fileParam) throws IOException {
+        for(int i = 0; i < VIDEO_DEFINITIONS.length; i++) {
+            if (fileParam.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(1280, 720, directory, fileParam);  return true;}
+        }
+        return false;
+    }
+
+    private void printVideo(int width, int height, String directory, String fileParam) throws IOException {
+        out.print("<video width='" + width + "' height='" + height + "' controls='controls'>" +
+                "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/ogg'>" +
+                "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/webm'>" +
+                "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/mp4'> " +
+                "Your browser does not support the video tag. </video>");
+    }
+
+    private void printImage(String directory, String file, int width, int height) throws IOException {
+        out.print("<img src='download?path=" + directory + "&file=" + file + "' alt='sample' height='' width=''>");
+    }
+
+    private void saveFile(String fileParam, HttpServletRequest request) throws IOException {
+        BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
+                (new FileOutputStream(currentDirectory + fileParam, false), StandardCharsets.UTF_8));
+        out.print("Saved");
+        String fileText = request.getParameter(FILE_TEXTAREA_NAME);
+        bufferedWriter.write(fileText);
+        bufferedWriter.flush();
+        bufferedWriter.close();
+    }
+
+    private void createFile(String pathParam, String fileParam, HttpServletResponse response) throws IOException {
+        File newFile = new File(pathParam + fileParam);
+        if(!newFile.exists())
+            newFile.createNewFile();
+        response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
     }
 
     private void printFileEditButtons() {
@@ -210,8 +342,47 @@
     private void wln(){w("\n");}
     private void setReference(String reference, String insides) { w("<a href=\""+reference+"\">"); w(insides); w("</a>"); }
 
-    private void startForm(String method, String action) { try{ out.print("<form method='" + method +"' action='"+action + "'>");} catch (Exception ex) {}}
-    private void endForm() {try{ out.print("</form>");}catch (Exception ex){}}
+
+    private void printInput(String type, String classN, String name, String placeholder, boolean multiple) throws IOException {
+        if(multiple) out.print("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"' multiple/>");
+        else out.print("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"'/>");
+    }
+    private void printInput(String type, String classN, String name, String placeholder, String value) throws IOException {
+        out.print("<input type='" + type + "' class='" + classN + "' name='" + name + "' value='" + value + "' placeholder='" + placeholder +"'/>");
+    }
+    private void printSubmit(String text) throws IOException { out.print("<input type='submit' value='" + text + "'/>");}
+    private void printSubmit(String text, String classN) throws IOException { out.print("<input type='submit' class='"+classN+"' value='" + text + "'/>");}
+    private void startDiv(String classN) throws IOException { out.print("<div class='" + classN + "'>"); }
+    private void startDiv(String classN, String id) throws IOException { out.print("<div class='" + classN + "' id='"+id+"'>"); }
+    private void startDiv(String classN, String id, String align) throws IOException { out.print("<div class='" + classN + "' id='"+id+"' align='" + align + "'>"); }
+    private void startDiv(String classN, String id, String align, String aria_labelledby) throws IOException { out.print("<div class='" + classN + "' id='"+id+"' align='" + align + "' aria-labelledby='" + aria_labelledby + "'>"); }
+    private void endDiv() throws IOException { out.print("</div>"); }
+
+    private void startTable(String classN) throws IOException { out.print("<table class='" + classN + "'>"); }
+    private void endTable(String classN) throws IOException { out.print("</table>"); }
+    private void startTHead(String classN) throws IOException { out.print("<thead class='" + classN + "'>"); }
+    private void endTHead(String classN) throws IOException { out.print("</thead class='" + classN + "'>"); }
+    private void startTBody(String classN) throws IOException { out.print("<tbody class='" + classN + "'>"); }
+    private void endTBody(String classN) throws IOException { out.print("</tbody class='" + classN + "'>"); }
+    private void printTRow(String classN) throws IOException { out.print("<"); }
+    private void startTr() throws IOException { out.print("<tr>");}
+    private void endTr() throws IOException { out.print("</tr>");}
+    private void printTh(String scope, String text) throws IOException { out.print("<th scope='"+scope+"'>" + text + "</th>");}
+    private void startTd(String classN, String text) throws IOException { out.print("<td class='"+classN+"'>" + text + "</td>");}
+    private void printTd(String scope, String classN, String align, String text) throws IOException { out.print("<td align='" + align + "' class='" + classN + "' scope='"+scope+"'>" + text + "</td>");}
+
+    private void printI(String text, String classN) throws IOException { out.print("<i class='" + classN + "'>" + text + "</i>"); }
+    private String getI(String text, String classN) throws IOException { return String.format("<i class='" + classN + "'>" + text + "</i>"); }
+    private void printH(String text, int size) throws IOException { out.print("<h" + size + ">" + text + "</h" + size + ">"); }
+    private void printH(String text, String classN, int size) throws IOException { out.print("<h" + size + " class='"+classN+"'>" + text + "</h" + size + ">"); }
+
+    private void printButton(String classN, String type, String id, String data_toggle, String aria_haspopup, String aria_expanded, String text) throws IOException {
+        out.print("<button class='"+classN+"' type='" + type + "' id='" + id + "' + data_toogle='" + data_toggle+"' aria_haspopup='" + aria_haspopup + "' aria_expanded='"+aria_expanded+ "'>" + text + "</button>");
+    }
+
+    private void startForm(String method, String action) throws IOException { out.print("<form method='" + method +"' action='"+action + "'>"); }
+    private void startForm(String method, String action, String enctype) throws IOException { out.print("<form method='" + method +"' action='"+action + "' enctype='"+enctype+"'>"); }
+    private void endForm() { try { out.print("</form>"); } catch (Exception ex) { } }
     private void printText(String name, int cols, int rows, String innerText) {
         try{
             out.print("<textarea name='" + name + "' cols=" + cols + " rows=" + rows + ">");
@@ -220,7 +391,7 @@
             out.print("</textarea>");
         } catch (Exception ex){}
     }
-    private void nLine() { try { out.print("<br/>");} catch (Exception ex) {}}
+    private void nLine() throws IOException { out.print("<br/>"); }
 %>
 <!DOCTYPE HTML>
 <html lang="ru">
@@ -231,12 +402,6 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">  <!-- SIC! external-ref (см выше) -->
     <link href="css/style.css" rel="stylesheet">
     <link rel="icon" href="img/user.png" type="image/png">
-    <script>
-       /* function shiftContainerLeft() {
-            let container = document.getElementById("main_block");
-            container.style.marginLeft = '0';
-        }*/
-    </script>
     <title>Просмотр файлов </title>
     <style>
         a:hover {
@@ -268,6 +433,8 @@
     if(!currentDirectory.endsWith(unixSlash))
         currentDirectory = currentDirectory + unixSlash;
 
+    processFileRequest(fileParam, pathParam, fileStatus, request, response);
+
     File actual = null;
 
     try {
@@ -276,7 +443,7 @@
 <div id="main_block" class="container">
     <div class="row">
         <div class="col">
-          <h3><%out.println("Содержание директории: "+ currentDirectory);%> </h3>
+          <h3><%out.println("Содержание директории: "+ currentDirectory);%></h3>
         </div>
     <div class="col" align="right">
           <div class="dropright"> 
@@ -354,11 +521,6 @@
     <td scope="row" align="center"><%=new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified())%></td>
     <td scope="row">
     <% if(f.isFile()&f.canRead()) { %>
-        <!-- <form method="POST" action="download">
-            <input type="hidden" name="path" value="<%--=currentDirectory--%>">
-            <input type="hidden" name="file" value="<%--=f.getName()--%>">
-            <input type="submit" value="Скачать">
-        </form>-->
         <a href="download?path=<%=encodeValue(currentDirectory)%>&file=<%=encodeValue(f.getName())%>">Скачать файл</a>  <!-- Возможно внедрение вредоноского кода и скачка файлов из других директорий (потом переделаю) -->
     <% } %>
     </td>
@@ -377,81 +539,9 @@ finally{ }
 </tbody>
 </table>
 </div>
-<%
-    if(fileParam != null) {
-        StringBuilder sb = new StringBuilder();
-        String fileBuffer = "";
-
-        if(fileStatus.equals(ACTION_CREATE)) {
-            File newFile = new File(pathParam + fileParam);
-            if(!newFile.exists())
-                newFile.createNewFile();
-            response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
-        }
-
-        if(request.getParameter(ACTION_SAVE) != null) {
-            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
-                    (new FileOutputStream(currentDirectory + fileParam, false), StandardCharsets.UTF_8));
-            out.print("Saved");
-            String fileText = request.getParameter(FILE_TEXTAREA_NAME);
-            bufferedWriter.write(fileText);
-            bufferedWriter.flush();
-            bufferedWriter.close();
-        }
-
-        try {
-            FileReader fileReader = new FileReader(currentDirectory + fileParam);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-            fileBuffer = bufferedReader.readLine();
-            while(fileBuffer != null) {
-                sb.append(fileBuffer).append('\n');
-                fileBuffer = bufferedReader.readLine();
-            }
-            fileReader.close();
-            bufferedReader.close();
-        } catch (Exception ex) {
-            out.print("cant read file");
-        }
-
-        if(request.getParameter(ACTION_DELETE) != null) {
-            deleteFile(currentDirectory + fileParam);
-        }
-
-        if(fileStatus != null) {
-            out.print("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
-            out.print("<div id='left_block' class='block' align='right'>");
-
-            out.print(getPathReference(encodeValue(pathParam), "Скрыть"));
-
-            boolean showed = false;
-            if (fileStatus.equals(ACTION_VIEW)) {
-                for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
-                    if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) {
-                        out.print("<img src='download?path=" + currentDirectory + "&file=" + fileParam + "' alt='sample' height='300' wigth='500'>");
-                        showed = true;
-                    }
-                }
-                for(int i = 0; i < VIDEO_DEFINITIONS.length; i++) {
-                    if (fileParam.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) {
-                        out.print("<video width='320' height='240' controls>" +
-                                "<source src='download?path=" + currentDirectory + "&file=" + fileParam + "' type='video/ogg'>" +
-                                "<source src='download?path=" + currentDirectory + "&file=" + fileParam + "' type='video/webm'>" +
-                                "<source src='download?path=" + currentDirectory + "&file=" + fileParam + "' type='video/mp4'> " +
-                                "Your browser does not support the video tag." +
-                                "</video>");
-                        showed = true;
-                    }
-                }
-                if(!showed)
-                    printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
-            }
-            out.print("</div>");
-        }
-    }
-%>
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script> 
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script src="contrib/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="contrib/nmp/popper.js-1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="contrib/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
 </body>
 </html>
