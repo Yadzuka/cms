@@ -393,6 +393,22 @@
     }
     private void nLine() throws IOException { out.print("<br/>"); }
 %>
+<% // этот блок инициализирующего кода выполняется уже в процессе обработки запроса, но в самом начале. я перенес его _до_ тела html документа
+    this.out = out;
+    long enter_time = System.currentTimeMillis();
+    initUser(request);
+    request.setCharacterEncoding("UTF-8");
+    log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
+    //-------------------------INIT SECTION ENDED------------------------//
+
+    String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
+    String fileParam = getRequestParameter(request, PARAM_FILE);
+    String fileStatus = getRequestParameter(request, PARAM_ACTION);
+
+    currentDirectory = pathParam;
+    if(!currentDirectory.endsWith(unixSlash))
+        currentDirectory = currentDirectory + unixSlash;
+%>
 <!DOCTYPE HTML>
 <html lang="ru">
 <head>
@@ -418,23 +434,7 @@
 </head>
 <body>
 <%
-    this.out = out;
-    long enter_time = System.currentTimeMillis();
-    initUser(request);
-    request.setCharacterEncoding("UTF-8");
-    log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
-    //-------------------------INIT SECTION ENDED------------------------//
-
-    String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
-    String fileParam = getRequestParameter(request, PARAM_FILE);
-    String fileStatus = getRequestParameter(request, PARAM_ACTION);
-
-    currentDirectory = pathParam;
-    if(!currentDirectory.endsWith(unixSlash))
-        currentDirectory = currentDirectory + unixSlash;
-
     processFileRequest(fileParam, pathParam, fileStatus, request, response);
-
     File actual = null;
 
     try {
@@ -538,6 +538,25 @@ finally{ }
 %>
 </tbody>
 </table>
+</div>
+<div id="issues" >
+<h3>Задачи и найденные ошибки в проекте, чтоб глаза мозолило</h3>
+<ul>
+<li> 01. Трекера задач нет, буду писать сюда ;)
+<li> 02. path=%2Fs%2Fusersdb%2Fyadzuka%2F - это плохо, path=/s/usersdb/yadzuka - лучше, но все-равно плохо
+<li> 03. path=/s/usersdb/yadzuka - плохо, path=/yadzuka - приемлимо, и даже нормально, то что это /s/usersdb/ пользователю знать не обязательно
+<li> 04. Вот этот блок (div), с id="issues", можно загрузить из отдельного файла, через include другой issues.jsp, но это задача Александру
+<li> 05. И в догонку к ней - через JS и стили сделать его сокрытие/показывание
+<li> 06. Makefile - пустой
+<li> 07. README.md - должен быть в wiki формате Markdown (см википедию) о чем говорит расширение .md
+<li> 08. в webapps/cms/WEB-INF/lib/ класть надо commons-fileupload-1.4.jar и commons-io-2.6.jar а не в /usr/local/apache-tomcat-9.0/lib/
+<li> 09. IOException от out.print() - не надо гонять по всему стеку, его надо поймать и проигнорировать в самом низу, метод w() есть у нас для этого
+<li> 10. при загрузке файлов получаю NullPointer Exception, но файлы грузятся... кто-то где-то накосячил
+<li> 11. загрузил я видеоролик, большой, 500 Mb, и решил его просмотреть, и посмотрел я на тот, как на сервере кончилась оперативная память, и понял я, что кто-то не понял, что память конечна и, видимо просто грузит весь файл в память, прежде чем отдать его клиенту, и опечалился я, и кончились у меня силы, и выпил я с горя водки, и пошел я спать... ;)
+<li> 12. ...но вернулся я, чтобы дописать - строка 495 - зло, 513 - зло, 515 - зло, 523, 525 - зло. Не надо злоупотреблять if-ми вообще, а внутри jsp или php, где вперемешку html и серверная императивная логика - особенно. 
+<li> 13. и самое главное, весь код от строки 484, до строки 540 должен превратиться в вызов всего одного метода warh.process(), пример можно посмотреть здесь <a href='https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/tisc/tiscui.jsp'>ConcepTIS/src/java/webapps/tisc/tiscui.jsp</a> строки 119-121, также см строки 43-50, а потом здесь : <a href='https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/tisc/tisc.jsp'>ConcepTIS/src/default/src/java/webapps/tisc/tisc.jsp</a>. Все порождение html кода содержательной части документа, зависящей от параметров запроса мы переносим в методы, которые затем перенесем в отдельные классы. В JSP остается только обрамляющая часть HTML-кода, общая для любой страницы, все остальное "рисуется" либо java на сервере, либо JavaScript в браузере. Но для прототипирования и отладки внешнего вида мы иногда пишем так, как написано сейчас, главное - вовремя остановиться. И здесь силы меня оставили совсем 13 мая 2020 г 1:53 мин.
+
+</ul>
 </div>
 <script src="contrib/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="contrib/nmp/popper.js-1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
