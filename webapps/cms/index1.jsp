@@ -10,6 +10,7 @@
          import="java.nio.charset.StandardCharsets"
          import="java.io.UnsupportedEncodingException"
          import="java.net.URLEncoder" %>
+<%@ page import="java.nio.file.StandardCopyOption" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -59,7 +60,7 @@
             }
         } catch (Exception ex) {
             try {
-                out.print("Can't create directory!");
+                w("Can't create directory!");
             } catch (Exception e) { log.e("Error in initUser(request) by user " + userIP); }
         }
     }
@@ -72,43 +73,19 @@
         }
     }
 
-    private boolean createDir(String path, String dirName) {
-        Path pathToDir = getPath(path, dirName);
-        File directory = new File(pathToDir.toUri());
-        if(directory.exists())
-            return true;
-        else
-            return directory.mkdir();
-    }
-
-    private boolean createFile(String fileName) throws Exception {
-        File file = new File(fileName);
-        return file.createNewFile();
-    }
-
-    private boolean deleteFile(String fileName) {
-        File file = new File(fileName);
-        return file.delete();
-    }
-
-    private Path getPath(String pathToFile, String fileName) {
+    private Path getPath(String pathToFile, String fileName)  {
         pathToFile = pathToFile.trim(); fileName = fileName.trim();
         Path filePath = null;
 
-        try {
-            if (!(pathToFile.endsWith(unixSlash))) {
-                pathToFile += unixSlash;
-            }
-            try {
-                filePath = Paths.get(pathToFile + fileName);
-            } catch (Exception ex) {
-                throw new FileNotFoundException("File not found!");
-            }
-        } catch (Exception ex) {
-            try {
-                out.print("Error with getting path");
-            } catch (Exception e) { }
+        if (!(pathToFile.endsWith(unixSlash))) {
+            pathToFile += unixSlash;
         }
+        try {
+            filePath = Paths.get(pathToFile + fileName);
+        } catch (Exception ex) {
+             w("File not found!");
+        }
+
         return filePath;
     }
 
@@ -124,11 +101,11 @@
 
     private boolean checkShellInjection(String param){ return param.contains(".."); }
 
-    private String getRequestParameter(ServletRequest request, String param) throws IOException {
+    private String getRequestParameter(ServletRequest request, String param)  {
         return getRequestParameter(request, param, null);
     }
 
-    private String getRequestParameter(ServletRequest request, String param, String default_value) throws IOException {
+    private String getRequestParameter(ServletRequest request, String param, String default_value)  {
         String value = request.getParameter(param);
         if(value == null) value = default_value;
         if(value == null) return (null);
@@ -155,22 +132,27 @@
         }
         return openFile(currentDirectory, fileName);
     }
+
     private String openFile(String href, String value){ return value; }
 
+    // Path reference with 'a' tags
     private String getPathReference(String path, String value) {
         return "<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + "'>" + value + "</a>";
     }
-
+    // Path reference
     private String getPathReference(String path) {
         return CGI_NAME + "?" + PARAM_PATH +"="+ path;
     }
+    // File regerence
     private String getFileReference(String path, String file) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file;
     }
+    // File reference with action
     private String getFileReference(String path, String file, String status) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_ACTION + "=" + status;
     }
 
+    // Go to the top directory
     private String goUpside(String folderName) {
         if(folderName.endsWith(unixSlash)) {
             folderName = folderName.substring(0, folderName.length() - 1);
@@ -179,13 +161,15 @@
         return folderName;
     }
 
+    // Diff files to get differences
     private List diffFile(String text1, String text2) {
         diff_match_patch diffMatchPatch = new diff_match_patch();
         List<diff_match_patch.Diff> differences = diffMatchPatch.diff_main(text1, text2);
         return differences;
     }
 
-    private void printFileForm(String directory, String fileName, String status, String fileText) throws IOException {
+    // Textarea fow file inners
+    private void printFileForm(String directory, String fileName, String status, String fileText)  {
         if(status.equals(ACTION_VIEW)) {
             startForm("POST", getFileReference(encodeValue(directory), encodeValue(fileName), ACTION_VIEW));
             printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
@@ -194,11 +178,141 @@
         }
     }
 
-    private void process() {
-
+    // Move file
+    private boolean mv(String path, String fileName, String newPath) {
+        try {
+            Path oldPlacement = getPath(path, fileName);
+            Path newPlacement = getPath(newPath, fileName);
+            File file = oldPlacement.toFile();
+            file.renameTo(newPlacement.toFile());
+            return true;
+        } catch (Exception ex) { return false; }
     }
 
-    private void printServerButton() throws IOException {
+    // Make directory
+    private boolean mkdir(String path, String dirName) {
+        Path pathToDir = getPath(path, dirName);
+        File directory = new File(pathToDir.toUri());
+        if(directory.exists()) return true;
+        else return directory.mkdir();
+    }
+
+    // Delete file
+    private boolean rm(String fileName) {
+        File file = new File(fileName);
+        return file.delete();
+    }
+
+    // Creating file
+    private boolean touch(String fileName) {
+        File file = new File(fileName);
+        try { return file.createNewFile(); } catch (IOException ex) { return false; }
+    }
+
+    private String cat(String fileName) {
+        try {
+            StringBuilder builder = new StringBuilder();
+            FileReader stream = new FileReader(fileName);
+
+            char [] buffer = new char[512];
+            int c;
+            while((c = stream.read(buffer)) > 0){
+                builder.append(stream.read(buffer, 0, c));
+            }
+            return builder.toString();
+        } catch (IOException ex) {
+            return "Cannot read the file";
+        }
+    }
+
+    // Copy file with replacing
+    private boolean cp(String path, String fileName, String newPath) {
+        try {
+            Path placement = getPath(path, fileName);
+            Path copyPlacement = getPath(newPath, fileName);
+            Files.copy(placement, copyPlacement, StandardCopyOption.REPLACE_EXISTING); // SIC! Надо будет посмотреть другие параметры.
+                                    // Данный - заменяет файл в целевой папке, если файл с таким именем уже существует
+            return true;
+        } catch (Exception ex) { return false; }
+    }
+
+    private void process() {
+        printMainBlock();
+    }
+
+    private void printMainBlock() {
+        File actual = null;
+        try {
+            actual = new File(currentDirectory);
+            startDiv("container", "main_block");
+            startDiv("row");
+            startDiv("col");
+            printH("Содержание директории: " + currentDirectory, 3);
+            endDiv();
+            printServerButton();
+            endDiv();
+            startTable("table");
+            startTHead("thead-light");
+            startTr();
+            printTh("col", "Имя");
+            printTh("col", "Размер, байт");
+            printTh("col", "Права");
+            printTh("col", "Последняя модификация");
+            printTh("col", "Операции с файлом");
+            endTr();
+            endTHead();
+            startTBody("");
+            if (!currentDirectory.equals(HOME_DIRECTORY)) {
+                startTr();
+                printTd("row", "viewer", "", getA(getI(". . .", "icon-share"), getPathReference(encodeValue(goUpside(currentDirectory)))));
+                endTr();
+            }
+
+            String ico = "";
+            String readwrite = "";
+            for (File f : actual.listFiles()) {
+                if (f.isDirectory() & !f.isFile()) {
+                    ico = getI("", "icon-folder");
+                } else if (!f.isDirectory() & f.isFile()) {
+                    ico = getI("", "icon-file-text2");
+                } else ico = "<i class=\"icon-link\" ></i>";
+                if (f.canWrite() & f.canRead()) {
+                    readwrite = "чтение/запись";
+                } else if (!f.canWrite() & f.canRead()) {
+                    readwrite = "чтение";
+                } else {
+                    readwrite = " ";
+                }
+                startTr();
+                startTd("viewer", "row");
+                if(f.isFile()&f.canRead()) {
+                    printA(ico+" "+f.getName(), getFileReference(encodeValue(currentDirectory), encodeValue(f.getName()), ACTION_VIEW));
+                } else {
+                    wln(ico + " " + goToFile(f.getName()));
+                }
+                endTd();
+                printTd("row", "", "right", String.format("%d",f.length()));
+                printTd("row", "", "", readwrite);
+                printTd("row", "", "center", new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified()));
+                startTd("", "row");
+                if(f.isFile()&f.canRead()) {
+                    printA("Скачать файл", "download?path="+encodeValue(currentDirectory)+"&file="+encodeValue(f.getName()));
+                }
+                endTd();
+                endTr();
+
+            } //for( File f : actual.listFiles())
+        } catch(Exception e) {
+            wln("Нераспознанная ошибка: " + e);
+            wln("попробуйте другую операцию" );
+        }
+        finally{ }
+        endTBody();
+        endTable();
+        endDiv();
+    }
+
+    private void printServerButton()  {
         startDiv("col", "", "right");
         startDiv("dropright");
         printButton("btn btn-light btn-lg dropdown-toggle", "button", "dropdownMenuButton", "dropdown", "true", "false", getI("   Сервер", "icon-folder-open") );
@@ -212,18 +326,18 @@
         printSubmit("Загрузить (Apache Commons)", "dropdown-item");
         endForm();
 
-        startForm("POST", "upload", "multipart/form-data");
+        startForm("POST", "upload_new_version", "multipart/form-data");
         printInput("hidden", "", "path", "", currentDirectory);
         printInput("file", "dropdown-item", "file", "", true);
-        printSubmit("Загрузить (Apache Commons)", "dropdown-item");
+        printSubmit("Загрузить (Servlet V3)", "dropdown-item");
         endForm();
 
         startDiv("dropdown-divider"); endDiv();
 
-        startForm("POST", "upload", "multipart/form-data");
-        printInput("hidden", "", "path", "", currentDirectory);
-        printInput("file", "dropdown-item", "file", "", true);
-        printSubmit("Загрузить (Apache Commons)", "dropdown-item");
+        startForm("POST", "index1.jsp?path="+encodeValue(currentDirectory)+"&status=create");
+        printInput("hidden", "", "action", "", "create");
+        printInput("text", "dropdown-item", "file", "Введите имя файла", false);
+        printSubmit("Создать файл", "dropdown-item");
         endForm();
 
         startDiv("dropdown-divider"); endDiv();
@@ -238,9 +352,7 @@
             String fileBuffer = "";
 
             if(fileStatus.equals(ACTION_CREATE)) {
-                File newFile = new File(pathParam + fileParam);
-                if(!newFile.exists())
-                    newFile.createNewFile();
+                touch(pathParam + fileParam);
                 response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
             }
 
@@ -260,18 +372,18 @@
                 fileReader.close();
                 bufferedReader.close();
             } catch (Exception ex) {
-                out.print("cant read file");
+                w("cant read file");
             }
 
             if(request.getParameter(ACTION_DELETE) != null) {
-                deleteFile(currentDirectory + fileParam);
+                rm(currentDirectory + fileParam);
             }
 
             if(fileStatus != null) {
-                out.print("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
-                out.print("<div id='left_block' class='block' align='right'>");
+                w("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
+                w("<div id='left_block' class='block' align='right'>");
 
-                out.print(getPathReference(encodeValue(pathParam), "Скрыть"));
+                w(getPathReference(encodeValue(pathParam), "Скрыть"));
 
                 boolean showed = false;
                 if (fileStatus.equals(ACTION_VIEW)) {
@@ -279,41 +391,41 @@
                             || printVideoFile(currentDirectory, fileParam)))
                         printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
                 }
-                out.print("</div>");
+                w("</div>");
             }
         }
     }
 
-    private boolean printImageFile(String directory, String fileParam) throws IOException {
+    private boolean printImageFile(String directory, String fileParam)  {
         for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
             if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) { printImage(directory, fileParam, 1280, 720); return true;}
         }
         return false;
     }
 
-    private boolean printVideoFile(String directory, String fileParam) throws IOException {
+    private boolean printVideoFile(String directory, String fileParam)  {
         for(int i = 0; i < VIDEO_DEFINITIONS.length; i++) {
             if (fileParam.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(1280, 720, directory, fileParam);  return true;}
         }
         return false;
     }
 
-    private void printVideo(int width, int height, String directory, String fileParam) throws IOException {
-        out.print("<video width='" + width + "' height='" + height + "' controls='controls'>" +
+    private void printVideo(int width, int height, String directory, String fileParam)  {
+        w("<video width='" + width + "' height='" + height + "' controls='controls'>" +
                 "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/ogg'>" +
                 "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/webm'>" +
                 "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/mp4'> " +
                 "Your browser does not support the video tag. </video>");
     }
 
-    private void printImage(String directory, String file, int width, int height) throws IOException {
-        out.print("<img src='download?path=" + directory + "&file=" + file + "' alt='sample' height='' width=''>");
+    private void printImage(String directory, String file, int width, int height)  {
+        w("<img src='download?path=" + directory + "&file=" + file + "' alt='sample' height='' width=''>");
     }
 
     private void saveFile(String fileParam, HttpServletRequest request) throws IOException {
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(currentDirectory + fileParam, false), StandardCharsets.UTF_8));
-        out.print("Saved");
+        w("Saved");
         String fileText = request.getParameter(FILE_TEXTAREA_NAME);
         bufferedWriter.write(fileText);
         bufferedWriter.flush();
@@ -338,60 +450,62 @@
         try { out.print(s); }
         catch (Exception e) { is_error = true; }
     }
-    private void wln(String s){w(s);w("\n");}
+    private void wln(String s){ w(s);w("\n");}
     private void wln(){w("\n");}
     private void setReference(String reference, String insides) { w("<a href=\""+reference+"\">"); w(insides); w("</a>"); }
 
 
-    private void printInput(String type, String classN, String name, String placeholder, boolean multiple) throws IOException {
-        if(multiple) out.print("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"' multiple/>");
-        else out.print("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"'/>");
+    private void printInput(String type, String classN, String name, String placeholder, boolean multiple)  {
+        if(multiple) w("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"' multiple/>");
+        else w("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"'/>");
     }
-    private void printInput(String type, String classN, String name, String placeholder, String value) throws IOException {
-        out.print("<input type='" + type + "' class='" + classN + "' name='" + name + "' value='" + value + "' placeholder='" + placeholder +"'/>");
+    private void printInput(String type, String classN, String name, String placeholder, String value)  {
+        w("<input type='" + type + "' class='" + classN + "' name='" + name + "' value='" + value + "' placeholder='" + placeholder +"'/>");
     }
-    private void printSubmit(String text) throws IOException { out.print("<input type='submit' value='" + text + "'/>");}
-    private void printSubmit(String text, String classN) throws IOException { out.print("<input type='submit' class='"+classN+"' value='" + text + "'/>");}
-    private void startDiv(String classN) throws IOException { out.print("<div class='" + classN + "'>"); }
-    private void startDiv(String classN, String id) throws IOException { out.print("<div class='" + classN + "' id='"+id+"'>"); }
-    private void startDiv(String classN, String id, String align) throws IOException { out.print("<div class='" + classN + "' id='"+id+"' align='" + align + "'>"); }
-    private void startDiv(String classN, String id, String align, String aria_labelledby) throws IOException { out.print("<div class='" + classN + "' id='"+id+"' align='" + align + "' aria-labelledby='" + aria_labelledby + "'>"); }
-    private void endDiv() throws IOException { out.print("</div>"); }
+    private void printSubmit(String text)  { w("<input type='submit' value='" + text + "'/>");}
+    private void printSubmit(String text, String classN)  { w("<input type='submit' class='"+classN+"' value='" + text + "'/>");}
+    private void startDiv(String classN)  { w("<div class='" + classN + "'>"); }
+    private void startDiv(String classN, String id) { w("<div class='" + classN + "' id='"+id+"'>"); }
+    private void startDiv(String classN, String id, String align)  { w("<div class='" + classN + "' id='"+id+"' align='" + align + "'>"); }
+    private void startDiv(String classN, String id, String align, String aria_labelledby) { w("<div class='" + classN + "' id='"+id+"' align='" + align + "' aria-labelledby='" + aria_labelledby + "'>"); }
+    private void endDiv()  { w("</div>"); }
 
-    private void startTable(String classN) throws IOException { out.print("<table class='" + classN + "'>"); }
-    private void endTable(String classN) throws IOException { out.print("</table>"); }
-    private void startTHead(String classN) throws IOException { out.print("<thead class='" + classN + "'>"); }
-    private void endTHead(String classN) throws IOException { out.print("</thead class='" + classN + "'>"); }
-    private void startTBody(String classN) throws IOException { out.print("<tbody class='" + classN + "'>"); }
-    private void endTBody(String classN) throws IOException { out.print("</tbody class='" + classN + "'>"); }
-    private void printTRow(String classN) throws IOException { out.print("<"); }
-    private void startTr() throws IOException { out.print("<tr>");}
-    private void endTr() throws IOException { out.print("</tr>");}
-    private void printTh(String scope, String text) throws IOException { out.print("<th scope='"+scope+"'>" + text + "</th>");}
-    private void startTd(String classN, String text) throws IOException { out.print("<td class='"+classN+"'>" + text + "</td>");}
-    private void printTd(String scope, String classN, String align, String text) throws IOException { out.print("<td align='" + align + "' class='" + classN + "' scope='"+scope+"'>" + text + "</td>");}
+    private void startTable(String classN)  { w("<table class='" + classN + "'>"); }
+    private void endTable()  { w("</table>"); }
+    private void startTHead(String classN)  { w("<thead class='" + classN + "'>"); }
+    private void endTHead()  { w("</thead>"); }
+    private void startTBody(String classN)  { w("<tbody class='" + classN + "'>"); }
+    private void endTBody()  { w("</tbody>"); }
+    private void printTRow(String classN)  { w("<"); }
+    private void startTr()  { w("<tr>");}
+    private void endTr()  { w("</tr>");}
+    private void printTh(String scope, String text)  { w("<th scope='"+scope+"'>" + text + "</th>");}
+    private void startTd(String classN)  { w("<td class='"+classN+"'>");}
+    private void startTd(String classN, String scope)  { w("<td class='"+classN+"' scope='" + scope + "'>");}
+    private void endTd()  { w("</td>");}
+    private void printTd(String scope, String classN, String align, String text) { w("<td align='" + align + "' class='" + classN + "' scope='"+scope+"'>" + text + "</td>");}
 
-    private void printI(String text, String classN) throws IOException { out.print("<i class='" + classN + "'>" + text + "</i>"); }
-    private String getI(String text, String classN) throws IOException { return String.format("<i class='" + classN + "'>" + text + "</i>"); }
-    private void printH(String text, int size) throws IOException { out.print("<h" + size + ">" + text + "</h" + size + ">"); }
-    private void printH(String text, String classN, int size) throws IOException { out.print("<h" + size + " class='"+classN+"'>" + text + "</h" + size + ">"); }
+    private void printI(String text, String classN) { w("<i class='" + classN + "'>" + text + "</i>"); }
+    private void printA(String text, String href) { w("<a href='" + href + "'>" + text + "</a>"); }
+    private String getA(String text, String href) { return String.format("<a href='" + href + "'>" + text + "</a>"); }
+    private String getI(String text, String classN)  { return String.format("<i class='" + classN + "'>" + text + "</i>"); }
+    private void printH(String text, int size)  { w("<h" + size + ">" + text + "</h" + size + ">"); }
+    private void printH(String text, String classN, int size) { w("<h" + size + " class='"+classN+"'>" + text + "</h" + size + ">"); }
 
-    private void printButton(String classN, String type, String id, String data_toggle, String aria_haspopup, String aria_expanded, String text) throws IOException {
-        out.print("<button class='"+classN+"' type='" + type + "' id='" + id + "' + data_toogle='" + data_toggle+"' aria_haspopup='" + aria_haspopup + "' aria_expanded='"+aria_expanded+ "'>" + text + "</button>");
+    private void printButton(String classN, String type, String id, String data_toggle, String aria_haspopup, String aria_expanded, String text)  {
+        w("<button class='"+classN+"' type='" + type + "' id='" + id + "' data-toggle='" + data_toggle + "' aria-haspopup='" + aria_haspopup + "' aria-expanded='"+aria_expanded+ "'>" + text + "</button>");
     }
 
-    private void startForm(String method, String action) throws IOException { out.print("<form method='" + method +"' action='"+action + "'>"); }
-    private void startForm(String method, String action, String enctype) throws IOException { out.print("<form method='" + method +"' action='"+action + "' enctype='"+enctype+"'>"); }
-    private void endForm() { try { out.print("</form>"); } catch (Exception ex) { } }
+    private void startForm(String method, String action)  { w("<form method='" + method +"' action='"+action + "'>"); }
+    private void startForm(String method, String action, String enctype)  { w("<form method='" + method +"' action='"+action + "' enctype='"+enctype+"'>"); }
+    private void endForm() { w("</form>");  }
     private void printText(String name, int cols, int rows, String innerText) {
-        try{
-            out.print("<textarea name='" + name + "' cols=" + cols + " rows=" + rows + ">");
+            w("<textarea name='" + name + "' cols=" + cols + " rows=" + rows + ">");
                 if(innerText != null)
-                    out.print(innerText);
-            out.print("</textarea>");
-        } catch (Exception ex){}
+                    w(innerText);
+            w("</textarea>");
     }
-    private void nLine() throws IOException { out.print("<br/>"); }
+    private void nLine() { w("<br/>"); }
 %>
 <% // этот блок инициализирующего кода выполняется уже в процессе обработки запроса, но в самом начале. я перенес его _до_ тела html документа
     this.out = out;
@@ -408,6 +522,9 @@
     currentDirectory = pathParam;
     if(!currentDirectory.endsWith(unixSlash))
         currentDirectory = currentDirectory + unixSlash;
+
+    processFileRequest(fileParam, pathParam, fileStatus, request, response);
+    process();
 %>
 <!DOCTYPE HTML>
 <html lang="ru">
@@ -433,112 +550,7 @@
     </style>
 </head>
 <body>
-<%
-    processFileRequest(fileParam, pathParam, fileStatus, request, response);
-    File actual = null;
 
-    try {
-     actual = new File(currentDirectory);
-%>
-<div id="main_block" class="container">
-    <div class="row">
-        <div class="col">
-          <h3><%out.println("Содержание директории: "+ currentDirectory);%></h3>
-        </div>
-    <div class="col" align="right">
-          <div class="dropright"> 
-            <button
-              class="btn btn-light btn-lg dropdown-toggle"
-              type="button"
-              id="dropdownMenuButton"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false">
-             <i class="icon-folder-open">   Сервер</i>
-            </button>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <h5 class="dropdown-header">Обращение к серверу</h5>
-              <div class="dropdown-divider"></div>
-                <form method="POST" enctype="multipart/form-data" action="upload">
-                  <input type="hidden" name="path" value="<%=currentDirectory%>">
-                  <input class="dropdown-item" type="file" name="file" multiple>
-                  <input class="dropdown-item" type="submit" value="Загрузить (Apache Commons)">
-                </form>
-                <form method="POST" enctype="multipart/form-data" action="upload_new_version">
-                    <input type="hidden" name="path" value="<%=currentDirectory%>">
-                    <input class="dropdown-item" type="file" name="file" multiple>
-                    <input class="dropdown-item" type="submit" value="Загрузить (Servlet V3.1)">
-                </form>
-                <div class="dropdown-divider"></div>
-                <form method="POST" action="index1.jsp?path=<%=encodeValue(currentDirectory)%>&status=create">
-                    <input type="hidden" name="action" value="create">
-                    <input class="dropdown-item" type="text" placeholder="Введите имя файла" name="file">
-                    <input class="dropdown-item" type="submit" value="Создать файл">
-                </form>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="#">Что-то ещё</a>
-            </div>
-          </div>
-        </div>
-    </div>
-	    <table class="table">
-        <thead class="thead-light">
-        <tr>
-            <th scope="col">Имя</th>
-            <th scope="col">Размер,байт</th>
-            <th scope="col">Свойство</th>
-            <th scope="col">Последняя модификация</th>
-            <th scope="col">Операции с файлом</th>
-        </tr>
-        </thead>
-<tbody>
-<% if(!currentDirectory.equals(HOME_DIRECTORY)) { %>
-<tr>
-    <td scope="row" class="viewer"><a href="<%=getPathReference(encodeValue(goUpside(currentDirectory)))%>"><i class="icon-share">. . .</i></a></td>
-</tr>
-<% } else;
-
-    String ico="";
-    String readwrite="";
-    for(File f : actual.listFiles()) {
-    if (f.isDirectory()&!f.isFile()) {ico="<i class=\"icon-folder\"></i>";}
-        else if(!f.isDirectory()&f.isFile()){ico="<i class=\"icon-file-text2\"></i>";}
-            else ico="<i class=\"icon-link\" ></i>";
-    if (f.canWrite()&f.canRead()) {readwrite="чтение/запись";}
-        else if (!f.canWrite()&f.canRead()){readwrite="чтение";}
-            else {readwrite=" ";}
-%>
-<tr>
-    <td scope="row" class="viewer">
-        <% if(f.isFile()&f.canRead()) { %>
-            <a href="<%=getFileReference(encodeValue(currentDirectory), encodeValue(f.getName()), ACTION_VIEW)%>"><%=ico+" "+f.getName()%></a>
-        <% } else {
-            out.println(ico + " " + goToFile(f.getName()));
-        } %>
-    </td>
-    <td scope="row" align="right"><%=f.length()%></td>
-    <td scope="row"><%out.println(readwrite);%></td>
-    <td scope="row" align="center"><%=new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified())%></td>
-    <td scope="row">
-    <% if(f.isFile()&f.canRead()) { %>
-        <a href="download?path=<%=encodeValue(currentDirectory)%>&file=<%=encodeValue(f.getName())%>">Скачать файл</a>  <!-- Возможно внедрение вредоноского кода и скачка файлов из других директорий (потом переделаю) -->
-    <% } %>
-    </td>
-</tr>
-<%
-    } //for( File f : actual.listFiles())
-}catch (IOException ex){
-    out.println("Ошибка ввода вывода : " + ex);
-}
-catch(Exception e) {
-    out.println("Нераспознанная ошибка: " + e);
-    out.println("попробуйте другую операцию" );
-}
-finally{ }
-%>
-</tbody>
-</table>
-</div>
 <div id="issues" >
 <h3>Задачи и найденные ошибки в проекте, чтоб глаза мозолило</h3>
 <ul>
@@ -550,7 +562,7 @@ finally{ }
 <li> 06. Makefile - пустой
 <li> 07. README.md - должен быть в wiki формате Markdown (см википедию) о чем говорит расширение .md
 <li> 08. в webapps/cms/WEB-INF/lib/ класть надо commons-fileupload-1.4.jar и commons-io-2.6.jar а не в /usr/local/apache-tomcat-9.0/lib/
-<li> 09. IOException от out.print() - не надо гонять по всему стеку, его надо поймать и проигнорировать в самом низу, метод w() есть у нас для этого
+<li> 09. IOException от w() - не надо гонять по всему стеку, его надо поймать и проигнорировать в самом низу, метод w() есть у нас для этого
 <li> 10. при загрузке файлов получаю NullPointer Exception, но файлы грузятся... кто-то где-то накосячил
 <li> 11. загрузил я видеоролик, большой, 500 Mb, и решил его просмотреть, и посмотрел я на тот, как на сервере кончилась оперативная память, и понял я, что кто-то не понял, что память конечна и, видимо просто грузит весь файл в память, прежде чем отдать его клиенту, и опечалился я, и кончились у меня силы, и выпил я с горя водки, и пошел я спать... ;)
 <li> 12. ...но вернулся я, чтобы дописать - строка 495 - зло, 513 - зло, 515 - зло, 523, 525 - зло. Не надо злоупотреблять if-ми вообще, а внутри jsp или php, где вперемешку html и серверная императивная логика - особенно. 
