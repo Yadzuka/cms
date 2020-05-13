@@ -12,14 +12,14 @@ usage:
 	@echo "make clean - for delete all jars, classes"
 all:
 	@if [ ! -d webapps/cms/WEB-INF/lib ]; then echo mkdir -p webapps/cms/WEB-INF/lib; fi
-#diffpatchmatch:
+diffpatchmatch:
 	git clone https://github.com/google/diff-match-patch.git
 	javac ${diffpatchmatch}name/fraser/neil/plaintext/*.java
 	cd diff-match-patch/java/src/
 	touch manifest.mf
 	awk 'BEGIN{print("Manifest-Version: 1.0"); print("Created-By: 1.6.0_19 (Sun Microsystems Inc.)");}' > manifest.mf
 	jar cvmf manifest.mf DiffPatchMatch.jar name && cd ../../../
-#commons:
+commons:
 	wget http://mirror.linux-ia64.org/apache//commons/fileupload/binaries/commons-fileupload-1.4-bin.zip
 	unzip commons-fileupload-1.4-bin.zip
 	cp commons-fileupload-1.4-bin/commons-fileupload-1.4.jar ${webinflib}

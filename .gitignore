@@ -3,4 +3,10 @@ out
 .idea
 webapps/cms/WEB-INF/lib
 target
+contrib/lib/DiffPatchMatch.jar
+contrib/lib/commons-fileupload-1.4.jar
+contrib/lib/commons-io-2.6.jar
+contrib/src/diff-patch-match/diff-match-patch/
+contrib/work/
+
 
