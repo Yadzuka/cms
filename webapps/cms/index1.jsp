@@ -10,6 +10,7 @@
          import="java.nio.charset.StandardCharsets"
          import="java.io.UnsupportedEncodingException"
          import="java.net.URLEncoder" %>
+<%@ page import="java.nio.file.StandardCopyOption" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -72,43 +73,19 @@
         }
     }
 
-    private boolean createDir(String path, String dirName) {
-        Path pathToDir = getPath(path, dirName);
-        File directory = new File(pathToDir.toUri());
-        if(directory.exists())
-            return true;
-        else
-            return directory.mkdir();
-    }
-
-    private boolean createFile(String fileName) throws Exception {
-        File file = new File(fileName);
-        return file.createNewFile();
-    }
-
-    private boolean deleteFile(String fileName) {
-        File file = new File(fileName);
-        return file.delete();
-    }
-
-    private Path getPath(String pathToFile, String fileName) {
+    private Path getPath(String pathToFile, String fileName)  {
         pathToFile = pathToFile.trim(); fileName = fileName.trim();
         Path filePath = null;
 
-        try {
-            if (!(pathToFile.endsWith(unixSlash))) {
-                pathToFile += unixSlash;
-            }
-            try {
-                filePath = Paths.get(pathToFile + fileName);
-            } catch (Exception ex) {
-                throw new FileNotFoundException("File not found!");
-            }
-        } catch (Exception ex) {
-            try {
-                w("Error with getting path");
-            } catch (Exception e) { }
+        if (!(pathToFile.endsWith(unixSlash))) {
+            pathToFile += unixSlash;
         }
+        try {
+            filePath = Paths.get(pathToFile + fileName);
+        } catch (Exception ex) {
+             w("File not found!");
+        }
+
         return filePath;
     }
 
@@ -124,11 +101,11 @@
 
     private boolean checkShellInjection(String param){ return param.contains(".."); }
 
-    private String getRequestParameter(ServletRequest request, String param) throws IOException {
+    private String getRequestParameter(ServletRequest request, String param)  {
         return getRequestParameter(request, param, null);
     }
 
-    private String getRequestParameter(ServletRequest request, String param, String default_value) throws IOException {
+    private String getRequestParameter(ServletRequest request, String param, String default_value)  {
         String value = request.getParameter(param);
         if(value == null) value = default_value;
         if(value == null) return (null);
@@ -155,22 +132,27 @@
         }
         return openFile(currentDirectory, fileName);
     }
+
     private String openFile(String href, String value){ return value; }
 
+    // Path reference with 'a' tags
     private String getPathReference(String path, String value) {
         return "<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + "'>" + value + "</a>";
     }
-
+    // Path reference
     private String getPathReference(String path) {
         return CGI_NAME + "?" + PARAM_PATH +"="+ path;
     }
+    // File regerence
     private String getFileReference(String path, String file) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file;
     }
+    // File reference with action
     private String getFileReference(String path, String file, String status) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_ACTION + "=" + status;
     }
 
+    // Go to the top directory
     private String goUpside(String folderName) {
         if(folderName.endsWith(unixSlash)) {
             folderName = folderName.substring(0, folderName.length() - 1);
@@ -179,12 +161,14 @@
         return folderName;
     }
 
+    // Diff files to get differences
     private List diffFile(String text1, String text2) {
         diff_match_patch diffMatchPatch = new diff_match_patch();
         List<diff_match_patch.Diff> differences = diffMatchPatch.diff_main(text1, text2);
         return differences;
     }
 
+    // Textarea fow file inners
     private void printFileForm(String directory, String fileName, String status, String fileText)  {
         if(status.equals(ACTION_VIEW)) {
             startForm("POST", getFileReference(encodeValue(directory), encodeValue(fileName), ACTION_VIEW));
@@ -194,11 +178,141 @@
         }
     }
 
-    private void process() {
-
+    // Move file
+    private boolean mv(String path, String fileName, String newPath) {
+        try {
+            Path oldPlacement = getPath(path, fileName);
+            Path newPlacement = getPath(newPath, fileName);
+            File file = oldPlacement.toFile();
+            file.renameTo(newPlacement.toFile());
+            return true;
+        } catch (Exception ex) { return false; }
     }
 
-    private void printServerButton() throws IOException {
+    // Make directory
+    private boolean mkdir(String path, String dirName) {
+        Path pathToDir = getPath(path, dirName);
+        File directory = new File(pathToDir.toUri());
+        if(directory.exists()) return true;
+        else return directory.mkdir();
+    }
+
+    // Delete file
+    private boolean rm(String fileName) {
+        File file = new File(fileName);
+        return file.delete();
+    }
+
+    // Creating file
+    private boolean touch(String fileName) {
+        File file = new File(fileName);
+        try { return file.createNewFile(); } catch (IOException ex) { return false; }
+    }
+
+    private String cat(String fileName) {
+        try {
+            StringBuilder builder = new StringBuilder();
+            FileReader stream = new FileReader(fileName);
+
+            char [] buffer = new char[512];
+            int c;
+            while((c = stream.read(buffer)) > 0){
+                builder.append(stream.read(buffer, 0, c));
+            }
+            return builder.toString();
+        } catch (IOException ex) {
+            return "Cannot read the file";
+        }
+    }
+
+    // Copy file with replacing
+    private boolean cp(String path, String fileName, String newPath) {
+        try {
+            Path placement = getPath(path, fileName);
+            Path copyPlacement = getPath(newPath, fileName);
+            Files.copy(placement, copyPlacement, StandardCopyOption.REPLACE_EXISTING); // SIC! Надо будет посмотреть другие параметры.
+                                    // Данный - заменяет файл в целевой папке, если файл с таким именем уже существует
+            return true;
+        } catch (Exception ex) { return false; }
+    }
+
+    private void process() {
+        printMainBlock();
+    }
+
+    private void printMainBlock() {
+        File actual = null;
+        try {
+            actual = new File(currentDirectory);
+            startDiv("container", "main_block");
+            startDiv("row");
+            startDiv("col");
+            printH("Содержание директории: " + currentDirectory, 3);
+            endDiv();
+            printServerButton();
+            endDiv();
+            startTable("table");
+            startTHead("thead-light");
+            startTr();
+            printTh("col", "Имя");
+            printTh("col", "Размер, байт");
+            printTh("col", "Права");
+            printTh("col", "Последняя модификация");
+            printTh("col", "Операции с файлом");
+            endTr();
+            endTHead();
+            startTBody("");
+            if (!currentDirectory.equals(HOME_DIRECTORY)) {
+                startTr();
+                printTd("row", "viewer", "", getA(getI(". . .", "icon-share"), getPathReference(encodeValue(goUpside(currentDirectory)))));
+                endTr();
+            }
+
+            String ico = "";
+            String readwrite = "";
+            for (File f : actual.listFiles()) {
+                if (f.isDirectory() & !f.isFile()) {
+                    ico = getI("", "icon-folder");
+                } else if (!f.isDirectory() & f.isFile()) {
+                    ico = getI("", "icon-file-text2");
+                } else ico = "<i class=\"icon-link\" ></i>";
+                if (f.canWrite() & f.canRead()) {
+                    readwrite = "чтение/запись";
+                } else if (!f.canWrite() & f.canRead()) {
+                    readwrite = "чтение";
+                } else {
+                    readwrite = " ";
+                }
+                startTr();
+                startTd("viewer", "row");
+                if(f.isFile()&f.canRead()) {
+                    printA(ico+" "+f.getName(), getFileReference(encodeValue(currentDirectory), encodeValue(f.getName()), ACTION_VIEW));
+                } else {
+                    wln(ico + " " + goToFile(f.getName()));
+                }
+                endTd();
+                printTd("row", "", "right", String.format("%d",f.length()));
+                printTd("row", "", "", readwrite);
+                printTd("row", "", "center", new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified()));
+                startTd("", "row");
+                if(f.isFile()&f.canRead()) {
+                    printA("Скачать файл", "download?path="+encodeValue(currentDirectory)+"&file="+encodeValue(f.getName()));
+                }
+                endTd();
+                endTr();
+
+            } //for( File f : actual.listFiles())
+        } catch(Exception e) {
+            wln("Нераспознанная ошибка: " + e);
+            wln("попробуйте другую операцию" );
+        }
+        finally{ }
+        endTBody();
+        endTable();
+        endDiv();
+    }
+
+    private void printServerButton()  {
         startDiv("col", "", "right");
         startDiv("dropright");
         printButton("btn btn-light btn-lg dropdown-toggle", "button", "dropdownMenuButton", "dropdown", "true", "false", getI("   Сервер", "icon-folder-open") );
@@ -238,9 +352,7 @@
             String fileBuffer = "";
 
             if(fileStatus.equals(ACTION_CREATE)) {
-                File newFile = new File(pathParam + fileParam);
-                if(!newFile.exists())
-                    newFile.createNewFile();
+                touch(pathParam + fileParam);
                 response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
             }
 
@@ -264,7 +376,7 @@
             }
 
             if(request.getParameter(ACTION_DELETE) != null) {
-                deleteFile(currentDirectory + fileParam);
+                rm(currentDirectory + fileParam);
             }
 
             if(fileStatus != null) {
@@ -356,27 +468,31 @@
     private void startDiv(String classN, String id) { w("<div class='" + classN + "' id='"+id+"'>"); }
     private void startDiv(String classN, String id, String align)  { w("<div class='" + classN + "' id='"+id+"' align='" + align + "'>"); }
     private void startDiv(String classN, String id, String align, String aria_labelledby) { w("<div class='" + classN + "' id='"+id+"' align='" + align + "' aria-labelledby='" + aria_labelledby + "'>"); }
-    private void endDiv() throws IOException { w("</div>"); }
+    private void endDiv()  { w("</div>"); }
 
     private void startTable(String classN)  { w("<table class='" + classN + "'>"); }
-    private void endTable(String classN)  { w("</table>"); }
+    private void endTable()  { w("</table>"); }
     private void startTHead(String classN)  { w("<thead class='" + classN + "'>"); }
-    private void endTHead(String classN)  { w("</thead class='" + classN + "'>"); }
+    private void endTHead()  { w("</thead>"); }
     private void startTBody(String classN)  { w("<tbody class='" + classN + "'>"); }
-    private void endTBody(String classN)  { w("</tbody class='" + classN + "'>"); }
+    private void endTBody()  { w("</tbody>"); }
     private void printTRow(String classN)  { w("<"); }
     private void startTr()  { w("<tr>");}
     private void endTr()  { w("</tr>");}
     private void printTh(String scope, String text)  { w("<th scope='"+scope+"'>" + text + "</th>");}
-    private void startTd(String classN, String text)  { w("<td class='"+classN+"'>" + text + "</td>");}
+    private void startTd(String classN)  { w("<td class='"+classN+"'>");}
+    private void startTd(String classN, String scope)  { w("<td class='"+classN+"' scope='" + scope + "'>");}
+    private void endTd()  { w("</td>");}
     private void printTd(String scope, String classN, String align, String text) { w("<td align='" + align + "' class='" + classN + "' scope='"+scope+"'>" + text + "</td>");}
 
     private void printI(String text, String classN) { w("<i class='" + classN + "'>" + text + "</i>"); }
+    private void printA(String text, String href) { w("<a href='" + href + "'>" + text + "</a>"); }
+    private String getA(String text, String href) { return String.format("<a href='" + href + "'>" + text + "</a>"); }
     private String getI(String text, String classN)  { return String.format("<i class='" + classN + "'>" + text + "</i>"); }
     private void printH(String text, int size)  { w("<h" + size + ">" + text + "</h" + size + ">"); }
     private void printH(String text, String classN, int size) { w("<h" + size + " class='"+classN+"'>" + text + "</h" + size + ">"); }
 
-    private void printButton(String classN, String type, String id, String data_toggle, String aria_haspopup, String aria_expanded, String text) throws IOException {
+    private void printButton(String classN, String type, String id, String data_toggle, String aria_haspopup, String aria_expanded, String text)  {
         w("<button class='"+classN+"' type='" + type + "' id='" + id + "' data-toggle='" + data_toggle + "' aria-haspopup='" + aria_haspopup + "' aria-expanded='"+aria_expanded+ "'>" + text + "</button>");
     }
 
@@ -406,6 +522,9 @@
     currentDirectory = pathParam;
     if(!currentDirectory.endsWith(unixSlash))
         currentDirectory = currentDirectory + unixSlash;
+
+    processFileRequest(fileParam, pathParam, fileStatus, request, response);
+    process();
 %>
 <!DOCTYPE HTML>
 <html lang="ru">
@@ -431,78 +550,7 @@
     </style>
 </head>
 <body>
-<%
-    processFileRequest(fileParam, pathParam, fileStatus, request, response);
-    File actual = null;
 
-    try {
-     actual = new File(currentDirectory);
-%>
-<div id="main_block" class="container">
-    <div class="row">
-        <div class="col">
-          <h3><%wln("Содержание директории: "+ currentDirectory);%></h3>
-        </div>
-        <% printServerButton(); %>
-    </div>
-	    <table class="table">
-        <thead class="thead-light">
-        <tr>
-            <th scope="col">Имя</th>
-            <th scope="col">Размер,байт</th>
-            <th scope="col">Свойство</th>
-            <th scope="col">Последняя модификация</th>
-            <th scope="col">Операции с файлом</th>
-        </tr>
-        </thead>
-<tbody>
-<% if(!currentDirectory.equals(HOME_DIRECTORY)) { %>
-<tr>
-    <td scope="row" class="viewer"><a href="<%=getPathReference(encodeValue(goUpside(currentDirectory)))%>"><i class="icon-share">. . .</i></a></td>
-</tr>
-<% } else;
-
-    String ico="";
-    String readwrite="";
-    for(File f : actual.listFiles()) {
-    if (f.isDirectory()&!f.isFile()) {ico="<i class=\"icon-folder\"></i>";}
-        else if(!f.isDirectory()&f.isFile()){ico="<i class=\"icon-file-text2\"></i>";}
-            else ico="<i class=\"icon-link\" ></i>";
-    if (f.canWrite()&f.canRead()) {readwrite="чтение/запись";}
-        else if (!f.canWrite()&f.canRead()){readwrite="чтение";}
-            else {readwrite=" ";}
-%>
-<tr>
-    <td scope="row" class="viewer">
-        <% if(f.isFile()&f.canRead()) { %>
-            <a href="<%=getFileReference(encodeValue(currentDirectory), encodeValue(f.getName()), ACTION_VIEW)%>"><%=ico+" "+f.getName()%></a>
-        <% } else {
-            wln(ico + " " + goToFile(f.getName()));
-        } %>
-    </td>
-    <td scope="row" align="right"><%=f.length()%></td>
-    <td scope="row"><%wln(readwrite);%></td>
-    <td scope="row" align="center"><%=new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified())%></td>
-    <td scope="row">
-    <% if(f.isFile()&f.canRead()) { %>
-        <a href="download?path=<%=encodeValue(currentDirectory)%>&file=<%=encodeValue(f.getName())%>">Скачать файл</a>  <!-- Возможно внедрение вредоноского кода и скачка файлов из других директорий (потом переделаю) -->
-    <% } %>
-    </td>
-</tr>
-<%
-    } //for( File f : actual.listFiles())
-}catch (IOException ex){
-    wln("Ошибка ввода вывода : " + ex);
-}
-catch(Exception e) {
-    wln("Нераспознанная ошибка: " + e);
-    wln("попробуйте другую операцию" );
-}
-finally{ }
-%>
-</tbody>
-</table>
-</div>
 <div id="issues" >
 <h3>Задачи и найденные ошибки в проекте, чтоб глаза мозолило</h3>
 <ul>
