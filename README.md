@@ -1,8 +1,8 @@
 [issues]: https://bitbucket.org/Yadzuka/cms/issues?status=new&status=open
-[image]: http://eustrosoft.org/img/EustroSoft2019-12-15.svg.png
 [eustrosoft]: http://eustrosoft.org/
 
-[ ![image]][eustrosoft]
+![eustrosoft](http://eustrosoft.org/img/EustroSoft2019-12-15.svg.png)
+---
 [Вопросы и предложения][issues]
 
 1. [Преднастройка](#presetting)
