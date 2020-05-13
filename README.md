@@ -1,70 +1,68 @@
-<h1>Control management system</h1>
+[issues]: https://bitbucket.org/Yadzuka/cms/issues?status=new&status=open
+[image]: http://eustrosoft.org/img/EustroSoft2019-12-15.svg.png
+[eustrosoft]: http://eustrosoft.org/
 
-<h2>Преднастройка</h2>
-<p>1. Целевая операционная система - *nix подобная.</p>
-<p>2. Используемый сервер приложений - Apache Tomcat (c Servlet V 3.1+)</p>
-<p>3. Используемые сторонние библиотеки: </p>
-    <ul>
-        <li>Diff-Match-Patch by Google (Apache 2.0 Licence)<br/>
-            Исходный код: <a href="https://github.com/google/diff-match-patch">клик!</a> 
-        </li>
-        <li>Apache Commons IO 2.6 (Apache 2.0 Licence)<br/>
-            JAR файл: <a href="https://mvnrepository.com/artifact/commons-io/commons-io/2.6">клик!</a>
-        </li>
-        <li>Apache Commons FileUpload 1.4 (Apache 2.0 Licence)<br/>
-            JAR файл: <a href="https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload/1.4">клик!</a>
-        </li>
-    </ul>
-<h2>Настройка компонентов</h2>
-<p>1. В качестве тестовой директории для работы с пользователями 
-    используется папка, расположенная по пути <code>/s/usersdb/</code>
-</p>
-<hr/>
-    <i>Примечание:</i><br/>
-    В файле <code>web.xml</code>
+[ ![image]][eustrosoft]
+[Вопросы и предложения][issues]
+
+1. [Преднастройка](#presetting)
+2. [Настройка компонентов](#components-installation)
+
+#Control management system
+
+## Presetting
+
+1. Целевая операционная система - *nix подобная.
+2. Используемый сервер приложений - Apache Tomcat (c Servlet V 3.1+)
+3. Используемые сторонние библиотеки:
+```
+    1. Diff-Match-Patch by Google (Apache 2.0 Licence)<br/>
+            Исходный код: [клик](https://github.com/google/diff-match-patch)
+    2. Apache Commons IO 2.6 (Apache 2.0 Licence)<br/>
+            JAR файл: [клик](https://mvnrepository.com/artifact/commons-io/commons-io/2.6")
+    3. Apache Commons FileUpload 1.4 (Apache 2.0 Licence)<br/>
+            JAR файл: [клик](https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload/1.4)
+```    
+## Components installation:
+
+  * В качестве тестовой директории для работы с пользователями используется папка, расположенная по пути `/s/usersdb/`
+```
+    Примечание:
+    В файле web.xml
     Необходимо поменять комтекстный параметр на параметр вашего имени/ника/прозвища
-    и создать папку по пути <code>/s/usersdb/CONTEXT-PARAM-NAME/</code><br/>
-    Также необходимо создать папку <code>.pspn</code> по пути <code>/s/usersdb/CONTEXT-PARAM-NAME/.pspn/</code><br/>
+    и создать папку по пути /s/usersdb/CONTEXT-PARAM-NAME/
+    Также необходимо создать папку .pspn по пути /s/usersdb/CONTEXT-PARAM-NAME/.pspn/
     Данная папка необходима для загрузки файлов на сервер (у каждого пользователя должна быть такая папка)
-<hr/>
-<p>2. Папка для логов по пути 
-    <code>/home/USER-NAME/workspace/logging/CMSLoggingTests/test1.txt</code>
-</p>
-<hr/>
-    <i>Примечание:</i><br/>
-    В файле <code>web.xml</code>
-    изменить путь: <code>"/home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt</code>
+```
+  * Папка для логов по пути `/home/USER-NAME/workspace/logging/CMSLoggingTests/test1.txt`
+```
+    Примечание:
+    В файле web.xml
+    изменить путь: /home/yadzuka/workspace/logging/CMSLoggingTests/test1.txt
     на путь, который указывает к вашему файлу, в который будут писаться кастомные логи приложения
-<hr/>
-<p>3. Проект должен находится по пути <code>tomcat/webapps/cms/</code>, 
-где tomcat - название директории tomcat сервера приложений.
-<code>cms/</code> папка находится в проекте по пути <code>CMSsystem/webapps/cms/</code>
-</p>
-<p>4. JAR архивы находятся по пути <code>tomcat/webapps/cms/WEB-INF/lib/</code>:</p>
-<ul>
-    <li>DiffPatchMatch.jar</li>
-    <li>Sources-1.0.jar</li>
-</ul>
-<hr/>
-<p>Для создания архивов DiffPatchMatch.jar и Sources-1.0.jar необходимо:</p>
-<ol>
-    <li>Скачать исходный код с GitHub по ссылке в преднастройке</li>
-    <li>Находясь по пути <code>diff-match-patch/java/src/</code> создать манифест 
-    командой <code>vi manifest.mf</code> с двумя строками внутри:<br/>
-    <code>Manifest-Version: 1.0<br/>
-          Created-By: 1.6.0_19 (Sun Microsystems Inc.)</code>
-          <br/>
-    А после добавить перевод строки (<b>ОБЯЗАТЕЛЬНО!</b>)
-    После создать .jar архив командой:<br/>
-    <code>jar cvmf manifest.mf DiffPatchMatch.jar name</code>
-    </li>
-    <li>
-    Архив Sources-1.0.jar создать с помощью команды
-    <code>mvn package</code>, находясь в дириктории
-    <code>CMSsystem/sources/</code>
-    </li>
-</ol>
-<p><b>Все готово!</b><br/>
-Осталось запустить tomcat и перейти на <code>:cms/index.jsp|index1.jsp</code>
-</p>
-<hr/>
+```
+  * Проект должен находится по пути `tomcat/webapps/cms/`, где tomcat - название директории tomcat сервера приложений.
+`cms/` папка находится в проекте по пути `CMSsystem/webapps/cms/`
+  * JAR архивы находятся по пути `tomcat/webapps/cms/WEB-INF/lib/`:
+   * DiffPatchMatch.jar
+   * Sources-1.0.jar
+
+**Для создания архивов DiffPatchMatch.jar и Sources-1.0.jar необходимо:**
+   * Скачать исходный код с GitHub по ссылке в преднастройке
+   * Находясь по пути `diff-match-patch/java/src/` создать манифест 
+    командой `vi manifest.mf` с двумя строками внутри:
+    1. `Manifest-Version: 1.0`
+    2. `Created-By: 1.6.0_19 (Sun Microsystems Inc.)`
+
+   * А после добавить перевод строки (**ОБЯЗАТЕЛЬНО!**)
+   * После создать .jar архив командой:
+    `jar cvmf manifest.mf DiffPatchMatch.jar name`
+
+
+   * Архив Sources-1.0.jar создать с помощью команды
+    `mvn package`, находясь в дириктории
+    `CMSsystem/sources/`
+
+---
+Все готово!
+Осталось запустить tomcat и перейти на :`cms/index.jsp|index1.jsp`
