@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# fetch wrapper script over BSD /usr/bin/fetch or LINUX /usr/[local/]bin/wget or /usr/[local/]bin/curl
+#
+# (c) EustroSoft.org & Alex V Eustrop 2020
+#
+# LICENSE: BALES
+
+FETCH_TOOLS_LIST="/usr/bin/fetch /usr/bin/wget /usr/local/bin/wget /usr/bin/curl /usr/local/bin/curl"
+FETCH=/usr/bin/fetch
+
+for F in ${FETCH} $FETCH_TOOLS_LIST
+do
+ if [ -x $F ]; then
+  echo "fetch using: $F"
+  break
+ fi
+done
+
+
+if [ ! -x $F ]; then
+ echo "ERROR! no any fetch tool" >> /dev/stderr
+ exit 1
+fi
+
+if [ `basename $F` == "curl" ]; then
+ OUTFILE=`basename $1`
+ $F --output $OUTFILE $1
+else
+ $F $*
+fi
+
