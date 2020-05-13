@@ -1,47 +1,38 @@
 CATALINA_HOME?=/usr/local/apache-tomcat-9.0/
-libs = ${CATALINA_HOME}
-sources = sources/src/main/java/org/eustrosoft/
-jarfile = target/
-package = sources/src/main/java/
-webinflib = ${webapps/cms/WEB-INF/lib/}
-diffpatchmatch = diff-match-patch/java/src/
+SOURCES=sources/src/main/java/org/eustrosoft/
+WORKDIR=work/
+JARFILE=EustroCMS.jar
+PACKAGE=${PWD}/sources/src/main/java/
+WEBINFLIB=webapps/cms/WEB-INF/lib/
+CLIBS=${PWD}/contrib/lib/
+LIBS=${CATALINA_HOME}/lib/servlet-api.jar:${CLIBS}/commons-fileupload-1.4.jar:${CLIBS}/commons-io-2.6.jar:${CLIBS}/DiffPatchMatch.jar:${PACKAGE}
 
 usage:
 	@echo "This project is the base platform for all services that we have and will have"
 	@echo "make all - download libraries, setup all configuration with standart user"
 	@echo "make clean - for delete all jars, classes"
-all:
+all: jar
 	@if [ ! -d webapps/cms/WEB-INF/lib ]; then echo mkdir -p webapps/cms/WEB-INF/lib; fi
-diffpatchmatch:
-	git clone https://github.com/google/diff-match-patch.git
-	javac ${diffpatchmatch}name/fraser/neil/plaintext/*.java
-	cd diff-match-patch/java/src/
-	touch manifest.mf
-	awk 'BEGIN{print("Manifest-Version: 1.0"); print("Created-By: 1.6.0_19 (Sun Microsystems Inc.)");}' > manifest.mf
-	jar cvmf manifest.mf DiffPatchMatch.jar name && cd ../../../
-commons:
-	wget http://mirror.linux-ia64.org/apache//commons/fileupload/binaries/commons-fileupload-1.4-bin.zip
-	unzip commons-fileupload-1.4-bin.zip
-	cp commons-fileupload-1.4-bin/commons-fileupload-1.4.jar ${webinflib}
-	wget https://apache-mirror.rbc.ru/pub/apache//commons/io/binaries/commons-io-2.6-bin.zip
-	unzip commons-io-2.6-bin.zip
-	cp commons-io-2.6-bin/commons-io-2.6.jar ${webinflib}
+contrib-lib:
+	cd contrib && make all
+jar:
 	@echo "Creating .class file"
-	javac ${sources}tools/ZLog.java
-	javac -cp ${package} ${sources}providers/LogProvider.java
-	javac -cp ${package}:${libs}/lib/servlet-api.jar:${webinflib}/lib/commons-fileupload-1.4.jar:${webinflib}/lib/commons-io-2.6.jar ${sources}servlets/DownloadServlet.java
-	javac -cp ${package}:${libs}/lib/servlet-api.jar:${webinflib}/lib/commons-fileupload-1.4.jar:${webinflib}/lib/commons-io-2.6.jar ${sources}servlets/UploadServlet.java
-	javac -cp ${package}:${libs}/lib/servlet-api.jar:${webinflib}/lib/commons-fileupload-1.4.jar:${webinflib}/lib/commons-io-2.6.jar ${sources}servlets/DownloadServletV3.java
-	cd ${package}
-	touch manifest.mf
-	awk 'BEGIN{print("Manifest-Version: 1.0"); print("Created-By: 1.6.0_19 (Sun Microsystems Inc.)");}' > manifest.mf
-	jar cvmf manifest.mf sources.jar org && cd ../../../../
-	cp ${package}sources.jar ${webinflib}
+	javac ${SOURCES}/tools/ZLog.java
+	javac -cp ${LIBS} ${SOURCES}/providers/LogProvider.java
+	javac -cp ${LIBS} ${SOURCES}/servlets/DownloadServlet.java
+	javac -cp ${LIBS} ${SOURCES}/servlets/UploadServlet.java
+	javac -cp ${LIBS} ${SOURCES}/servlets/UploadServletV3.java
+	cd ${PACKAGE} && awk 'BEGIN{print("Manifest-Version: 1.0"); print("Created-By: 1.6.0_19 (Sun Microsystems Inc.)");}' > manifest.mf
+	cd ${PACKAGE} && jar cvmf manifest.mf ${JARFILE} org
+	cp ${PACKAGE}/${JARFILE} ${WEBINFLIB}
+	cp ${CLIBS}/commons-fileupload-1.4.jar ${WEBINFLIB}
+	cp ${CLIBS}/commons-io-2.6.jar ${WEBINFLIB}
+	cp ${CLIBS}/DiffPatchMatch.jar ${WEBINFLIB}
 clean:
 	@echo "Cleaning all"
-	rm ${sources}providers/*.class ${sources}tools/*.class ${sources}servlets/*.class
 	rm webapps/cms/WEB-INF/lib/*.jar
+	rm ${SOURCES}/providers/*.class ${SOURCES}tools/*.class ${SOURCES}servlets/*.class
 maven:
 	@echo "Maven making"
 	mvn package
-	cp ${jarfile}sources-1.0-SNAPSHOT.jar ${webinflib}
+#	cp ${jarfile}sources-1.0-SNAPSHOT.jar ${webinflib}
