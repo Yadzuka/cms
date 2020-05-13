@@ -1,17 +1,13 @@
 package org.eustrosoft.servlets;
 
 import org.eustrosoft.providers.LogProvider;
-import org.eustrosoft.tools.ZLog;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 
 public class DownloadServlet extends HttpServlet {
 
