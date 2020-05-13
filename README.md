@@ -8,21 +8,21 @@
 1. [Преднастройка](#presetting)
 2. [Настройка компонентов](#components-installation)
 
-#Control management system
+Control management system
+====
 
 ## Presetting
 
 1. Целевая операционная система - *nix подобная.
 2. Используемый сервер приложений - Apache Tomcat (c Servlet V 3.1+)
 3. Используемые сторонние библиотеки:
-```
-    1. Diff-Match-Patch by Google (Apache 2.0 Licence)<br/>
+    1. Diff-Match-Patch by Google (Apache 2.0 Licence)
             Исходный код: [клик](https://github.com/google/diff-match-patch)
-    2. Apache Commons IO 2.6 (Apache 2.0 Licence)<br/>
+    2. Apache Commons IO 2.6 (Apache 2.0 Licence)
             JAR файл: [клик](https://mvnrepository.com/artifact/commons-io/commons-io/2.6")
-    3. Apache Commons FileUpload 1.4 (Apache 2.0 Licence)<br/>
-            JAR файл: [клик](https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload/1.4)
-```    
+    3. Apache Commons FileUpload 1.4 (Apache 2.0 Licence)
+            JAR файл: [клик](https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload/1.4)  
+             
 ## Components installation:
 
   * В качестве тестовой директории для работы с пользователями используется папка, расположенная по пути `/s/usersdb/`
@@ -65,4 +65,4 @@
 
 ---
 Все готово!
-Осталось запустить tomcat и перейти на :`cms/index.jsp|index1.jsp`
+Осталось запустить tomcat и перейти на :`cms/(index.jsp|index1.jsp)`
