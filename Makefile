@@ -35,7 +35,7 @@ all:
 	touch manifest.mf
 	awk 'BEGIN{print("Manifest-Version: 1.0"); print("Created-By: 1.6.0_19 (Sun Microsystems Inc.)");}' > manifest.mf
 	jar cvmf manifest.mf sources.jar org && cd ../../../../
-	mv sources.jar ${webinflib}
+	cp ${package}sources.jar ${webinflib}
 clean:
 	@echo "Cleaning all"
 	rm ${sources}providers/*.class ${sources}tools/*.class ${sources}servlets/*.class
