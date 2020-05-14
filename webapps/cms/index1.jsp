@@ -360,7 +360,7 @@
                 saveFile(fileParam, request);
             }
 
-            try {
+            try { //SIC! вот здесь кончается память
                 FileReader fileReader = new FileReader(currentDirectory + fileParam);
                 BufferedReader bufferedReader = new BufferedReader(fileReader);
 
@@ -523,7 +523,7 @@
     if(!currentDirectory.endsWith(unixSlash))
         currentDirectory = currentDirectory + unixSlash;
 
-    processFileRequest(fileParam, pathParam, fileStatus, request, response);
+    processFileRequest(fileParam, pathParam, fileStatus, request, response); //SIC! вот это печатает ДО HTML ДОКУМЕНТА! это в process() !!!!
 %>
 <!DOCTYPE HTML>
 <html lang="ru">
