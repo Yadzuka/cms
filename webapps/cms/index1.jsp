@@ -9,8 +9,8 @@
          import="java.util.List"
          import="java.nio.charset.StandardCharsets"
          import="java.io.UnsupportedEncodingException"
-         import="java.net.URLEncoder" %>
-<%@ page import="java.nio.file.StandardCopyOption" %>
+         import="java.net.URLEncoder"
+         import="java.nio.file.StandardCopyOption" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -264,7 +264,7 @@
             startTBody("");
             if (!currentDirectory.equals(HOME_DIRECTORY)) {
                 startTr();
-                printTd("row", "viewer", "", getA(getI(". . .", "icon-share"), getPathReference(encodeValue(goUpside(currentDirectory)))));
+                printTd("row", "viewer", "", getA(getI(". . .", "icon-share"), getPathReference(goUpside(currentDirectory))));
                 endTr();
             }
 
@@ -524,7 +524,6 @@
         currentDirectory = currentDirectory + unixSlash;
 
     processFileRequest(fileParam, pathParam, fileStatus, request, response);
-    process();
 %>
 <!DOCTYPE HTML>
 <html lang="ru">
@@ -550,8 +549,8 @@
     </style>
 </head>
 <body>
-
-<div id="issues" >
+<% process(); %>
+<!--div id="issues" >
 <h3>Задачи и найденные ошибки в проекте, чтоб глаза мозолило</h3>
 <ul>
 <li> 01. Трекера задач нет, буду писать сюда ;)
@@ -569,7 +568,7 @@
 <li> 13. и самое главное, весь код от строки 484, до строки 540 должен превратиться в вызов всего одного метода warh.process(), пример можно посмотреть здесь <a href='https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/tisc/tiscui.jsp'>ConcepTIS/src/java/webapps/tisc/tiscui.jsp</a> строки 119-121, также см строки 43-50, а потом здесь : <a href='https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/tisc/tisc.jsp'>ConcepTIS/src/default/src/java/webapps/tisc/tisc.jsp</a>. Все порождение html кода содержательной части документа, зависящей от параметров запроса мы переносим в методы, которые затем перенесем в отдельные классы. В JSP остается только обрамляющая часть HTML-кода, общая для любой страницы, все остальное "рисуется" либо java на сервере, либо JavaScript в браузере. Но для прототипирования и отладки внешнего вида мы иногда пишем так, как написано сейчас, главное - вовремя остановиться. И здесь силы меня оставили совсем 13 мая 2020 г 1:53 мин.
 
 </ul>
-</div>
+</div-->
 <script src="contrib/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="contrib/nmp/popper.js-1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="contrib/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
