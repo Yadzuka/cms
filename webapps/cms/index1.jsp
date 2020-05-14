@@ -28,6 +28,7 @@
     // Files and directories manipulating
     private final static String PARAM_PATH = "path";
     private final static String PARAM_FILE = "file";
+    // private final static String PARAM_PATH = "d";
     private final static String PARAM_ACTION = "cmd";
     private final static String FILE_TEXTAREA_NAME = "file_text";
 
@@ -91,7 +92,7 @@
         return "";
     }
 
-    private String encodeValue(String value) {
+    private String encodeValue(String value) { // SIC! тут надо в слеши превращать %2F
         try {
             return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
         } catch (UnsupportedEncodingException ex) {
@@ -99,7 +100,7 @@
         }
     }
 
-    private Path getPath(String pathToFile, String fileName)  {
+    private Path getPath(String pathToFile, String fileName)  { // SIC! не знаю зачем этот метод, если на слаши проверяется, может быть потом можно вообще убрать, но задумывался как проверка пути на правильность
         pathToFile = pathToFile.trim(); fileName = fileName.trim();
         Path filePath = null;
 
@@ -131,11 +132,12 @@
         return getRequestParameter(request, param, null);
     }
 
-    private String getRequestParameter(ServletRequest request, String param, String default_value)  {
+    private String getRequestParameter(ServletRequest request, String param, String default_value)  { // SIC! Используется только для директорий & при создании одного параметра тут все менять надо
         String value = request.getParameter(param);
         if(value == null) value = default_value;
         if(value == null) return (null);
         if (PARAM_PATH.equals(param)) {
+            // value = HOME_DIRECTORY + value;
             if (!(value.endsWith(unixSlash)))
                 value += unixSlash;
             if (!value.startsWith(HOME_DIRECTORY))
@@ -147,7 +149,7 @@
         return value;
     }
 
-    private String goToFile(String fileName) {
+    private String goToFile(String fileName) { // SIC! Только для папок - не знаю зачем тут проверка ( на всякий случай), но может потом надо убрать вообще
         if(isDir(currentDirectory, fileName)) {
             String targetPath = encodeValue(currentDirectory) + encodeValue(fileName);
             return getPathReference(targetPath, fileName);
@@ -157,6 +159,7 @@
 
     private String openFile(String href, String value){ return value; }
 
+
     // Path reference with 'a' tags
     private String getPathReference(String path, String value) {
         return "<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + "'>" + value + "</a>";
@@ -165,17 +168,20 @@
     private String getPathReference(String path) {
         return CGI_NAME + "?" + PARAM_PATH +"="+ path;
     }
+    // SIC! Ссылки снизу поменять либо на path + file, либо заменить на один параметр
     // File regerence
     private String getFileReference(String path, String file) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file;
+        // return CGI_NAME + "?" + PARAM_PATH + "=" + path + file;
     }
     // File reference with action
     private String getFileReference(String path, String file, String cmd) {
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_ACTION + "=" + cmd;
+        // return CGI_NAME + "?" + PARAM_PATH + "=" + path + file + "&" + PARAM_ACTION + "=" + cmd;
     }
 
     // Go to the top directory
-    private String goUpside(String folderName) {
+    private String goUpside(String folderName) { // SIC! Тут отрезается только если есть слеш в конце -> если его нет, то ничего не режет
         if(folderName.endsWith(unixSlash)) {
             folderName = folderName.substring(0, folderName.length() - 1);
             folderName = folderName.substring(0, folderName.lastIndexOf(unixSlash));
@@ -252,7 +258,7 @@
         printMainBlock();
     }
 
-    private void printMainBlock() {
+    private void printMainBlock() { // SIC! тут показывается currentDirectory, а это весь путь с /s/usersdb/, поэтому там ещё все ссылки надо менять и в ссылках тоже (поэтому все так сложно)
         File actual = null;
         try {
             actual = new File(currentDirectory);
@@ -324,6 +330,7 @@
         endDiv();
     }
 
+    // SIC! тут в формах тоже надо менять ссылки (currentDirectory), соответственно это либо в сервлетах надо учитывать либо ещё что
     private void printServerButton()  {
         startDiv("col", "", "right");
         startDiv("dropright");
@@ -373,8 +380,16 @@
             }
 
             try { //SIC! вот здесь кончается память
+                File f = new File(currentDirectory + fileParam);
+                //if(f.length() > 1_000_000) //SIC! примерно так
+                   // throw new IOException("Big file. Cant read");
                 FileReader fileReader = new FileReader(currentDirectory + fileParam);
                 BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+                // char [] symbols = new char[4096];
+                // while((int k = bufferedReader.read(symbols) != -1)
+                //      sb.append(bufferedReader.read(symbols, 0, k);
+
 
                 fileBuffer = bufferedReader.readLine();
                 while(fileBuffer != null) {
@@ -539,6 +554,7 @@
 
     String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
     String fileParam = getRequestParameter(request, PARAM_FILE);
+    // SIC! Что-то вроде fileParam = basename(pathParam); но у меня не получилось
     String fileStatus = getRequestParameter(request, PARAM_ACTION);
 
     currentDirectory = pathParam;
@@ -572,7 +588,7 @@
 </head>
 <body>
 <% process();
-//request.getRequestDispatcher("editqrpage.jsp").forward(request,response);
+//request.getRequestDispatcher("editqrpage.jsp").forward(request,response); // SIC! редирект
 %>
 <!--div id="issues" >
 <h3>Задачи и найденные ошибки в проекте, чтоб глаза мозолило</h3>

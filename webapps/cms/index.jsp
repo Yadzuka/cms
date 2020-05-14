@@ -107,7 +107,7 @@
 
     private boolean checkShellInjection(String param){ return param.contains(".."); }
 
-    private String getRequestParameter(ServletRequest request, String param, String default_value){
+    private String getRequestParameter(ServletRequest request, String param, String default_value){ // SIC!
         String value = request.getParameter(param);
         if(value == null) value = default_value;
         if(value == null) return (null);
