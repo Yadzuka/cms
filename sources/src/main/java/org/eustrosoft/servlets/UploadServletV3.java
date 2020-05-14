@@ -18,6 +18,7 @@ public class UploadServletV3 extends HttpServlet {
 
     private PrintWriter out;
     private String user;
+    String className;
     private LogProvider log;
 
     private InputStream is;
@@ -26,10 +27,10 @@ public class UploadServletV3 extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
-            String UPLOAD_PATH = "/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
+            String UPLOAD_PATH = getServletContext().getInitParameter("user") + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
             out = response.getWriter();
-            LogProvider log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
-            String className = this.getClass().getName();
+            log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
+            className = this.getClass().getName();
             String user = request.getRemoteAddr();
 
             realPath = request.getParameter("path");
@@ -57,16 +58,16 @@ public class UploadServletV3 extends HttpServlet {
                     os.write(buffer, 0, bytesRead);
                 }
                 os.flush();
-                log.i(filePart.getName() + " was uploaded by " + user + " to " + filePath);
+                log.i(filePart.getName() + " was uploaded by " + user + " to " + filePath  + ". In " + className);
             }
         } catch (Exception ex) {
-            log.e(ex + " user:" + user + ".");
+            log.e(ex + " user:" + user + ". In " + className);
         } finally {
             try {
                 os.close();
                 is.close();
                 response.sendRedirect("index1.jsp?path=" + URLEncoder.encode(realPath, StandardCharsets.UTF_8.toString()));
-            } catch (Exception ex) { log.e(ex + " user:" + user + "."); }
+            } catch (Exception ex) { log.e(ex + " user:" + user + ". In " + className); }
         }
     }
 }

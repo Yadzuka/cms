@@ -13,7 +13,7 @@ public final class ZLog {
     private static final String [] PREFIXES = {PREFIX_NORMAL, PREFIX_WARNING, PREFIX_ERROR};
 
     private static SimpleDateFormat dateFormat;
-    private PrintWriter []outputStream;
+    private PrintWriter [] outputStream;
 
     public void writeLog(String message, int status) {
         if(status < 0 | status > 2 | message == null) {
@@ -25,7 +25,7 @@ public final class ZLog {
             for (int i = 0; i < outputStream.length; i++) {
                 out(outputStream[i], dateFormat.format(new Date()) +" " + prefix + " : " + message);
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             System.err.println("Error with message writing." + dateFormat.format(new Date()));
         }
     }

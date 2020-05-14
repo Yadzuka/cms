@@ -27,7 +27,7 @@ public class UploadServlet extends HttpServlet {
      String className;
      String UPLOAD_PATH;
         try {
-            UPLOAD_PATH = "/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
+            UPLOAD_PATH = getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = request.getRemoteAddr();
@@ -48,7 +48,7 @@ public class UploadServlet extends HttpServlet {
             for (int i = 1; i < filesCollection.size(); i++) {
                 FileItem f = (FileItem)filesCollection.get(i);
                 f.write(new File(realPath + f.getName()));
-                log.i(f.getName() + " was uploaded by " + user + " to " + UPLOAD_PATH);
+                log.i(f.getName() + " was uploaded by " + user + " to " + realPath);
             }
         }catch (Exception e){
             log.e(e + " user:" + user + ".");

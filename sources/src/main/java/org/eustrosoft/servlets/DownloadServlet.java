@@ -26,7 +26,7 @@ public class DownloadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            HOME_DIRECTORY = "/s/usersdb/" + getServletContext().getInitParameter("user") + "/"; // SIC! гвоздями прибито $%^@#$%^
+            HOME_DIRECTORY = getServletContext().getInitParameter("root") + getServletContext().getInitParameter("user") + "/";
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = req.getRemoteAddr();

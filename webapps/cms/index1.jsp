@@ -11,6 +11,7 @@
          import="java.io.UnsupportedEncodingException"
          import="java.net.URLEncoder"
          import="java.nio.file.StandardCopyOption" %>
+<%@ page import="java.util.Random" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -27,7 +28,7 @@
     // Files and directories manipulating
     private final static String PARAM_PATH = "path";
     private final static String PARAM_FILE = "file";
-    private final static String PARAM_ACTION = "status";
+    private final static String PARAM_ACTION = "cmd";
     private final static String FILE_TEXTAREA_NAME = "file_text";
 
     // File manipulating (view, save, update, delete)
@@ -44,14 +45,14 @@
 
     // User info
     private String userIP;
-    private String HOME_DIRECTORY = "/s/usersdb/";
+    private String HOME_DIRECTORY;
     private String currentDirectory = HOME_DIRECTORY;
 
     private final static String unixSlash = "/";
 
     private void initUser(HttpServletRequest request) {
         userIP = request.getRemoteAddr();
-        HOME_DIRECTORY = "/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user") + "/";
+        HOME_DIRECTORY = getServletConfig().getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user") + "/";
         currentDirectory = HOME_DIRECTORY;
         try {
             if (!Files.exists(Paths.get(HOME_DIRECTORY))) {
@@ -63,6 +64,31 @@
                 wln("Can't create directory!");
             } catch (Exception e) { log.e("Error in initUser(request) by user " + userIP); }
         }
+    }
+
+    // Check access
+    private boolean checkAccess(String path, String file) throws IllegalAccessException {
+        Random rand = new Random();
+        double i = rand.nextDouble();
+        if(i < 0.3) {
+            throw new IllegalAccessException();
+        } else {
+            return true;
+        }
+    }
+
+    private void reserveVersion(String path, String file) throws IllegalAccessException {
+        checkAccess(path, file);
+    }
+
+    // Get file name
+    private String basename(String path) {
+        return "";
+    }
+
+    // Get directory name
+    private String dirname(String path) {
+        return "";
     }
 
     private String encodeValue(String value) {
@@ -117,11 +143,7 @@
 
             if (checkShellInjection(value))
                 throw new RuntimeException("Shell injection");
-        } else if (PARAM_FILE.equals(param)) {
-            if (checkShellInjection(value))
-                throw new RuntimeException("Shell injection");
         }
-
         return value;
     }
 
@@ -148,8 +170,8 @@
         return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file;
     }
     // File reference with action
-    private String getFileReference(String path, String file, String status) {
-        return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_ACTION + "=" + status;
+    private String getFileReference(String path, String file, String cmd) {
+        return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_ACTION + "=" + cmd;
     }
 
     // Go to the top directory
@@ -166,16 +188,6 @@
         diff_match_patch diffMatchPatch = new diff_match_patch();
         List<diff_match_patch.Diff> differences = diffMatchPatch.diff_main(text1, text2);
         return differences;
-    }
-
-    // Textarea fow file inners
-    private void printFileForm(String directory, String fileName, String status, String fileText)  {
-        if(status.equals(ACTION_VIEW)) {
-            startForm("POST", getFileReference(encodeValue(directory), encodeValue(fileName), ACTION_VIEW));
-            printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
-            printFileEditButtons();
-            endForm();
-        }
     }
 
     // Move file
@@ -334,7 +346,7 @@
 
         startDiv("dropdown-divider"); endDiv();
 
-        startForm("POST", "index1.jsp?path="+encodeValue(currentDirectory)+"&status=create");
+        startForm("POST", "index1.jsp?path="+encodeValue(currentDirectory)+"&cmd=create");
         printInput("hidden", "", "action", "", "create");
         printInput("text", "dropdown-item", "file", "Введите имя файла", false);
         printSubmit("Создать файл", "dropdown-item");
@@ -496,6 +508,16 @@
         wln("<button class='"+classN+"' type='" + type + "' id='" + id + "' data-toggle='" + data_toggle + "' aria-haspopup='" + aria_haspopup + "' aria-expanded='"+aria_expanded+ "'>" + text + "</button>");
     }
 
+    // Textarea fow file inners
+    private void printFileForm(String directory, String fileName, String cmd, String fileText)  {
+        if(cmd.equals(ACTION_VIEW)) {
+            startForm("POST", getFileReference(encodeValue(directory), encodeValue(fileName), ACTION_VIEW));
+            printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
+            printFileEditButtons();
+            endForm();
+        }
+    }
+
     private void startForm(String method, String action)  { wln("<form method='" + method +"' action='"+action + "'>"); }
     private void startForm(String method, String action, String enctype)  { wln("<form method='" + method +"' action='"+action + "' enctype='"+enctype+"'>"); }
     private void endForm() { wln("</form>");  }
@@ -549,7 +571,9 @@
     </style>
 </head>
 <body>
-<% process(); %>
+<% process();
+//request.getRequestDispatcher("editqrpage.jsp").forward(request,response);
+%>
 <!--div id="issues" >
 <h3>Задачи и найденные ошибки в проекте, чтоб глаза мозолило</h3>
 <ul>
@@ -566,7 +590,6 @@
 <li> 11. загрузил я видеоролик, большой, 500 Mb, и решил его просмотреть, и посмотрел я на тот, как на сервере кончилась оперативная память, и понял я, что кто-то не понял, что память конечна и, видимо просто грузит весь файл в память, прежде чем отдать его клиенту, и опечалился я, и кончились у меня силы, и выпил я с горя водки, и пошел я спать... ;)
 <li> 12. ...но вернулся я, чтобы дописать - строка 495 - зло, 513 - зло, 515 - зло, 523, 525 - зло. Не надо злоупотреблять if-ми вообще, а внутри jsp или php, где вперемешку html и серверная императивная логика - особенно. 
 <li> 13. и самое главное, весь код от строки 484, до строки 540 должен превратиться в вызов всего одного метода warh.process(), пример можно посмотреть здесь <a href='https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/tisc/tiscui.jsp'>ConcepTIS/src/java/webapps/tisc/tiscui.jsp</a> строки 119-121, также см строки 43-50, а потом здесь : <a href='https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/tisc/tisc.jsp'>ConcepTIS/src/default/src/java/webapps/tisc/tisc.jsp</a>. Все порождение html кода содержательной части документа, зависящей от параметров запроса мы переносим в методы, которые затем перенесем в отдельные классы. В JSP остается только обрамляющая часть HTML-кода, общая для любой страницы, все остальное "рисуется" либо java на сервере, либо JavaScript в браузере. Но для прототипирования и отладки внешнего вида мы иногда пишем так, как написано сейчас, главное - вовремя остановиться. И здесь силы меня оставили совсем 13 мая 2020 г 1:53 мин.
-
 </ul>
 </div-->
 <script src="contrib/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>

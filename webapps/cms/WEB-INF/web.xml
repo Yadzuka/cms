@@ -33,6 +33,12 @@
         <url-pattern>/download</url-pattern>
     </servlet-mapping>
 
+    <!-- PARAMETER FOR ROOT DIRECTORY -->
+    <context-param>
+        <param-name>root</param-name>
+        <param-value>/s/usersdb/</param-value>
+    </context-param>
+
     <!-- PARAMETER FOR USER's DIRECTORY (Path - /s/usersdb/(user)/) -->
     <context-param>
         <param-name>user</param-name>
