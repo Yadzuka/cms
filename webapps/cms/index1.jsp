@@ -28,7 +28,8 @@
     // Files and directories manipulating
     private final static String PARAM_PATH = "path";
     private final static String PARAM_FILE = "file";
-    // private final static String PARAM_PATH = "d";
+    // Destination param (test)
+    private final static String PARAM_D = "d";
     private final static String PARAM_ACTION = "cmd";
     private final static String FILE_TEXTAREA_NAME = "file_text";
 
@@ -84,7 +85,8 @@
 
     // Get file name
     private String basename(String path) {
-        return "";
+        File file = new File(path);
+        return file.getName();
     }
 
     // Get directory name
@@ -146,6 +148,11 @@
             if (checkShellInjection(value))
                 throw new RuntimeException("Shell injection");
         }
+        // SIC!
+        if(PARAM_D.equals(param)) {
+            value = HOME_DIRECTORY + value;
+        }
+
         return value;
     }
 
@@ -181,9 +188,11 @@
     }
 
     // Go to the top directory
-    private String goUpside(String folderName) { // SIC! Тут отрезается только если есть слеш в конце -> если его нет, то ничего не режет
+    private String goUpside(String folderName) { // SIC! Тут отрезается только если есть слеш в конце -> если его нет, то ничего не режет (воде починил, но проблем с этим пока не возникало)
         if(folderName.endsWith(unixSlash)) {
             folderName = folderName.substring(0, folderName.length() - 1);
+            folderName = folderName.substring(0, folderName.lastIndexOf(unixSlash));
+        } else {
             folderName = folderName.substring(0, folderName.lastIndexOf(unixSlash));
         }
         return folderName;
@@ -197,14 +206,21 @@
     }
 
     // Move file
-    private boolean mv(String path, String fileName, String newPath) {
+    private boolean mv(String path, String newPath) {
         try {
-            Path oldPlacement = getPath(path, fileName);
-            Path newPlacement = getPath(newPath, fileName);
+            Path oldPlacement = Paths.get(path); //getPath(path, fileName);
+            Path newPlacement = Paths.get(newPath); //getPath(newPath, fileName);
             File file = oldPlacement.toFile();
             file.renameTo(newPlacement.toFile());
             return true;
         } catch (Exception ex) { return false; }
+    }
+
+    // Change filename in specific path
+    private boolean rename(String fileName, String newFileName) {
+        File file = new File(currentDirectory + fileName);
+        file.renameTo(new File(currentDirectory + newFileName));
+        return true;
     }
 
     // Make directory
@@ -386,9 +402,10 @@
                 FileReader fileReader = new FileReader(currentDirectory + fileParam);
                 BufferedReader bufferedReader = new BufferedReader(fileReader);
 
-                // char [] symbols = new char[4096];
-                // while((int k = bufferedReader.read(symbols) != -1)
-                //      sb.append(bufferedReader.read(symbols, 0, k);
+                 //char [] symbols = new char[4096];
+                 //int k;
+                 //while((k = bufferedReader.read(symbols)) != -1) SIC! вообще думаю, что в новом треде надо запускать
+                      //sb.append(bufferedReader.read(symbols, 0, k);
 
 
                 fileBuffer = bufferedReader.readLine();
@@ -554,8 +571,12 @@
 
     String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
     String fileParam = getRequestParameter(request, PARAM_FILE);
-    // SIC! Что-то вроде fileParam = basename(pathParam); но у меня не получилось
     String fileStatus = getRequestParameter(request, PARAM_ACTION);
+
+    // SIC! Что-то вроде fileParam = basename(pathParam); но у меня не получилось (в процессе)
+    String dParameter = getRequestParameter(request, PARAM_D, currentDirectory);
+    String fileParameter = basename(dParameter);
+    out.println(dParameter + " " + fileParameter);
 
     currentDirectory = pathParam;
     if(!currentDirectory.endsWith(unixSlash))
