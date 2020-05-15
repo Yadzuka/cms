@@ -155,6 +155,10 @@
     private void beginDiv(String className) throws Exception{ out.println("<div class='"+className+"'>"); }
     private void endDiv() throws Exception{ out.println("</div>"); }
 %>
+<html><h1>Отключено воизбежании использования уязвимостей в заброшенном коде. Eustrop 2020-05-14 13:06 MSK</h1>
+<a href="./">Вернуться назад</a>
+</html>
+<%if(false) { // START DISABLED CODE %>
 <html>
 <head>
     <title><%=CGI_TITLE%></title>
@@ -171,9 +175,11 @@
 <body>
 <h1>Hello and welcome to the start page of our CMS!</h1>
 <h2><a href="index1.jsp">Улучшенный интерфейс</a></h2>
+<% } // END DISABLED %>
 <%
-    this.out = out;
     long enter_time = System.currentTimeMillis();
+if(false) { // START DISABLED
+    this.out = out;
     initUser();
 
     String p_filename = request.getParameter(PARAM_FILENAME);
@@ -208,7 +214,9 @@
         ex.printStackTrace();
     }
 
+} // END DISABLED
 %>
+<%if(false) { // START DISABLED CODE %>
 <hr>
 <form method="POST" action="download">
     <input type="hidden" name="path" value="<%=currentDirectory%>">
@@ -241,3 +249,4 @@ Hello! your web-server is <%= application.getServerInfo() %><br>
 <!-- Привет this is just for UTF-8 testing (must be russian word "Privet") -->
 </body>
 </html>
+<% } // END DISABLED %>
