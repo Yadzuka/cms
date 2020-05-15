@@ -26,8 +26,6 @@
     public final static String[] VALUE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","&quot;","&#039;"};
 
     // Files and directories manipulating
-    private final static String PARAM_PATH = "path";
-    private final static String PARAM_FILE = "file";
     // Destination param (test)
     private final static String PARAM_D = "d";
     private final static String PARAM_ACTION = "cmd";
@@ -49,12 +47,14 @@
     private String userIP;
     private String HOME_DIRECTORY;
     private String currentDirectory = HOME_DIRECTORY;
+    private String showedPath;
 
     private final static String unixSlash = "/";
 
     private void initUser(HttpServletRequest request) {
         userIP = request.getRemoteAddr();
-        HOME_DIRECTORY = getServletConfig().getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user") + "/";
+        HOME_DIRECTORY = getServletConfig().getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user");
+        showedPath = "/";
         currentDirectory = HOME_DIRECTORY;
         try {
             if (!Files.exists(Paths.get(HOME_DIRECTORY))) {
@@ -69,7 +69,7 @@
     }
 
     // Check access
-    private boolean checkAccess(String path, String file) throws IllegalAccessException {
+    private boolean checkAccess(String path) throws IllegalAccessException {
         Random rand = new Random();
         double i = rand.nextDouble();
         if(i < 0.3) {
@@ -79,14 +79,18 @@
         }
     }
 
-    private void reserveVersion(String path, String file) throws IllegalAccessException {
-        checkAccess(path, file);
+    private void reserveVersion(String path) throws IllegalAccessException {
+        checkAccess(path);
     }
 
     // Get file name
     private String basename(String path) {
-        File file = new File(path);
-        return file.getName();
+        try {
+            File file = new File(path);
+            return file.getName();
+        } catch (Exception ex) {
+            return "";
+        }
     }
 
     // Get directory name
@@ -118,13 +122,13 @@
         return filePath;
     }
 
-    private boolean isExecutable(String path, String fileName) {
-        Path pathToFile = getPath(path, fileName);
+    private boolean isExecutable(String path) {
+        Path pathToFile = Paths.get(path);
         return Files.isExecutable(pathToFile);
     }
 
-    private boolean isDir(String path, String fileName) {
-        Path pathToFile = getPath(path, fileName);
+    private boolean isDir(String path) {
+        Path pathToFile = Paths.get(path);
         return Files.isDirectory(pathToFile);
     }
 
@@ -138,52 +142,45 @@
         String value = request.getParameter(param);
         if(value == null) value = default_value;
         if(value == null) return (null);
-        if (PARAM_PATH.equals(param)) {
-            // value = HOME_DIRECTORY + value;
-            if (!(value.endsWith(unixSlash)))
-                value += unixSlash;
-            if (!value.startsWith(HOME_DIRECTORY))
-                value = default_value;
-
-            if (checkShellInjection(value))
-                throw new RuntimeException("Shell injection");
-        }
         // SIC!
         if(PARAM_D.equals(param)) {
+            showedPath = value;
             value = HOME_DIRECTORY + value;
+
+            if(!value.startsWith(unixSlash))
+                value = unixSlash + value;
+            if (checkShellInjection(value))
+                throw new RuntimeException("Shell injection");
         }
 
         return value;
     }
 
     private String goToFile(String fileName) { // SIC! Только для папок - не знаю зачем тут проверка ( на всякий случай), но может потом надо убрать вообще
-        if(isDir(currentDirectory, fileName)) {
-            String targetPath = encodeValue(currentDirectory) + encodeValue(fileName);
-            return getPathReference(targetPath, fileName);
+        if(isDir(currentDirectory + fileName)) {
+            String targetPath = encodeValue(currentDirectory);
+            return getPathReference(fileName, fileName);
         }
-        return openFile(currentDirectory, fileName);
+        return openFile(fileName);
     }
 
-    private String openFile(String href, String value){ return value; }
+    private String openFile(String value){ return value; }
 
 
     // Path reference with 'a' tags
     private String getPathReference(String path, String value) {
-        return "<a href='" + CGI_NAME + "?" + PARAM_PATH +"="+ path + "'>" + value + "</a>";
+        return "<a href='" + CGI_NAME + "?" + PARAM_D +"="+ path + "'>" + value + "</a>";
     }
     // Path reference
     private String getPathReference(String path) {
-        return CGI_NAME + "?" + PARAM_PATH +"="+ path;
+        return CGI_NAME + "?" + PARAM_D +"="+ path;
     }
+
     // SIC! Ссылки снизу поменять либо на path + file, либо заменить на один параметр
-    // File regerence
-    private String getFileReference(String path, String file) {
-        return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file;
-        // return CGI_NAME + "?" + PARAM_PATH + "=" + path + file;
-    }
+
     // File reference with action
-    private String getFileReference(String path, String file, String cmd) {
-        return CGI_NAME + "?" + PARAM_PATH + "=" + path + "&" + PARAM_FILE + "=" + file + "&" + PARAM_ACTION + "=" + cmd;
+    private String getFileReference(String path, String cmd) {
+        return CGI_NAME + "?" + PARAM_D + "=" + path + "&" + PARAM_ACTION + "=" + cmd;
         // return CGI_NAME + "?" + PARAM_PATH + "=" + path + file + "&" + PARAM_ACTION + "=" + cmd;
     }
 
@@ -191,10 +188,8 @@
     private String goUpside(String folderName) { // SIC! Тут отрезается только если есть слеш в конце -> если его нет, то ничего не режет (воде починил, но проблем с этим пока не возникало)
         if(folderName.endsWith(unixSlash)) {
             folderName = folderName.substring(0, folderName.length() - 1);
-            folderName = folderName.substring(0, folderName.lastIndexOf(unixSlash));
-        } else {
-            folderName = folderName.substring(0, folderName.lastIndexOf(unixSlash));
         }
+        folderName = folderName.substring(0, folderName.lastIndexOf(unixSlash));
         return folderName;
     }
 
@@ -270,18 +265,22 @@
         } catch (Exception ex) { return false; }
     }
 
-    private void process() {
+    private void process(HttpServletRequest req, HttpServletResponse resp) {
+
         printMainBlock();
     }
 
     private void printMainBlock() { // SIC! тут показывается currentDirectory, а это весь путь с /s/usersdb/, поэтому там ещё все ссылки надо менять и в ссылках тоже (поэтому все так сложно)
         File actual = null;
         try {
+            if(!showedPath.endsWith(unixSlash))
+                showedPath = showedPath + unixSlash;
             actual = new File(currentDirectory);
+            w(currentDirectory);
             startDiv("container", "main_block");
             startDiv("row");
             startDiv("col");
-            printH("Содержание директории: " + currentDirectory, 3);
+            printH("Содержание директории: " + showedPath, 3);
             endDiv();
             printServerButton();
             endDiv();
@@ -296,9 +295,9 @@
             endTr();
             endTHead();
             startTBody("");
-            if (!currentDirectory.equals(HOME_DIRECTORY)) {
+            if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
                 startTr();
-                printTd("row", "viewer", "", getA(getI(". . .", "icon-share"), getPathReference(goUpside(currentDirectory))));
+                printTd("row", "viewer", "", getA(getI(". . .", "icon-share"), getPathReference(goUpside(showedPath))));
                 endTr();
             }
 
@@ -320,7 +319,7 @@
                 startTr();
                 startTd("viewer", "row");
                 if(f.isFile()&f.canRead()) {
-                    printA(ico+" "+f.getName(), getFileReference(encodeValue(currentDirectory), encodeValue(f.getName()), ACTION_VIEW));
+                    printA(ico+" "+f.getName(), getFileReference(encodeValue(showedPath + f.getName()) , ACTION_VIEW));
                 } else {
                     wln(ico + " " + goToFile(f.getName()));
                 }
@@ -330,7 +329,7 @@
                 printTd("row", "", "center", new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified()));
                 startTd("", "row");
                 if(f.isFile()&f.canRead()) {
-                    printA("Скачать файл", "download?path="+encodeValue(currentDirectory)+"&file="+encodeValue(f.getName()));
+                    printA("Скачать файл", "download?d="+encodeValue(showedPath + f.getName()));
                 }
                 endTd();
                 endTr();
@@ -356,20 +355,20 @@
         startDiv("dropdown-divider"); endDiv();
 
         startForm("POST", "upload", "multipart/form-data");
-        printInput("hidden", "", "path", "", currentDirectory);
+        printInput("hidden", "", PARAM_D , "", showedPath);
         printInput("file", "dropdown-item", "file", "", true);
         printSubmit("Загрузить (Apache Commons)", "dropdown-item");
         endForm();
 
         startForm("POST", "upload_new_version", "multipart/form-data");
-        printInput("hidden", "", "path", "", currentDirectory);
+        printInput("hidden", "", PARAM_D , "", showedPath);
         printInput("file", "dropdown-item", "file", "", true);
         printSubmit("Загрузить (Servlet V3)", "dropdown-item");
         endForm();
 
         startDiv("dropdown-divider"); endDiv();
 
-        startForm("POST", "index1.jsp?path="+encodeValue(currentDirectory)+"&cmd=create");
+        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=create");
         printInput("hidden", "", "action", "", "create");
         printInput("text", "dropdown-item", "file", "Введите имя файла", false);
         printSubmit("Создать файл", "dropdown-item");
@@ -381,25 +380,25 @@
         endDiv();
     }
 
-    private void processFileRequest(String fileParam, String pathParam, String fileStatus, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if(fileParam != null) {
+    private void processFileRequest(String path, String fileStatus, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if(path != null && fileStatus != null) {
             StringBuilder sb = new StringBuilder();
             String fileBuffer = "";
 
             if(fileStatus.equals(ACTION_CREATE)) {
-                touch(pathParam + fileParam);
+                touch(path);
                 response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
             }
 
             if(request.getParameter(ACTION_SAVE) != null) {
-                saveFile(fileParam, request);
+                saveFile(path, request);
             }
 
             try { //SIC! вот здесь кончается память
-                File f = new File(currentDirectory + fileParam);
+                File f = new File(HOME_DIRECTORY + path);
                 //if(f.length() > 1_000_000) //SIC! примерно так
                    // throw new IOException("Big file. Cant read");
-                FileReader fileReader = new FileReader(currentDirectory + fileParam);
+                FileReader fileReader = new FileReader(f.getPath());
                 BufferedReader bufferedReader = new BufferedReader(fileReader);
 
                  //char [] symbols = new char[4096];
@@ -420,50 +419,50 @@
             }
 
             if(request.getParameter(ACTION_DELETE) != null) {
-                rm(currentDirectory + fileParam);
+                rm(path);
             }
 
             if(fileStatus != null) {
                 wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
                 wln("<div id='left_block' class='block' align='right'>");
 
-                wln(getPathReference(encodeValue(pathParam), "Скрыть"));
+                wln(getPathReference(encodeValue(path), "Скрыть"));
 
                 boolean showed = false;
                 if (fileStatus.equals(ACTION_VIEW)) {
-                    if(!(printImageFile(currentDirectory, fileParam)
-                            || printVideoFile(currentDirectory, fileParam)))
-                        printFileForm(currentDirectory, fileParam, fileStatus, sb.toString());
+                    if(!(printImageFile(path)
+                            || printVideoFile(path)))
+                        printFileForm(path, fileStatus, sb.toString());
                 }
                 wln("</div>");
             }
         }
     }
 
-    private boolean printImageFile(String directory, String fileParam)  {
+    private boolean printImageFile(String path)  {
         for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
-            if (fileParam.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) { printImage(directory, fileParam, 1280, 720); return true;}
+            if (path.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) { printImage(path, 1280, 720); return true;}
         }
         return false;
     }
 
-    private boolean printVideoFile(String directory, String fileParam)  {
+    private boolean printVideoFile(String path)  {
         for(int i = 0; i < VIDEO_DEFINITIONS.length; i++) {
-            if (fileParam.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(1280, 720, directory, fileParam);  return true;}
+            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(1280, 720, path);  return true;}
         }
         return false;
     }
 
-    private void printVideo(int width, int height, String directory, String fileParam)  {
+    private void printVideo(int width, int height, String path)  {
         wln("<video width='" + width + "' height='" + height + "' controls='controls'>" +
-                "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/ogg'>" +
-                "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/webm'>" +
-                "<source src='download?path=" + directory + "&file=" + fileParam + "' type='video/mp4'> " +
+                "<source src='download?" + PARAM_D + "=" + path + "' type='video/ogg'>" +
+                "<source src='download?" + PARAM_D + "=" + path + "' type='video/webm'>" +
+                "<source src='download?" + PARAM_D + "=" + path + "' type='video/mp4'> " +
                 "Your browser does not support the video tag. </video>");
     }
 
-    private void printImage(String directory, String file, int width, int height)  {
-        wln("<img src='download?path=" + directory + "&file=" + file + "' alt='sample' height='' width=''>");
+    private void printImage(String path, int width, int height)  {
+        wln("<img src='download?" + PARAM_D + "=" + path + "' alt='sample' height='' width=''>");
     }
 
     private void saveFile(String fileParam, HttpServletRequest request) throws IOException {
@@ -541,9 +540,9 @@
     }
 
     // Textarea fow file inners
-    private void printFileForm(String directory, String fileName, String cmd, String fileText)  {
+    private void printFileForm(String path, String cmd, String fileText)  {
         if(cmd.equals(ACTION_VIEW)) {
-            startForm("POST", getFileReference(encodeValue(directory), encodeValue(fileName), ACTION_VIEW));
+            startForm("POST", getFileReference(encodeValue(path), ACTION_VIEW));
             printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
             printFileEditButtons();
             endForm();
@@ -569,20 +568,15 @@
     log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
     //-------------------------INIT SECTION ENDED------------------------//
 
-    String pathParam = getRequestParameter(request, PARAM_PATH, currentDirectory);
-    String fileParam = getRequestParameter(request, PARAM_FILE);
+    // SIC! Что-то вроде fileParam = basename(pathParam); но у меня не получилось (в процессе)
+    String dParameter = getRequestParameter(request, PARAM_D, showedPath);
+    String fileParameter = basename(dParameter);
+
     String fileStatus = getRequestParameter(request, PARAM_ACTION);
 
-    // SIC! Что-то вроде fileParam = basename(pathParam); но у меня не получилось (в процессе)
-    String dParameter = getRequestParameter(request, PARAM_D, currentDirectory);
-    String fileParameter = basename(dParameter);
-    out.println(dParameter + " " + fileParameter);
+    currentDirectory = dParameter;
 
-    currentDirectory = pathParam;
-    if(!currentDirectory.endsWith(unixSlash))
-        currentDirectory = currentDirectory + unixSlash;
-
-    processFileRequest(fileParam, pathParam, fileStatus, request, response); //SIC! вот это печатает ДО HTML ДОКУМЕНТА! это в process() !!!!
+    processFileRequest(dParameter , fileStatus, request, response); //SIC! вот это печатает ДО HTML ДОКУМЕНТА! это в process() !!!!
 %>
 <!DOCTYPE HTML>
 <html lang="ru">
@@ -608,7 +602,7 @@
     </style>
 </head>
 <body>
-<% process();
+<% process(request, response);
 //request.getRequestDispatcher("editqrpage.jsp").forward(request,response); // SIC! редирект
 %>
 <!--div id="issues" >

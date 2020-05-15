@@ -24,10 +24,10 @@ public class UploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
      List filesCollection;
      String realPath = ""; // real here means that it is the way, where customer wants to upload his file
-     String className;
-     String UPLOAD_PATH;
+     String className = "";
+     String UPLOAD_PATH = "";
         try {
-            UPLOAD_PATH = getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
+            UPLOAD_PATH = getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user");
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = request.getRemoteAddr();
@@ -39,10 +39,11 @@ public class UploadServlet extends HttpServlet {
                 log.w("Files counter was null in " + className + " user:" + user + ".");
 
             realPath = processRealPath(filesCollection);
+            realPath = UPLOAD_PATH + realPath;
 
             if(realPath == null)
                 log.w("Real path was null in " + className + " user:" + user + ".");
-            else if(!realPath.startsWith("/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user")))
+            else if(!realPath.startsWith(getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user")))
                 return;
 
             for (int i = 1; i < filesCollection.size(); i++) {
@@ -53,7 +54,7 @@ public class UploadServlet extends HttpServlet {
         }catch (Exception e){
             log.e(e + " user:" + user + ".");
         } finally {
-            response.sendRedirect("index1.jsp?path=" + URLEncoder.encode(realPath, StandardCharsets.UTF_8.toString()));
+            response.sendRedirect("index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
         }
     }
 
