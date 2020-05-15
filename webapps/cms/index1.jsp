@@ -430,32 +430,32 @@
                     fileReader.close();
                     bufferedReader.close();
                 } catch (Exception ex) {
-                    wln("cant read file");
+                    wln("Cant read file");
                 }
 
                 if (request.getParameter(ACTION_DELETE) != null) {
                     rm(path);
                 }
 
-                if (fileStatus != null) {
+                if(fileStatus.equals(ACTION_VIEW)) {
                     wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
                     wln("<div id='left_block' class='block' align='right'>");
 
-                    out.println("");
+                    wln("");
                     wln(getPathReference(encodeValue(goUpside(showedPath)), "Скрыть"));
-
+                    
                     boolean showed = false;
                     if (fileStatus.equals(ACTION_VIEW)) {
-                        if (!(printImageFile(path)
-                                || printVideoFile(path)))
-                            printFileForm(path, fileStatus, sb.toString());
+                        if (!(printImageFile(unixSlash + basename(path))
+                                || printVideoFile(unixSlash + basename(path))))
+                            printFileForm(showedPath, fileStatus, sb.toString());
                     }
                     wln("</div>");
                 }
                 return;
             }
         } catch (Exception ex) {
-            w("Error with opening file");
+            w(ex + "Error with opening file");
         }
     }
 
@@ -485,9 +485,9 @@
         wln("<img src='download?" + PARAM_D + "=" + path + "' alt='sample' height='' width=''>");
     }
 
-    private void saveFile(String fileParam, HttpServletRequest request) throws IOException {
+    private void saveFile(String path, HttpServletRequest request) throws IOException {
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(currentDirectory + fileParam, false), StandardCharsets.UTF_8));
+                (new FileOutputStream(path, false), StandardCharsets.UTF_8));
         wln("Saved");
         String fileText = request.getParameter(FILE_TEXTAREA_NAME);
         bufferedWriter.write(fileText);
@@ -561,12 +561,10 @@
 
     // Textarea fow file inners
     private void printFileForm(String path, String cmd, String fileText)  {
-        if(cmd.equals(ACTION_VIEW)) {
-            startForm("POST", getFileReference(encodeValue(path), ACTION_VIEW));
-            printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
-            printFileEditButtons();
-            endForm();
-        }
+        startForm("POST", getFileReference(encodeValue(path), cmd));
+        printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
+        printFileEditButtons();
+        endForm();
     }
 
     private void startForm(String method, String action)  { wln("<form method='" + method +"' action='"+action + "'>"); }
