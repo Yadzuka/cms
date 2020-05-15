@@ -477,14 +477,14 @@
 
     private void printVideo(int width, int height, String path)  {
         wln("<video width='" + width + "' height='" + height + "' controls='controls'>" +
-                "<source src='download?" + PARAM_D + "=" + path + "' type='video/ogg'>" +
-                "<source src='download?" + PARAM_D + "=" + path + "' type='video/webm'>" +
-                "<source src='download?" + PARAM_D + "=" + path + "' type='video/mp4'> " +
+                "<source src='download?" + PARAM_D + "=" + encodeValue(showedPath) + "' type='video/ogg'>" +
+                "<source src='download?" + PARAM_D + "=" + encodeValue(showedPath) + "' type='video/webm'>" +
+                "<source src='download?" + PARAM_D + "=" + encodeValue(showedPath) + "' type='video/mp4'> " +
                 "Your browser does not support the video tag. </video>");
     }
 
     private void printImage(String path, int width, int height)  {
-        wln("<img src='download?" + PARAM_D + "=" + path + "' alt='sample' height='' width=''>");
+        wln("<img src='download?" + PARAM_D + "=" + encodeValue(showedPath)  + "' alt='sample' height='' width=''>");
     }
 
     private void saveFile(String path, HttpServletRequest request) throws IOException {
