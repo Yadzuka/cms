@@ -271,8 +271,18 @@
     }
 
     private void process(HttpServletRequest req, HttpServletResponse resp) {
+        // SIC! Что-то вроде fileParam = basename(pathParam); но у меня не получилось (в процессе)
+        String dParameter = getRequestParameter(req, PARAM_D, showedPath);
+        String fileParameter = basename(dParameter);
+        String fileStatus = getRequestParameter(req, PARAM_ACTION);
+        currentDirectory = dParameter;
 
-        printMainBlock();
+        boolean isFileAction = fileStatus != null;
+        if (isFileAction) {
+            processFileRequest(dParameter, fileStatus, req, resp);
+        } else {
+            printMainBlock();
+        }
     }
 
     private void printMainBlock() { // SIC! тут показывается currentDirectory, а это весь путь с /s/usersdb/, поэтому там ещё все ссылки надо менять и в ссылках тоже (поэтому все так сложно)
@@ -281,7 +291,6 @@
             if(!showedPath.endsWith(unixSlash))
                 showedPath = showedPath + unixSlash;
             actual = new File(currentDirectory);
-            w(currentDirectory);
             startDiv("container", "main_block");
             startDiv("row");
             startDiv("col");
@@ -385,62 +394,68 @@
         endDiv();
     }
 
-    private void processFileRequest(String path, String fileStatus, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if(path != null && fileStatus != null) {
-            StringBuilder sb = new StringBuilder();
-            String fileBuffer = "";
+    private void processFileRequest(String path, String fileStatus, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            if (path != null && fileStatus != null) {
+                StringBuilder sb = new StringBuilder();
+                String fileBuffer = "";
 
-            if(fileStatus.equals(ACTION_CREATE)) {
-                touch(path);
-                response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
-            }
+                if (fileStatus.equals(ACTION_CREATE)) {
+                    touch(path);
+                    response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
+                }
 
-            if(request.getParameter(ACTION_SAVE) != null) {
-                saveFile(path, request);
-            }
+                if (request.getParameter(ACTION_SAVE) != null) {
+                    saveFile(path, request);
+                }
 
-            try { //SIC! вот здесь кончается память
-                File f = new File(HOME_DIRECTORY + path);
-                //if(f.length() > 1_000_000) //SIC! примерно так
-                   // throw new IOException("Big file. Cant read");
-                FileReader fileReader = new FileReader(f.getPath());
-                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                try { //SIC! вот здесь кончается память
+                    // File f = new File(HOME_DIRECTORY + path);
+                    //if(f.length() > 1_000_000) //SIC! примерно так
+                    // throw new IOException("Big file. Cant read");
+                    FileReader fileReader = new FileReader(path);
+                    BufferedReader bufferedReader = new BufferedReader(fileReader);
 
-                 //char [] symbols = new char[4096];
-                 //int k;
-                 //while((k = bufferedReader.read(symbols)) != -1) SIC! вообще думаю, что в новом треде надо запускать
-                      //sb.append(bufferedReader.read(symbols, 0, k);
+                    //char [] symbols = new char[4096];
+                    //int k;
+                    //while((k = bufferedReader.read(symbols)) != -1) SIC! вообще думаю, что в новом треде надо запускать
+                    //sb.append(bufferedReader.read(symbols, 0, k);
 
 
-                fileBuffer = bufferedReader.readLine();
-                while(fileBuffer != null) {
-                    sb.append(fileBuffer).append('\n');
                     fileBuffer = bufferedReader.readLine();
+                    while (fileBuffer != null) {
+                        sb.append(fileBuffer).append('\n');
+                        fileBuffer = bufferedReader.readLine();
+                    }
+                    fileReader.close();
+                    bufferedReader.close();
+                } catch (Exception ex) {
+                    wln("cant read file");
                 }
-                fileReader.close();
-                bufferedReader.close();
-            } catch (Exception ex) {
-                wln("cant read file");
-            }
 
-            if(request.getParameter(ACTION_DELETE) != null) {
-                rm(path);
-            }
-
-            if(fileStatus != null) {
-                wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
-                wln("<div id='left_block' class='block' align='right'>");
-
-                wln(getPathReference(encodeValue(path), "Скрыть"));
-
-                boolean showed = false;
-                if (fileStatus.equals(ACTION_VIEW)) {
-                    if(!(printImageFile(path)
-                            || printVideoFile(path)))
-                        printFileForm(path, fileStatus, sb.toString());
+                if (request.getParameter(ACTION_DELETE) != null) {
+                    rm(path);
                 }
-                wln("</div>");
+
+                if (fileStatus != null) {
+                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
+                    wln("<div id='left_block' class='block' align='right'>");
+
+                    out.println("");
+                    wln(getPathReference(encodeValue(goUpside(showedPath)), "Скрыть"));
+
+                    boolean showed = false;
+                    if (fileStatus.equals(ACTION_VIEW)) {
+                        if (!(printImageFile(path)
+                                || printVideoFile(path)))
+                            printFileForm(path, fileStatus, sb.toString());
+                    }
+                    wln("</div>");
+                }
+                return;
             }
+        } catch (Exception ex) {
+            w("Error with opening file");
         }
     }
 
@@ -573,15 +588,9 @@
     log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
     //-------------------------INIT SECTION ENDED------------------------//
 
-    // SIC! Что-то вроде fileParam = basename(pathParam); но у меня не получилось (в процессе)
-    String dParameter = getRequestParameter(request, PARAM_D, showedPath);
-    String fileParameter = basename(dParameter);
 
-    String fileStatus = getRequestParameter(request, PARAM_ACTION);
 
-    currentDirectory = dParameter;
 
-    processFileRequest(dParameter , fileStatus, request, response); //SIC! вот это печатает ДО HTML ДОКУМЕНТА! это в process() !!!!
 %>
 <!DOCTYPE HTML>
 <html lang="ru">

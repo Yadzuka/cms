@@ -34,7 +34,7 @@ public class UploadServletV3 extends HttpServlet {
             className = this.getClass().getName();
             String user = request.getRemoteAddr();
 
-            realPath = UPLOAD_PATH + request.getParameter("d");
+            realPath = request.getParameter("d");
 
             if(!realPath.startsWith(getServletContext().getInitParameter("user") + getServletConfig().getServletContext().getInitParameter("user")))
                 return;

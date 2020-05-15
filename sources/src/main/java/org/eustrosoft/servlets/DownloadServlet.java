@@ -36,13 +36,13 @@ public class DownloadServlet extends HttpServlet {
             String file = req.getParameter("d");
             //String fileName = req.getParameter("file"); //SIC! а зачем нам отдельно path и file?
             //String pathName = req.getParameter("path");
-            if(checkForInjection(HOME_DIRECTORY + file)); //SIC! оно не работает, но хорошо, что хоть заглушка есть ;)
+            if(checkForInjection(file)); //SIC! оно не работает, но хорошо, что хоть заглушка есть ;)
             else {
                 log.e("User wanted to download " + file + " from incorrect path "  + " (" + user + ").");
                 return;
             }
 
-            File f1 = new File(HOME_DIRECTORY + file);
+            File f1 = new File(file);
             // File f = new File(pathName + fileName); //SIC! опять path injection "/s/usersdb/" + "../../etc/passwd"
             if (!f1.exists()) {
                 log.w(user + " wanted to download nonexistent file.");
