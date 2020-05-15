@@ -382,8 +382,7 @@
 
         startDiv("dropdown-divider"); endDiv();
 
-        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=create");
-        printInput("hidden", "", "action", "", "create");
+        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
         printInput("text", "dropdown-item", "file", "Введите имя файла", false);
         printSubmit("Создать файл", "dropdown-item");
         endForm();
@@ -401,8 +400,11 @@
                 String fileBuffer = "";
 
                 if (fileStatus.equals(ACTION_CREATE)) {
-                    touch(path);
-                    response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
+                    String newFileName = request.getParameter("file");
+                    if(touch(path + newFileName))
+                        response.sendRedirect(getPathReference(encodeValue(showedPath)));
+                    else
+                        wln(path + " " + fileStatus);
                 }
 
                 if (request.getParameter(ACTION_SAVE) != null) {
@@ -443,7 +445,7 @@
 
                     wln("");
                     wln(getPathReference(encodeValue(goUpside(showedPath)), "Скрыть"));
-                    
+
                     boolean showed = false;
                     if (fileStatus.equals(ACTION_VIEW)) {
                         if (!(printImageFile(unixSlash + basename(path))
@@ -495,8 +497,8 @@
         bufferedWriter.close();
     }
 
-    private void createFile(String pathParam, String fileParam, HttpServletResponse response) throws IOException {
-        File newFile = new File(pathParam + fileParam);
+    private void createFile(String pathParam,  HttpServletResponse response) throws IOException {
+        File newFile = new File(pathParam);
         if(!newFile.exists())
             newFile.createNewFile();
         response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
@@ -585,10 +587,6 @@
     request.setCharacterEncoding("UTF-8");
     log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
     //-------------------------INIT SECTION ENDED------------------------//
-
-
-
-
 %>
 <!DOCTYPE HTML>
 <html lang="ru">
