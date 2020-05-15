@@ -99,11 +99,15 @@
     }
 
     private String encodeValue(String value) { // SIC! тут надо в слеши превращать %2F
+        String regexForSlashes = "%2F";
+        String str;
         try {
-            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+            str = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+            str = str.replaceAll(regexForSlashes, "/");
         } catch (UnsupportedEncodingException ex) {
             throw new RuntimeException(ex.getCause());
         }
+        return str;
     }
 
     private Path getPath(String pathToFile, String fileName)  { // SIC! не знаю зачем этот метод, если на слаши проверяется, может быть потом можно вообще убрать, но задумывался как проверка пути на правильность
@@ -156,10 +160,10 @@
         return value;
     }
 
-    private String goToFile(String fileName) { // SIC! Только для папок - не знаю зачем тут проверка ( на всякий случай), но может потом надо убрать вообще
+    private String goToFile(String showedPath, String fileName) { // SIC! Только для папок - не знаю зачем тут проверка ( на всякий случай), но может потом надо убрать вообще
         if(isDir(currentDirectory + fileName)) {
-            String targetPath = encodeValue(currentDirectory);
-            return getPathReference(fileName, fileName);
+            String targetPath = encodeValue(showedPath + fileName + unixSlash);
+            return getPathReference(targetPath, fileName);
         }
         return openFile(fileName);
     }
@@ -190,6 +194,7 @@
             folderName = folderName.substring(0, folderName.length() - 1);
         }
         folderName = folderName.substring(0, folderName.lastIndexOf(unixSlash));
+        folderName += unixSlash;
         return folderName;
     }
 
@@ -321,7 +326,7 @@
                 if(f.isFile()&f.canRead()) {
                     printA(ico+" "+f.getName(), getFileReference(encodeValue(showedPath + f.getName()) , ACTION_VIEW));
                 } else {
-                    wln(ico + " " + goToFile(f.getName()));
+                    wln(ico + " " + goToFile(showedPath, f.getName()));
                 }
                 endTd();
                 printTd("row", "", "right", String.format("%d",f.length()));
