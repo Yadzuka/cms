@@ -24,18 +24,19 @@ public class UploadServletV3 extends HttpServlet {
     private InputStream is;
     private OutputStream os;
     String realPath;
+    String UPLOAD_PATH = "";
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
-            String UPLOAD_PATH = getServletContext().getInitParameter("user") + getServletConfig().getServletContext().getInitParameter("user") + "/.pspn/";
+            UPLOAD_PATH = getServletContext().getInitParameter("user") + getServletConfig().getServletContext().getInitParameter("user");
             out = response.getWriter();
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             String user = request.getRemoteAddr();
 
-            realPath = request.getParameter("path");
+            realPath = UPLOAD_PATH + request.getParameter("d");
 
-            if(!realPath.startsWith("/s/usersdb/" + getServletConfig().getServletContext().getInitParameter("user")))
+            if(!realPath.startsWith(getServletContext().getInitParameter("user") + getServletConfig().getServletContext().getInitParameter("user")))
                 return;
 
             List<Part> fileParts;
@@ -66,7 +67,7 @@ public class UploadServletV3 extends HttpServlet {
             try {
                 os.close();
                 is.close();
-                response.sendRedirect("index1.jsp?path=" + URLEncoder.encode(realPath, StandardCharsets.UTF_8.toString()));
+                response.sendRedirect("index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
             } catch (Exception ex) { log.e(ex + " user:" + user + ". In " + className); }
         }
     }

@@ -26,32 +26,32 @@ public class DownloadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
-            HOME_DIRECTORY = getServletContext().getInitParameter("root") + getServletContext().getInitParameter("user") + "/";
+            HOME_DIRECTORY = getServletContext().getInitParameter("root") + getServletContext().getInitParameter("user");
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = req.getRemoteAddr();
 
             resp.setContentType("text/html");
             out = resp.getOutputStream();
-            String fileName = req.getParameter("file"); //SIC! а зачем нам отдельно path и file?
-            String pathName = req.getParameter("path");
-            if(checkForInjection(pathName)); //SIC! оно не работает, но хорошо, что хоть заглушка есть ;)
+            String file = req.getParameter("d");
+            if(checkForInjection(HOME_DIRECTORY + file)); //SIC! оно не работает, но хорошо, что хоть заглушка есть ;)
             else {
-                log.e("User wanted to download " + fileName + " from incorrect path " + pathName + " (" + user + ").");
+                log.e("User wanted to download " + file + " from incorrect path "  + " (" + user + ").");
                 return;
             }
 
-            File f = new File(pathName + fileName); //SIC! опять path injection "/s/usersdb/" + "../../etc/passwd"
-            if (!f.exists()) {
+            File f1 = new File(HOME_DIRECTORY + file);
+            // File f = new File(pathName + fileName); //SIC! опять path injection "/s/usersdb/" + "../../etc/passwd"
+            if (!f1.exists()) {
                 log.w(user + " wanted to download nonexistent file.");
             } else {
-                String mimeType = getServletContext().getMimeType(pathName + fileName);
+                String mimeType = getServletContext().getMimeType(f1.getPath());
                 if(mimeType == null) resp.setContentType("Application/Octet-Stream");
                 else resp.setContentType(mimeType);
 
-                resp.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-                resp.setHeader("Content-Length", String.format("%d",new File(pathName + fileName).length()));
-                FileInputStream fis = new FileInputStream(pathName + fileName);
+                resp.setHeader("Content-Disposition", "attachment; filename=\"" + f1.getName() + "\"");
+                resp.setHeader("Content-Length", String.format("%d",f1.length()));
+                FileInputStream fis = new FileInputStream(f1.getPath());
 
                 byte[] buffer = new byte[4096];
                 int bytesRead = -1;
@@ -59,7 +59,7 @@ public class DownloadServlet extends HttpServlet {
                     out.write(buffer, 0, bytesRead);
                     out.flush(); //SIC! думал здесь есть проблема, добавил flush(), но нет - можно убрать, потом
                 }
-                log.i(pathName+fileName + " was downloaded by " + user + ".");
+                log.i(f1.getPath() + " was downloaded by " + user + ".");
                 fis.close();
                 out.close();
             }
