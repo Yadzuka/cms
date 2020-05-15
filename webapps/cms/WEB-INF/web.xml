@@ -48,7 +48,7 @@
     <!-- PARAMETER FOR LOGGING (file path) -->
     <context-param>
         <param-name>logFilePath</param-name>
-        <param-value>/mnt/e/AllProjects/Java_projects/LogsFromCMS/logs.txt</param-value>
+        <param-value>/var/log/EustroCMS/cms.log</param-value>
     </context-param>
     
     <welcome-file-list>
