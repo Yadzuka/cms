@@ -28,7 +28,7 @@ public class UploadServletV3 extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
-            UPLOAD_PATH = getServletContext().getInitParameter("user") + getServletConfig().getServletContext().getInitParameter("user");
+            UPLOAD_PATH = getServletContext().getInitParameter("root") + getServletContext().getInitParameter("user");
             out = response.getWriter();
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
@@ -36,7 +36,7 @@ public class UploadServletV3 extends HttpServlet {
 
             realPath = UPLOAD_PATH + request.getParameter("d");
 
-            if(!realPath.startsWith(getServletContext().getInitParameter("user") + getServletConfig().getServletContext().getInitParameter("user")))
+            if(!realPath.startsWith(getServletContext().getInitParameter("root") + getServletContext().getInitParameter("user")))
                 return;
 
             List<Part> fileParts;
