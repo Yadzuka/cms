@@ -3,7 +3,7 @@
  (c) Alex V Eustrop 2009
  see LICENSE at the project's root directory
 
- $Id: cms.jsp,v 1.1 2020/05/15 22:10:23 eustrop Exp $
+ $Id: cms.jsp,v 1.2 2020/05/15 22:28:41 eustrop Exp $
 
  Purpose: PostgreSQL DB access via tiny JSP-based application using
           it's (PGSQL) "trusted login" feature and web server's
@@ -23,11 +23,11 @@
 //
 // Global parameters
 //
-private final static String CGI_NAME = "psql.jsp";
+private final static String CGI_NAME = "cms.jsp";
 private final static String CGI_TITLE = "PSQL-like tool via JSP and JDBC";
 //private final static String DBSERVER_URL = "jdbc:postgresql:tisexmpldb?user=tisuser1&password=";
 private final static String DBSERVER_URL = "jdbc:postgresql:conceptisdb";
-private final static String JSP_VERSION = "$Id: cms.jsp,v 1.1 2020/05/15 22:10:23 eustrop Exp $";
+private final static String JSP_VERSION = "$Id: cms.jsp,v 1.2 2020/05/15 22:28:41 eustrop Exp $";
 
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
