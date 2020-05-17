@@ -1,0 +1,2 @@
+#YYYY-MM-DD HH:MM:SS.mmmm	success	user@domain.name:workstation	cmd	d	d2	opts	msg
+2020-05-17 18:00:04.0123	+	username@example.org:127.0.0.1	ls	/home	.	--none	OK
