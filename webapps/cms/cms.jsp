@@ -3,7 +3,7 @@
  (c) Alex V Eustrop 2009
  see LICENSE at the project's root directory
 
- $Id: cms.jsp,v 1.3 2020/05/16 19:12:18 eustrop Exp $
+ $Id: cms.jsp,v 1.4 2020/05/17 00:38:10 eustrop Exp $
 
  Purpose: PostgreSQL DB access via tiny JSP-based application using
           it's (PGSQL) "trusted login" feature and web server's
@@ -25,7 +25,7 @@
 private final static String CGI_NAME = "cms.jsp";
 private final static String CGI_TITLE = "EustroCMS - система управления разнородным ПСПН контентом (РД по TIS/SQL)";
 private final static String CMS_ROOT = "/s/QREditDB/";
-private final static String JSP_VERSION = "$Id: cms.jsp,v 1.3 2020/05/16 19:12:18 eustrop Exp $";
+private final static String JSP_VERSION = "$Id: cms.jsp,v 1.4 2020/05/17 00:38:10 eustrop Exp $";
 
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
@@ -70,14 +70,21 @@ private JspWriter out;
  return(translate_tokens(text,HTML_UNSAFE_CHARACTERS,HTML_UNSAFE_CHARACTERS_SUBST));
  } // text2html()
 
- /** convert plain textual data into html form value suitable for input or textarea fields.
-  * @param text - plain text
-  * @return escaped text
-  */
- public static String text2value(String text)
- {
- return(translate_tokens(text,VALUE_CHARACTERS,VALUE_CHARACTERS_SUBST));
- } // text2html()
+// BEGIN WAMessage section
+    /**
+     * convert plain textual data into html form value suitable for input or textarea fields.
+     *
+     * @param text - plain text
+     * @return escaped text
+     */
+    public static String text2value(String text) {
+        return (translate_tokens(text, VALUE_CHARACTERS, VALUE_CHARACTERS_SUBST));
+    } // text2value()
+
+    public static String obj2value(Object o) {
+        return (text2value(obj2text(o)));
+    }
+// END WAMessage section
 
  /** replace all sz's occurrences of 'from[x]' onto 'to[x]' and return the result.
   * Each occurence processed once and result depend on token's order at 'from'. 
@@ -223,11 +230,26 @@ private JspWriter out;
 <body>
   <h2><%= CGI_TITLE %></h2>
   <form method="GET" action="<%=CGI_NAME%>">
-  cmd : <input name="cmd" type="text" value=""><br>
-  d : <input name="d" type="text" value=""><br>
-  d2 : <input name="d" type="text" value=""><br>
+  cmd : <select name="<%=PARAM_CMD %>">
+   <option value="ls">ls</option>
+   <option value="mv">mv</option>
+   <option value="rename">rename</option>
+   <option value="create">create</option>
+   <option value="rm">rm</option>
+   <option value="cp">cp</option>
+   <option value="view">view</option>
+   <option value="lock">lock</option>
+   <option value="unlock">unlock</option>
+   <option value="commit">commit</option>
+   <option value="rollback">rollback</option>
+   <option value="fetch">fetch</option>
+   <option value="chown">chown</option>
+  </select>
+   <input name="<%=PARAM_CMD %>" type="text" value="<%=obj2value(cmd) %>"><br>
+  d : <input name="<%=PARAM_D %>" type="text" value="<%=obj2value(d) %>"><br>
+  d2 : <input name="<%=PARAM_D2 %>" type="text" value="<%=obj2value(d2) %>"><br>
   opts : <br>
-  <textarea name="opts" rows="2" cols="72"><%
+  <textarea name="<%=PARAM_OPTS %>" rows="2" cols="72"><%
   //
   // get request from the passed parameters 
   // and display it as <textarea>
