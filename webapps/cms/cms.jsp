@@ -3,7 +3,7 @@
  (c) Alex V Eustrop 2009
  see LICENSE at the project's root directory
 
- $Id: cms.jsp,v 1.2 2020/05/15 22:28:41 eustrop Exp $
+ $Id: cms.jsp,v 1.3 2020/05/16 19:12:18 eustrop Exp $
 
  Purpose: PostgreSQL DB access via tiny JSP-based application using
           it's (PGSQL) "trusted login" feature and web server's
@@ -17,17 +17,15 @@
   page contentType="text/html; charset=UTF-8"
   import="java.util.*"
   import="java.io.*"
-  import="java.sql.*"
 %>
 <%!
 //
 // Global parameters
 //
 private final static String CGI_NAME = "cms.jsp";
-private final static String CGI_TITLE = "PSQL-like tool via JSP and JDBC";
-//private final static String DBSERVER_URL = "jdbc:postgresql:tisexmpldb?user=tisuser1&password=";
-private final static String DBSERVER_URL = "jdbc:postgresql:conceptisdb";
-private final static String JSP_VERSION = "$Id: cms.jsp,v 1.2 2020/05/15 22:28:41 eustrop Exp $";
+private final static String CGI_TITLE = "EustroCMS - система управления разнородным ПСПН контентом (РД по TIS/SQL)";
+private final static String CMS_ROOT = "/s/QREditDB/";
+private final static String JSP_VERSION = "$Id: cms.jsp,v 1.3 2020/05/16 19:12:18 eustrop Exp $";
 
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
@@ -109,62 +107,52 @@ private JspWriter out;
  // DB interaction & result printing methods
  //
 
-  /** create driver class by its classname (jdbc_driver parameter)
-   * and register it via DriverManager.registerDriver().
-   * @param jdbc_driver - "org.postgresql.Driver" for postgres,
-   * "oracle.jdbc.driver.OracleDriver" for oracle, etc.
+  /** Инициализация контекста системы, получение параметров для настройки,
+   * загрузка в глобальные статические структуры всего того, что желательно
+   * иметь под рукой, в процессе работы, сейчас и после.
+   * Вызывается перед оработкой каждого запроса.
+   * Выполняется один раз, при каждом обнаружении изменений в загружаемых данных.
+   * 
    */ 
- public static void register_jdbc_driver(String jdbc_driver)
-	throws Exception
+ public static void init_cms_context() throws Exception
   {
-   java.sql.Driver d;
-   Class dc;
-   // get "Class" object for driver's class
-   try
-   {
-    dc = Class.forName(jdbc_driver);
-    d = (java.sql.Driver)dc.newInstance();
-   }
-   catch(ClassNotFoundException e) {
-     throw new Exception("register_jdbc_driver:" + "unable to get Class for "
-     + jdbc_driver + ":" + e); }
-   catch(Exception e) {
-     throw new Exception("register_jdbc_driver: unable to get driver " 
-     + jdbc_driver + " : " + e); }
-   // register driver
-   try { DriverManager.registerDriver(d); }
-   catch(SQLException e) { throw new Exception(
-   "register_jdbc_driver: unable to register driver "+jdbc_driver+" : "+e);}
-  } // register_jdbc_driver()
 
-  /** execute sz_sql and print it's ResultSet as html table.
+  } // init_cms_context()
+  public static void logon(String user,String remote_ws)
+  {
+   return;
+  }
+  public static void logoff() { return; }
+  public static boolean check_access(String cmd, String d,String d2){return(true);}
+  public static void do_log(String msg) {}
+
+  /** выполнение запроса
    */
-   public void exec_sql(java.sql.Connection dbc,String sz_sql)
-    throws java.sql.SQLException, java.io.IOException
+   public void exec_request(String cmd,String d,String d2,String opts[])
+   throws IOException
    {
-    java.sql.Statement st = null;
-    java.sql.ResultSet rs = null;
-    try
-    {
-     st = dbc.createStatement();
-     rs = st.executeQuery(sz_sql);
-     print_sql_rs(rs);
+    try{
+     print_exec_result(cmd,d,d2,opts,"Test");
     }
-    catch(SQLException e){
-     printerrln("sql error during \"" + sz_sql + "\": " + e ); 
+    catch(Exception e){
+     printerrln("exec_request: " + e ); 
     }
-    finally{
-     try{if(rs != null) rs.close();}catch(SQLException e){}
-     try{if(st != null) st.close();}catch(SQLException e){}
-    }
-   } //exec_sql()
+    finally{ }
+   } //exec_request()
+   public void print_exec_result(String cmd,String d,String d2,String opts[],String msg)
+   throws IOException
+   {
+   out.println(cmd);
+   out.println(d);
+   out.println(d2);
+   out.println(msg);
+   }
 
   /** print the whole of rs as html table/
    */
-   public void print_sql_rs(java.sql.ResultSet rs)
-    throws java.sql.SQLException,  java.io.IOException
+   public void print_exec_result_table(String[] header, String[] rows,String footer[])
    {
-   java.sql.ResultSetMetaData rsmd = rs.getMetaData();
+/*
    int column_count=rsmd.getColumnCount();
    int i;
     // print column's titles
@@ -191,7 +179,8 @@ private JspWriter out;
     out.println("</tr>");
     } // while(rs.next())
     out.println("</table>");
-   } // print_sql_rs
+*/
+   } // print_exec_result
 
    /** print message to stdout. TISExmlDB.java legacy where have been wrapper to System.out.print */
    public  void printmsg(String msg) throws java.io.IOException {out.print(msg);}
@@ -202,6 +191,11 @@ private JspWriter out;
    public  void printerr(String msg) throws java.io.IOException {out.print("<b>" + obj2html(msg) + "</b>");}
    public  void printerrln(String msg) throws java.io.IOException {printerr(msg);out.print("<br>");}
    public  void printerrln() throws java.io.IOException {out.println();}
+
+   public final static String PARAM_CMD="cmd";
+   public final static String PARAM_D="d";
+   public final static String PARAM_D2="d2";
+   public final static String PARAM_OPTS="opts";
 %>
 <%
 
@@ -215,7 +209,11 @@ private JspWriter out;
  response.setHeader("Pragma","no-cache");
  response.setDateHeader("Expires",expire_time);
  request.setCharacterEncoding("UTF-8");
- String szSQLRequest=SZ_EMPTY;
+
+ String cmd=request.getParameter(PARAM_CMD);
+ String d=request.getParameter(PARAM_D);
+ String d2=request.getParameter(PARAM_D2);
+ String opts=request.getParameter(PARAM_OPTS);
 
 %>
 <html>
@@ -224,20 +222,21 @@ private JspWriter out;
  </head>
 <body>
   <h2><%= CGI_TITLE %></h2>
-  <form method="POST" action="<%=CGI_NAME%>">
-  SQL request:<br>
-  <textarea name="SQLRequest" rows="10" cols="72"><%
-
+  <form method="GET" action="<%=CGI_NAME%>">
+  cmd : <input name="cmd" type="text" value=""><br>
+  d : <input name="d" type="text" value=""><br>
+  d2 : <input name="d" type="text" value=""><br>
+  opts : <br>
+  <textarea name="opts" rows="2" cols="72"><%
   //
-  // get SQL request from the passed parameters 
+  // get request from the passed parameters 
   // and display it as <textarea>
   //
 
-  szSQLRequest=request.getParameter("SQLRequest");
-  if(SZ_EMPTY.equals(szSQLRequest) || szSQLRequest == null){
-   out.println("select SAM.get_user()");
+  if( opts == null){
+   out.println("--none");
   }else{
-   out.print(text2value(szSQLRequest));
+   out.print(text2value(opts));
   }
 
   %></textarea><br>
@@ -247,21 +246,19 @@ private JspWriter out;
  <%
 
   //
-  // passed SQL request executing
+  // passed request executing
   //
 
-  if((!SZ_EMPTY.equals(szSQLRequest)) && szSQLRequest != null)
+  if((!SZ_EMPTY.equals(cmd)) && cmd != null)
   {
    this.out = out;
-   java.sql.Connection dbc;
    try{
-    // register JDBC driver
-    register_jdbc_driver("org.postgresql.Driver");
-    // open JDBC connection
-    dbc=DriverManager.getConnection(DBSERVER_URL,request.getRemoteUser(),"");
-    //dbc=DriverManager.getConnection(DBSERVER_URL);
-    try{ exec_sql(dbc,szSQLRequest); }
-    finally{ dbc.close();}
+    // prepare session context if so
+    init_cms_context();
+    // logon into system with current request's user
+    logon(request.getRemoteUser(),"");
+    try{ exec_request(cmd,d,d2,new String[]{opts}); }
+    finally{ logoff();}
     }
     catch(Exception e){printerrln(e.toString());}
   }
