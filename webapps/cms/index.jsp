@@ -10,6 +10,10 @@ You can select one from the next variants of UI<br>
 <li><b><a href="index0.jsp">index0.jsp</a> - интерфейс самый-самый первый</b>
 <li><b><a href="editqrpage.jsp">editqrpage.jsp</a> - интерфейс от edit.qr.qxyz.ru</b>
 </ul>
+<h2>Прототипы пользовательского интерфейса:</h2>
+<ul>
+<li> <a href='ui_proto2_ale777.html'>Прототип интерфейса №2, на примере ConcepTIS (ale77)</a>
+</ul>
 <h2>Официальные репозитории:</h2>
 <ul>
 <li> <a href='https://bitbucket.org/Yadzuka/cms/src/master/'>bitbucket.org/Yadzuka/cms/</a>

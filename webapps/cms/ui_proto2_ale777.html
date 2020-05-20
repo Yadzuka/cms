@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	<link rel="shortcut icon" href="beacon.png" type="image/png">
+   <link rel="icon" href="beacon.png" type="image/png">
+	<title>Concept TIS menu</title>
+<style>
+body {
+	width: 100%;
+	height: 950px;
+	color: #333;
+	background: #DEF;
+	font-size: 1em;
+	font-family: "Tahoma", sans-serif;
+	line-height: 135%;
+	padding:15px;
+}
+.btn-link{
+	color:black;
+}
+.btn-link:hover{
+	background-color: black
+	color:white;
+}
+a {
+/* 	color:blue; */
+	text-decoration: none;
+}
+a:hover{
+
+}
+
+</style>
+
+</head>
+<body>
+
+<header>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+ 	  <a class="navbar-brand" href="#">
+    <img src="beacon.png" width="30" height="30" class="d-inline-block align-top" alt="">
+    Eustrosoft
+      </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto" style='justify-content: space-around; width: 70%;'>
+      <div>
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Главная<span class="sr-only">(current)</span></a>
+      </li>
+      </div>
+      <div>
+      <li class="nav-item">
+        <a class="nav-link" href="#">SAM</a>
+      </li>
+      </div>
+      <div>
+	<li class="nav-item">
+        <a class="nav-link" href="#">TISC</a>
+      </li>
+      </div>
+      <div>
+	<li class="nav-item">
+        <a class="nav-link" href="#">Tools</a>
+      </li>
+      </div>
+      <div>
+      <li class="nav-item">
+        <a class="nav-link" href="#">PSQL</a>
+      </li>
+      </div>
+
+<div>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Help
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#">Action</a>
+          <a class="dropdown-item" href="#">Another action</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#">Something else here</a>
+        </div>
+      </li>
+</div>
+<div>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">Disabled</a>
+      </li>
+</div>
+    </ul>
+
+	<form class="form-inline my-2 my-lg-0">
+      <input class="form-control mr-sm-2" type="search" placeholder="" aria-label="Search">
+      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Загрузить</button>
+    </form>
+</div>
+</nav>
+</header>
+
+<div class="row" style='padding:15px;'>
+
+	<div class='col-md-3' style='border-right: 2px solid darkred;height: 100%;'>
+		<div style='border-botton: 2px solid darkred;padding:10px;'>
+		<form class="bd-search my-2 my-lg-0" style='border-botton: 2px solid darkred;'>
+      	<input class="form-control mr-sm-2" type="search" placeholder="Поиск..." aria-label="Search">
+    	</form>
+		</div>
+	<nav class="">
+
+<!-- <div class="dropdown">
+  <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    SAM
+  </a>
+
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+    <a class="dropdown-item" href="#">Users</a>
+    <a class="dropdown-item" href="#">Group</a>
+    <a class="dropdown-item" href="#">Scopes</a>
+  </div>
+</div>
+-->
+<div>
+<button class="btn btn-link" type="button" data-toggle="collapse" data-target=".SAM-collapse" aria-expanded="false" aria-controls="CollapseSAM1 CollapseSAM2"> SAM</button>
+	<div class="collapse SAM-collapse" id="CollapseSAM1">
+    	<ul type='none' class="main_logo">
+			<li class="nav-item">
+				<a class="btn btn-link" href='#'>Users</a>
+			</li>
+			<li class="nav-item">
+				<a class="btn btn-link" href='#'>Group</a>
+			</li>
+			<li class="nav-item">
+				<a class="btn btn-link" href='#'>Scopes</a>
+			</li>
+		</ul>
+    </div>
+</div>
+<div>
+<button class="btn btn-link" type="button" data-toggle="collapse" data-target=".TISC-collapse" aria-expanded="false" aria-controls="CollapseTISC1 CollapseTISC2">TISC</button>
+	<div class="collapse TISC-collapse" id="CollapseTISC1">
+	<ul type='none' class="main_logo">
+		<li>
+			<a class="btn btn-link" href='#'>Area</a>
+		</li>
+		<li>
+			<a class="btn btn-link" href='#'>Container</a>
+		</li>
+		<li>
+			<a class="btn btn-link" href='#'>Document</a>
+		</li>
+	</ul>
+	</div>
+</div>
+<div>
+<button class="btn btn-link" type="button" data-toggle="collapse" data-target=".tools-collapse" aria-expanded="false" aria-controls="CollapseTools1 CollapseTools2">Tools</button>
+<a class="btn btn-link" data-toggle="collapse" href="#collapseExampleTools" role="button" aria-expanded="false" aria-controls="collapseExample">
+
+</a>
+	<div class="collapse tools-collapse" id="collapseTools1">
+		<ul type='none' class="main_logo">
+			<li>
+				<a class="btn btn-link" href='#'>TISGeneric</a>
+			</li>
+			<li>
+				<a class="btn btn-link" href='#'>PSQL</a>
+			</li>
+			<li>
+				<a class="btn btn-link" href='#'>AJAX</a>
+			</li>
+		</ul>
+	</div>
+</div>
+
+				<div class="left_item">
+					<a class="btn btn-link" href='#'>Dic</a>
+				</div>
+				<div class="left_item">
+					<a class="btn btn-link" href='#'>Doc</a>
+				</div>
+				<div class="left_item">
+					<a class="btn btn-link" href='#'>SandBox</a>
+				</div>
+				<div class="left_item">
+					<a class="btn btn-link" href='#'>About</a>
+				</div>
+
+</nav>
+</div>
+
+	<main class="col-md-5 py-md-3 pl-md-5" role="main" style="height: auto;">
+          <h1 class="bd-title" id="content">Навигация</h1>
+          <p class="bd-lead">Документация и примеры использования навигационных компонентов Bootstrap.</p>
+	</main>
+
+<div class='col-md-3'style='border-left: 2px solid darkred;'>
+<nav class="" aria-label="Secondary navigation">
+
+<div class="right_nav">
+	<div class="collapse SAM-collapse" id="CollapseSAM2">
+		<span>:List Users: :Create Users: :Find Users:
+ :ist Groups::reate Group::ind Group>:
+ :ist Scopes::reate Scope::ind Scope>:
+ 	    SAM subsystem - users, groups, ACL management
+        List TIS Users
+        Create new User
+        Find User
+
+        List TIS Groups
+        Create new Group
+        Find Group
+
+        List TIS Scopes
+        Create new Scope
+        Find Scope
+        Create user for DB owner (SQL, use it once)</span>
+		</div>
+<div class="collapse TISC-collapse" id="CollapseTISC2">
+	<span class="main_logo">
+		TISC subsystem - generic ConcepTIS objects (Area,Document,Container)
+        List Areas
+        Create new Area
+        Find Area
+        List Containers
+        Create new Container
+        Find Container
+        List Documents
+        Create new Document
+        Find Document
+;List Areas; ;Create Area; ;Find Area;
+;List Containers; ;Create Container; ;Find Container;
+;List Documents; ;Create Document; ;Find Document;TISC</span>
+</div>
+<div class="collapse tools-collapse" id="collapseTools1">
+<span class="main_logo">ConcepTIS generic object related actions a(create/delete, open/commit/rollback, lock/unlock etc.)
+        List data objects of specified scope
+        Find data object
+        View data object
+        Create data object
+        Open data object
+        Commit data object
+        Rollback data object
+        Compare two versions of data object
+        Lock data object
+        Unlock data object
+        Delete data object
+        Move object between scopes
+        Set data object secrecy level
+        Set DB time section visible via VD_ views
+        View last value of TIS.ZObject_seq (SQL, DB owner only)
+        Set start value of TIS.ZObject_seq (SQL, DB owner only)
+ </span>
+</div>
+
+		</div>
+	</nav>
+</div>
+
+</div>
+
+<footer class="fixed-bottom" style="background-color: #dfdfdf; height: 50px; font-size: 1em; font-family: sans-serif; font-style:italic"> <!-- page-footer font-small blue  -->
+ <div class="footer-copyright text-center py-3">© Eustrosoft, ConcepTIS v0.3 - stable version of UI (see for UI variants)  </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
+</html>
