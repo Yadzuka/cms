@@ -31,6 +31,7 @@ jar:
 install:
 	mkdir -p ${WORKDIR}/webapps/cms/WEB-INF/lib
 	cp webapps/cms/index*jsp ${WORKDIR}/webapps/cms/
+	cp webapps/cms/ui_proto* ${WORKDIR}/webapps/cms/
 	cp webapps/cms/cms.jsp ${WORKDIR}/webapps/cms/
 	cp webapps/cms/editqrpage.jsp ${WORKDIR}/webapps/cms/
 	cp webapps/cms/WEB-INF/web.xml ${WORKDIR}/webapps/cms/WEB-INF/
@@ -38,6 +39,7 @@ install:
 	cp -r webapps/cms/contrib ${WORKDIR}/webapps/cms/
 	cp -r webapps/cms/img ${WORKDIR}/webapps/cms/
 	cp -r webapps/cms/js ${WORKDIR}/webapps/cms/
+	cp -r webapps/cms/css ${WORKDIR}/webapps/cms/
 	cp -r webapps/cms/contrib ${WORKDIR}/webapps/cms/
 clean:
 	@echo "Cleaning all"
