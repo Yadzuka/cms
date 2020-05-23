@@ -105,43 +105,31 @@ a:hover{
 </nav>
 </header>
 
-<div class="row" style='padding:15px;'>
+<div class="row" style='padding:15px;height: 90%'>
 
-	<div class='col-md-3' style='border-right: 2px solid darkred;height: 100%;'>
+	<div class='col-md-3' style='border-right: 2px solid darkgray;height: 100%;'>
 		<div style='border-botton: 2px solid darkred;padding:10px;'>
 <!--
 search form moved to TISC section
-		<form class="bd-search my-2 my-lg-0" style='border-botton: 2px solid darkred;'>
+		<form class="bd-search my-2 my-lg-0" style='border-botton: 2px solid darkgray;'>
       	<input class="form-control mr-sm-2" type="search" placeholder="Поиск..." aria-label="Search">
     	</form>
 -->
 		</div>
 	<nav class="">
 
-<!-- <div class="dropdown">
-  <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    SAM
-  </a>
-
-  <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-    <a class="dropdown-item" href="#">Users</a>
-    <a class="dropdown-item" href="#">Group</a>
-    <a class="dropdown-item" href="#">Scopes</a>
-  </div>
-</div>
--->
 <div>
-<button class="btn btn-link" type="button" data-toggle="collapse" data-target=".SAM-collapse" aria-expanded="false" aria-controls="CollapseSAM1 CollapseSAM2"> SAM</button>
+<button class="btn btn-link" type="button" data-toggle="collapse" data-target=".SAM-collapse" aria-expanded="false" aria-controls="CollapseSAM1 CollapseSAM2">SAM</button>
 	<div class="collapse SAM-collapse" id="CollapseSAM1">
     	<ul type='none' class="main_logo">
 			<li class="nav-item">
-				<a class="btn btn-link" href='#'>Users</a>
+				<a class="btn btn-link" data-toggle="collapse" href="#collapseSAMusers" role="button" aria-expanded="false" aria-controls="collapseExample">Users</a>
 			</li>
 			<li class="nav-item">
-				<a class="btn btn-link" href='#'>Group</a>
+				<a class="btn btn-link" data-toggle="collapse" href="#collapseSAMgroupes" role="button" aria-expanded="false" aria-controls="collapseExample">Group</a>
 			</li>
 			<li class="nav-item">
-				<a class="btn btn-link" href='#'>Scopes</a>
+				<a class="btn btn-link" data-toggle="collapse" href="#collapseSAMscopes" role="button" aria-expanded="false" aria-controls="collapseExample">Scopes</a>
 			</li>
 		</ul>
     </div>
@@ -152,9 +140,9 @@ search form moved to TISC section
 <!-- 
 search form moved here
 -->
-		<form class="bd-search my-2 my-lg-0" style='border-botton: 2px solid darkred;'>
+	<!--	<form class="bd-search my-2 my-lg-0" style='border-botton: 2px solid darkred;'>
       	<input class="form-control mr-sm-2" type="search" placeholder="Поиск..." aria-label="Search">
-    	</form>
+    	</form> -->
 	<ul type='none' class="main_logo">
 		<li>
 			<a class="btn btn-link" href='#'>Area</a>
@@ -170,9 +158,9 @@ search form moved here
 </div>
 <div>
 <button class="btn btn-link" type="button" data-toggle="collapse" data-target=".tools-collapse" aria-expanded="false" aria-controls="CollapseTools1 CollapseTools2">Tools</button>
-<a class="btn btn-link" data-toggle="collapse" href="#collapseExampleTools" role="button" aria-expanded="false" aria-controls="collapseExample">
-
+<!-- <a class="btn btn-link" data-toggle="collapse" href="#collapseExampleTools" role="button" aria-expanded="false" aria-controls="collapseExample">
 </a>
+-->
 	<div class="collapse tools-collapse" id="collapseTools1">
 		<ul type='none' class="main_logo">
 			<li>
@@ -209,63 +197,45 @@ search form moved here
           <p class="bd-lead">Документация и примеры использования навигационных компонентов Bootstrap.</p>
 	</main>
 
-<div class='col-md-3'style='border-left: 2px solid darkred;'>
+<div class='col-md-3'style='border-left: 2px solid darkgray;'>
 <nav class="" aria-label="Secondary navigation">
 
 <div class="right_nav">
 	<div class="collapse SAM-collapse" id="CollapseSAM2">
-		<span>:List Users: :Create Users: :Find Users:
- :ist Groups::reate Group::ind Group>:
- :ist Scopes::reate Scope::ind Scope>:
- 	    SAM subsystem - users, groups, ACL management
-        List TIS Users
-        Create new User
-        Find User
-
-        List TIS Groups
-        Create new Group
-        Find Group
-
-        List TIS Scopes
-        Create new Scope
-        Find Scope
-        Create user for DB owner (SQL, use it once)</span>
+		<p>SAM subsystem - users, groups, ACL management</p>
+		<hr>
+		<div id='collapseSAMusers'><span>List TIS Users<br>Create new User<br>Find User<hr></span>
+		</div>
+		<div id='collapseSAMgroupes'><span>List TIS Groups<br>Create new Group<br>Find Group<hr></span>
+		</div>
+		<div id='collapseSAMscopes'><span>List TIS Scopes<br>Create new Scope<br>Find Scope<br>Create user for DB owner (SQL, use it once)<hr></span>
+		</div>
 		</div>
 <div class="collapse TISC-collapse" id="CollapseTISC2">
-	<span class="main_logo">
-		TISC subsystem - generic ConcepTIS objects (Area,Document,Container)
-        List Areas
-        Create new Area
-        Find Area
-        List Containers
-        Create new Container
-        Find Container
-        List Documents
-        Create new Document
-        Find Document
-;List Areas; ;Create Area; ;Find Area;
-;List Containers; ;Create Container; ;Find Container;
-;List Documents; ;Create Document; ;Find Document;TISC</span>
+	<p>TISC subsystem - generic ConcepTIS objects: Area, Document, Container</p>
+		<hr>
+		<div><span>List Areas<br>Create new Area<br>Find Area<hr></span></div>
+        <div><span>List Containers<br>Create new Container<br>Find Container<hr></span></div>
+        <div><span>List Documents<br>Create new Document<br>Find Document<hr></span></div>
 </div>
 <div class="collapse tools-collapse" id="collapseTools1">
-<span class="main_logo">ConcepTIS generic object related actions a(create/delete, open/commit/rollback, lock/unlock etc.)
-        List data objects of specified scope
-        Find data object
-        View data object
-        Create data object
-        Open data object
-        Commit data object
-        Rollback data object
-        Compare two versions of data object
-        Lock data object
-        Unlock data object
-        Delete data object
-        Move object between scopes
-        Set data object secrecy level
-        Set DB time section visible via VD_ views
-        View last value of TIS.ZObject_seq (SQL, DB owner only)
-        Set start value of TIS.ZObject_seq (SQL, DB owner only)
- </span>
+<p>ConcepTIS generic object related actions a(create/delete, open/commit/rollback, lock/unlock etc.)</p><hr>
+        <span>List data objects of specified scope<br></span>
+        <span>Find data object<br></span>
+        <span>View data object<br></span>
+        <span>Create data object<br></span>
+        <span>Open data object<br></span>
+        <span>Commit data object<br></span>
+        <span>Rollback data object<br></span>
+        <span>Compare two versions of data object<br></span>
+        <span>Lock data object<br></span>
+        <span>Unlock data object<br></span>
+        <span>Delete data object<br></span>
+        <span>Move object between scopes<br></span>
+        <span>Set data object secrecy level<br></span>
+        <span>Set DB time section visible via VD_ views<br></span>
+        <span>View last value of TIS.ZObject_seq (SQL, DB owner only)<br></span>
+        <span>Set start value of TIS.ZObject_seq (SQL, DB owner only)<br></span>
 </div>
 
 		</div>
