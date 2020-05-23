@@ -1,7 +1,7 @@
 <%--
  EustroCMS project
  cms.jsp - portable, single-JSP, SPA proof of concept for EustroCMS
- $Id: cms.jsp,v 1.5 2020/05/23 12:22:50 eustrop Exp eustrop $
+ $Id: cms.jsp,v 1.6 2020/05/23 23:30:48 eustrop Exp eustrop $
  (c) EustroSoft.org, Alex V Eustrop & Staff, 2020
  LICENSE: BALES, BSD, MIT (on your choice), see http://bales.eustrosoft.org
 
@@ -12,7 +12,8 @@
  4. <write your name here & move this text to next line>
 
  Other Contributions & Contributors (projects, sources & authors of code included into this project)
- 1. <write the name of project, its source or authors here & move this text to next line>
+ 1. ConcepTIS : some code imported from classes ZSystem,WAMessages,WASkin,WARHMain (see inital contrib notes for repo)
+ 2. <write the name of project, its source or authors here & move this text to next line>
 
  Inital contributions & contributors
  1. This code started from Eustrop's ConcepTIS:/src/java/webapps/psql/psql.jsp
@@ -43,13 +44,15 @@
 private final static String CGI_NAME = "cms.jsp";
 private final static String CGI_TITLE = "EustroCMS - система управления разнородным ПСПН контентом (РД по TIS/SQL)";
 private final static String CMS_ROOT = "/s/QREditDB/";
-private final static String JSP_VERSION = "$Id: cms.jsp,v 1.5 2020/05/23 12:22:50 eustrop Exp eustrop $";
+private final static String JSP_VERSION = "$Id: cms.jsp,v 1.6 2020/05/23 23:30:48 eustrop Exp eustrop $";
 
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
 private final static String SZ_UNKNOWN = "<<UNKNOWN>>";
 
 private JspWriter out;
+
+private WAMessages wam = null; // будем пока использовать только статические методы и св-ва
 
 // ################################################################################
 //
@@ -70,13 +73,12 @@ public class CMDDef{
  {this.cmd=cmd; this.cmpltn=cmpltn; this.d=d; this.opts=opts; this.access=access; this.name=name; this.desc=desc; this.comment=comment;}
 }
 
+public class CMSystem
+{
+
 //
 // 1.1. Это будет корневой DAO класс - логика манипулирования объектами предметной области
 //
-  //
-  // CMD commands
-  // 
-  public static final String CMD_LS="ls";
 
   RList cmd_ls(String d,String[] opts) { return(null); }
 
@@ -87,17 +89,18 @@ public class CMDDef{
    * Выполняется один раз, при каждом обнаружении изменений в загружаемых данных.
    * 
    */ 
- public static void init_cms_context() throws Exception
+ public void init_cms_context() throws Exception
   {
 
   } // init_cms_context()
-  public static void logon(String user,String remote_ws)
+  public void logon(String user,String remote_ws)
   {
    return;
   }
-  public static void logoff() { return; }
-  public static boolean check_access(String cmd, String d,String d2){return(true);}
-  public static void do_log(String msg) {}
+  public void logoff() { return; }
+  public boolean check_access(String cmd, String d,String d2){return(true);}
+  public void do_log(String msg) {}
+} // END CMSystem class
 
 // ###### END DAO PACKAGE
 
@@ -110,11 +113,17 @@ public class CMDDef{
 //    а также - статических методов манипулирования строками obj2text(), o2html(),..
 //
 // ################################################################################
+public static class WAMessages
+{
 
    public final static String PARAM_CMD="cmd";
    public final static String PARAM_D="d";
    public final static String PARAM_D2="d2";
    public final static String PARAM_OPTS="opts";
+  //
+  // CMD commands
+  // 
+  public static final String CMD_LS="ls";
 
 //
 // static conversion helpful functions
@@ -129,6 +138,14 @@ public class CMDDef{
  if(o == null) return(SZ_NULL); return(o.toString());
  }
 
+ /** convert object to text but preserve null value if so.
+ * @see obj2text
+ */
+ public static String obj2string(Object o)
+ {
+ if(o == null) return(null); return(obj2text(o));
+ }
+
  /** convert object to html text even if object is null.
  * @see #obj2text
  * @see #text2html
@@ -139,8 +156,8 @@ public class CMDDef{
  }
 
  //
- public static String[] HTML_UNSAFE_CHARACTERS = {"<",">","&","\n"};
- public static String[] HTML_UNSAFE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","<br>\n"};
+ public final static String[] HTML_UNSAFE_CHARACTERS = {"<",">","&","\n"};
+ public final static String[] HTML_UNSAFE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","<br>\n"};
  public final static String[] VALUE_CHARACTERS = { "<",">","&","\"","'" };
  public final static String[] VALUE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","&quot;","&#039;"};
 
@@ -199,6 +216,7 @@ public class CMDDef{
   }
   return(sb.toString());
  } // translate_tokens
+} //END class CMS WAMessages
 
 // ################################################################################
 //
@@ -206,15 +224,102 @@ public class CMDDef{
 //
 // ################################################################################
 
+public class WASkin
+{
+private String CGI_NAME="cms.jsp";
+private javax.servlet.jsp.JspWriter out;
+private WAMessages wam;
+private boolean is_error=false;
+private Exception last_exception = null;
+private boolean is_debug=true;
+
+/** set debug mode. if v=true -> display all printDebug() messages, else - ignore them. */
+public void setDebug(boolean v){is_debug=v;}
+/** display debug messages if setDebug(true). */
+public void printDebug(String msg){if(!is_debug)return;printDivDebug(msg);}
+public void printDivDebug(String s){w("<div class='TISCUIDebug' title='this is debug message!'><pre>"); w(t2h(s)); w("</pre></div>");}
+
+/** main raw text writing method (all writes comes through). */
+private void w(String s)
+{
+ is_error=false;
+ try{out.print(s);}
+ catch(Exception e)
+  {is_error=true;last_exception=e;}
+} // w(String s)
+private void wln(String s){w(s);w("\n");}
+private void wln(){w("\n");}
+
+public void sendHTTPRedirect(
+        javax.servlet.http.HttpServletResponse response, String szURL)
+{
+ try{
+  //if(true) throw(new java.io.IOException("test exception"));
+  response.sendRedirect(szURL);
+ }
+ catch(java.io.IOException e) {
+  printDebug(e.toString());
+ }
+} // sendHTTPRedirect
+
+// error control methods
+public boolean checkError(){return(is_error);}
+public Exception getLastException(){return(last_exception);}
+
+/** obj2html */
+private String t2h(String s){return(WAMessages.obj2html(s));}
+/** obj2value */
+private String o2v(Object o){return(WAMessages.obj2value(o));}
+/** obj2urlvalue (WARNING: must be rewritten) */
+private String o2uv(Object o){return(WAMessages.obj2value(o));}
+/** obj2text */
+private String o2t(Object o){return(WAMessages.obj2text(o));}
+/** obj2string */
+private String o2s(Object o){return(WAMessages.obj2string(o));}
+
+public void print(String s){w(t2h(s));}
+public void println(String s){w(t2h(s));wln("<br>");}
+public void println(){wln("<br>");}
+
+
+// SIC! BEGIN CODE FOR REMOVE
    /** print message to stdout. TISExmlDB.java legacy where have been wrapper to System.out.print */
    public  void printmsg(String msg) throws java.io.IOException {out.print(msg);}
    public  void printmsgln(String msg) throws java.io.IOException {out.println(msg);}
    public  void printmsgln() throws java.io.IOException {out.println();}
 
    /** print message to stderror. TISExmlDB.java legacy where have been just a wrapper to System.err.print */
-   public  void printerr(String msg) throws java.io.IOException {out.print("<b>" + obj2html(msg) + "</b>");}
-   public  void printerrln(String msg) throws java.io.IOException {printerr(msg);out.print("<br>");}
-   public  void printerrln() throws java.io.IOException {out.println();}
+   public  void printerr(String msg) {print("<b>" + wam.obj2html(msg) + "</b>");}
+   public  void printerrln(String msg) {println(msg);print("<br>");}
+// SIC! END CODE FOR REMOVE
+
+//
+// properties get/set
+//
+
+public void setOut(javax.servlet.jsp.JspWriter out){this.out=out;}
+public javax.servlet.jsp.JspWriter getOut(){return(out);}
+
+public String getCGI() { return(CGI_NAME); }
+public String setCGI(String CGI) {String s=CGI_NAME; CGI_NAME=CGI; return(s);}
+
+// constructors
+
+public WASkin() {}
+public WASkin(javax.servlet.jsp.JspWriter out, WAMessages wam)
+{
+ setOut(out);
+ this.wam=wam;
+}
+
+public WASkin(String CGI, javax.servlet.jsp.JspWriter out, WAMessages wam)
+{
+ setCGI(CGI);
+ setOut(out);
+ this.wam=wam;
+}
+
+} //END CMS WASkin class
 
 
 // ################################################################################
@@ -229,6 +334,24 @@ public class CMDDef{
 //
 // ################################################################################
 
+public class WARHMain
+{
+private String CGI_NAME = "cms.jsp";
+private String CMS_ROOT = "/s/QREditDB/";
+
+private final static String SZ_EMPTY = "";
+private final static String SZ_NULL = "<<NULL>>";
+private final static String SZ_UNKNOWN = "<<UNKNOWN>>";
+
+protected WASkin was;
+protected WAMessages wam;
+
+protected javax.servlet.jsp.JspWriter out;
+protected javax.servlet.http.HttpServletRequest request;
+protected javax.servlet.http.HttpServletResponse response;
+
+CMSystem cms = null;
+
  //
  // DB interaction & result printing methods
  //
@@ -240,7 +363,7 @@ public class CMDDef{
    // was.beginTabLS(ls)
    // for ( f in ls) { was.printRowLS(f);}
    // was.closeTabLS(ls)
-   out.println("exec_ls:" + d + " Ok");
+   was.println("exec_ls:" + d + " Ok");
   }
 
   /** выполнение запроса
@@ -252,22 +375,22 @@ public class CMDDef{
      print_exec_result(cmd,d,d2,opts,"Test");
      switch(cmd)
      {
-      case CMD_LS: cmd_ls(cmd,null);
+      case "ls": exec_cmd_ls(cmd,null);
       default:
      }
     }
     catch(Exception e){
-     printerrln("exec_request: " + e ); 
+     was.printerrln("exec_request: " + e ); 
     }
     finally{ }
    } //exec_request()
    public void print_exec_result(String cmd,String d,String d2,String opts[],String msg)
    throws IOException
    {
-   out.println(cmd);
-   out.println(d);
-   out.println(d2);
-   out.println(msg);
+   was.println(cmd);
+   was.println(d);
+   was.println(d2);
+   was.println(msg);
    }
 
   /** print the whole of rs as html table/
@@ -304,6 +427,40 @@ public class CMDDef{
 */
    } // print_exec_result
 
+   public void process()
+   {
+ String cmd=request.getParameter(wam.PARAM_CMD);
+ String d=request.getParameter(wam.PARAM_D);
+ String d2=request.getParameter(wam.PARAM_D2);
+ String opts=request.getParameter(wam.PARAM_OPTS);
+    cms=new CMSystem();
+    try{
+    // prepare session context if so
+    cms.init_cms_context();
+    // logon into system with current request's user
+    cms.logon(request.getRemoteUser(),"");
+    try{ exec_request(cmd,d,d2,new String[]{opts}); }
+    finally{ cms.logoff();}
+    }
+    catch(Exception e){was.printerrln(e.toString());}
+   }
+
+   // Constructors
+
+
+ public WARHMain(
+        javax.servlet.http.HttpServletRequest request,
+        javax.servlet.http.HttpServletResponse response,
+        javax.servlet.jsp.JspWriter out)
+ {
+  this.request = request;
+  this.response = response;
+  this.out = out;
+  wam = new WAMessages(); was = new WASkin(out,wam);
+ } // WARequestHandler(HttpServletRequest,JspWriter)
+
+}// END WARHMain
+
 // ###### END WEBAPPS PACKAGE
 
 %><%
@@ -328,10 +485,10 @@ public class CMDDef{
  response.setDateHeader("Expires",expire_time);
  request.setCharacterEncoding("UTF-8");
 
- String cmd=request.getParameter(PARAM_CMD);
- String d=request.getParameter(PARAM_D);
- String d2=request.getParameter(PARAM_D2);
- String opts=request.getParameter(PARAM_OPTS);
+ String cmd=request.getParameter(wam.PARAM_CMD);
+ String d=request.getParameter(wam.PARAM_D);
+ String d2=request.getParameter(wam.PARAM_D2);
+ String opts=request.getParameter(wam.PARAM_OPTS);
 
  boolean should_be_jsp_body_printed = true;
 
@@ -369,7 +526,7 @@ if(should_be_jsp_body_printed) { // возможно, мы уже все сде�
 <body>
   <h2><%= CGI_TITLE %></h2>
   <form method="GET" action="<%=CGI_NAME%>">
-  cmd : <select name="<%=PARAM_CMD %>">
+  cmd : <select name="<%=wam.PARAM_CMD %>">
    <option value="ls">ls</option>
    <option value="mv">mv</option>
    <option value="rename">rename</option>
@@ -384,11 +541,11 @@ if(should_be_jsp_body_printed) { // возможно, мы уже все сде�
    <option value="fetch">fetch</option>
    <option value="chown">chown</option>
   </select>
-   <input name="<%=PARAM_CMD %>" type="text" value="<%=obj2value(cmd) %>"><br>
-  d : <input name="<%=PARAM_D %>" type="text" value="<%=obj2value(d) %>"><br>
-  d2 : <input name="<%=PARAM_D2 %>" type="text" value="<%=obj2value(d2) %>"><br>
+   <input name="<%=wam.PARAM_CMD %>" type="text" value="<%=wam.obj2value(cmd) %>"><br>
+  d : <input name="<%=wam.PARAM_D %>" type="text" value="<%=wam.obj2value(d) %>"><br>
+  d2 : <input name="<%=wam.PARAM_D2 %>" type="text" value="<%=wam.obj2value(d2) %>"><br>
   opts : <br>
-  <textarea name="<%=PARAM_OPTS %>" rows="2" cols="72"><%
+  <textarea name="<%=wam.PARAM_OPTS %>" rows="2" cols="72"><%
   //
   // get request from the passed parameters 
   // and display it as <textarea>
@@ -397,7 +554,7 @@ if(should_be_jsp_body_printed) { // возможно, мы уже все сде�
   if( opts == null){
    out.println("--none");
   }else{
-   out.print(text2value(opts));
+   out.print(wam.text2value(opts));
   }
 
   %></textarea><br>
@@ -413,18 +570,10 @@ if(should_be_jsp_body_printed) { // возможно, мы уже все сде�
   if((!SZ_EMPTY.equals(cmd)) && cmd != null)
   {
    this.out = out;
-   try{
-    // prepare session context if so
-    init_cms_context();
-    // logon into system with current request's user
-    logon(request.getRemoteUser(),"");
-    try{ exec_request(cmd,d,d2,new String[]{opts}); }
-    finally{ logoff();}
-    }
-    catch(Exception e){printerrln(e.toString());}
+   WARHMain warh=new WARHMain(request,response,out);
+   warh.process();
   }
- out.println("<hr>");
-
+  out.println("<hr>");
  %>
   <i>timing : <%= ((System.currentTimeMillis() - enter_time) + " ms") %></i>
  <br>
