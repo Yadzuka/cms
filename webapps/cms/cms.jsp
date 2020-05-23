@@ -1,9 +1,28 @@
 <%--
+ EustroCMS project
+ cms.jsp - portable, single-JSP, SPA proof of concept for EustroCMS
+ $Id: cms.jsp,v 1.5 2020/05/23 12:22:50 eustrop Exp eustrop $
+ (c) EustroSoft.org, Alex V Eustrop & Staff, 2020
+ LICENSE: BALES, BSD, MIT (on your choice), see http://bales.eustrosoft.org
+
+ EustroStaff (authors) list:
+ 1. Alex V Eustrop
+ 2. Pavel Seleznev (yadzuka@)
+ 3. Alexander B. Shuvalov (ale777@)
+ 4. <write your name here & move this text to next line>
+
+ Other Contributions & Contributors (projects, sources & authors of code included into this project)
+ 1. <write the name of project, its source or authors here & move this text to next line>
+
+ Inital contributions & contributors
+ 1. This code started from Eustrop's ConcepTIS:/src/java/webapps/psql/psql.jsp
+    it can be found here : https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/psql/psql.jsp
+
+ ###########    HEADER NOTES FROM ConcepTIS psql.jsp :   #################
+
  ConcepTIS project
  (c) Alex V Eustrop 2009
  see LICENSE at the project's root directory
-
- $Id: cms.jsp,v 1.4 2020/05/17 00:38:10 eustrop Exp $
 
  Purpose: PostgreSQL DB access via tiny JSP-based application using
           it's (PGSQL) "trusted login" feature and web server's
@@ -12,26 +31,90 @@
   2009/11/21 started from the TISExmlDB.java,v 1.1 2009/10/04 14:28:00 eustrop Exp
   2009/11/25 done. size: 271 lines
   2009/11/28 some finishing. CVS import. size 277 line.
---%>
-<%@
+ ############ END of HEADER NOTES FROM ConcepTIS psql.jsp ##################
+--%><%@
   page contentType="text/html; charset=UTF-8"
   import="java.util.*"
   import="java.io.*"
-%>
-<%!
+%><%! // Это "><" НЕСПРОСТА! оно чтобы лишнее "\n" в браузер не улетало!
 //
-// Global parameters
+// 0. Глобальные параметры и вспомогательные методы JSP
 //
 private final static String CGI_NAME = "cms.jsp";
 private final static String CGI_TITLE = "EustroCMS - система управления разнородным ПСПН контентом (РД по TIS/SQL)";
 private final static String CMS_ROOT = "/s/QREditDB/";
-private final static String JSP_VERSION = "$Id: cms.jsp,v 1.4 2020/05/17 00:38:10 eustrop Exp $";
+private final static String JSP_VERSION = "$Id: cms.jsp,v 1.5 2020/05/23 12:22:50 eustrop Exp eustrop $";
 
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
 private final static String SZ_UNKNOWN = "<<UNKNOWN>>";
 
 private JspWriter out;
+
+// ################################################################################
+//
+// 1. Это будет DAO - структуры и логика манипулирования объектами предметной области
+//
+// ################################################################################
+// ###### BEGIN DAO PACKAGE
+
+public abstract class RItem{ abstract public String getKey(); abstract public String getString(); public String toString(){return(getString());} }
+public class RList{ public RItem get(int i){return(null);} public int size(){return(0);} }
+
+/** Хранилище определения команды (информационное)
+ */
+public class CMDDef{
+ String cmd; String cmpltn; String d; String opts; String access; String name; String desc; String comment;
+ public String getKey(){return(cmd);}
+ CMDDef(String cmd, String cmpltn, String d, String opts, String access, String name, String desc, String comment)
+ {this.cmd=cmd; this.cmpltn=cmpltn; this.d=d; this.opts=opts; this.access=access; this.name=name; this.desc=desc; this.comment=comment;}
+}
+
+//
+// 1.1. Это будет корневой DAO класс - логика манипулирования объектами предметной области
+//
+  //
+  // CMD commands
+  // 
+  public static final String CMD_LS="ls";
+
+  RList cmd_ls(String d,String[] opts) { return(null); }
+
+  /** Инициализация контекста системы, получение параметров для настройки,
+   * загрузка в глобальные статические структуры всего того, что желательно
+   * иметь под рукой, в процессе работы, сейчас и после.
+   * Вызывается перед оработкой каждого запроса.
+   * Выполняется один раз, при каждом обнаружении изменений в загружаемых данных.
+   * 
+   */ 
+ public static void init_cms_context() throws Exception
+  {
+
+  } // init_cms_context()
+  public static void logon(String user,String remote_ws)
+  {
+   return;
+  }
+  public static void logoff() { return; }
+  public static boolean check_access(String cmd, String d,String d2){return(true);}
+  public static void do_log(String msg) {}
+
+// ###### END DAO PACKAGE
+
+// ###### BEGIN WEBAPPS PACKAGE
+
+// ################################################################################
+//
+// 2. Это будет WAMessages - класс-хранилище лексем, сообщений, средств локализации,
+//    методов извлечения и формирования [локализованных] сообщений,
+//    а также - статических методов манипулирования строками obj2text(), o2html(),..
+//
+// ################################################################################
+
+   public final static String PARAM_CMD="cmd";
+   public final static String PARAM_D="d";
+   public final static String PARAM_D2="d2";
+   public final static String PARAM_OPTS="opts";
 
 //
 // static conversion helpful functions
@@ -95,6 +178,13 @@ private JspWriter out;
  {
   if(sz == null) return(sz);
   StringBuffer sb = new StringBuffer(sz.length() + 256);
+ //    И где-то там, всего одна строчка, которая вызывает warh.process(), который
+ //    разбирает полученный запрос, исполняет его, и рисует в этом месте документ -
+ //    - результат исполнения запроса. А может быть он просто рисует один тэг с id=main
+ //    и фрагмент JS с литералом объекта, описывающего, что надо нарисовать?
+ //    С точки зрения бизнес-логики это абсолютно не важно. Можно и так и эдак,
+ //    и даже смешать, главное чтобы в этом можно было потом разобраться, чтобы
+ //    поддерживать и развивать.
   int p=0;
   while(p<sz.length())
   {
@@ -110,28 +200,48 @@ private JspWriter out;
   return(sb.toString());
  } // translate_tokens
 
+// ################################################################################
+//
+// 4. Это будет WASkin - средство порождения визуальных элементов UI
+//
+// ################################################################################
+
+   /** print message to stdout. TISExmlDB.java legacy where have been wrapper to System.out.print */
+   public  void printmsg(String msg) throws java.io.IOException {out.print(msg);}
+   public  void printmsgln(String msg) throws java.io.IOException {out.println(msg);}
+   public  void printmsgln() throws java.io.IOException {out.println();}
+
+   /** print message to stderror. TISExmlDB.java legacy where have been just a wrapper to System.err.print */
+   public  void printerr(String msg) throws java.io.IOException {out.print("<b>" + obj2html(msg) + "</b>");}
+   public  void printerrln(String msg) throws java.io.IOException {printerr(msg);out.print("<br>");}
+   public  void printerrln() throws java.io.IOException {out.println();}
+
+
+// ################################################################################
+//
+// 5. Это будет WARHCMS extends WARequestHandler - он обрабатывает запросы,
+//    исполняет их посредсвом DAO и рисует пользовательский интерфейс посредством
+//    WASkin (и только им, никаких других out.print*, никакого HTML, вдруг это
+//    вообще не html... Для этого мы просто подключим другой WASkin). А если ему
+//    нужно что-то сказать на человеческом языке, он берет это из WAMessages,
+//    ибо человеческие языки разные, и только WAMessages знает, как это
+//    будет на том языке, который выбрал пользователь.
+//
+// ################################################################################
+
  //
  // DB interaction & result printing methods
  //
 
-  /** Инициализация контекста системы, получение параметров для настройки,
-   * загрузка в глобальные статические структуры всего того, что желательно
-   * иметь под рукой, в процессе работы, сейчас и после.
-   * Вызывается перед оработкой каждого запроса.
-   * Выполняется один раз, при каждом обнаружении изменений в загружаемых данных.
-   * 
-   */ 
- public static void init_cms_context() throws Exception
+  private void exec_cmd_ls(String d,String[] opts) throws IOException
   {
-
-  } // init_cms_context()
-  public static void logon(String user,String remote_ws)
-  {
-   return;
+   // логика работы такова:
+   // RList ls = cmd_ls(d,opts); // далее db.ls(d,opts) или pspn.cms(wam.CMD_LS,d,opts);
+   // was.beginTabLS(ls)
+   // for ( f in ls) { was.printRowLS(f);}
+   // was.closeTabLS(ls)
+   out.println("exec_ls:" + d + " Ok");
   }
-  public static void logoff() { return; }
-  public static boolean check_access(String cmd, String d,String d2){return(true);}
-  public static void do_log(String msg) {}
 
   /** выполнение запроса
    */
@@ -140,6 +250,11 @@ private JspWriter out;
    {
     try{
      print_exec_result(cmd,d,d2,opts,"Test");
+     switch(cmd)
+     {
+      case CMD_LS: cmd_ls(cmd,null);
+      default:
+     }
     }
     catch(Exception e){
      printerrln("exec_request: " + e ); 
@@ -189,22 +304,18 @@ private JspWriter out;
 */
    } // print_exec_result
 
-   /** print message to stdout. TISExmlDB.java legacy where have been wrapper to System.out.print */
-   public  void printmsg(String msg) throws java.io.IOException {out.print(msg);}
-   public  void printmsgln(String msg) throws java.io.IOException {out.println(msg);}
-   public  void printmsgln() throws java.io.IOException {out.println();}
+// ###### END WEBAPPS PACKAGE
 
-   /** print message to stderror. TISExmlDB.java legacy where have been just a wrapper to System.err.print */
-   public  void printerr(String msg) throws java.io.IOException {out.print("<b>" + obj2html(msg) + "</b>");}
-   public  void printerrln(String msg) throws java.io.IOException {printerr(msg);out.print("<br>");}
-   public  void printerrln() throws java.io.IOException {out.println();}
-
-   public final static String PARAM_CMD="cmd";
-   public final static String PARAM_D="d";
-   public final static String PARAM_D2="d2";
-   public final static String PARAM_OPTS="opts";
-%>
-<%
+%><%
+ // ################################################################################
+ //
+ // 6. START OF JSP, NON-VISUAL SECTION - здесь можно проделать подготовительную работу
+ //    пока в браузер не ушло ни одного байта, можно поправить http заголовки,
+ //    поменять mime-type, кодировку, перехватить поток идущий из браузера методами
+ //    POST/PUT, чтобы самому разобрать их содержимое (например если это JSON
+ //    или просто бинарный поток)
+ //
+ // ################################################################################
 
  //
  // some hints for old and buggy browsers like NN4.x
@@ -222,7 +333,35 @@ private JspWriter out;
  String d2=request.getParameter(PARAM_D2);
  String opts=request.getParameter(PARAM_OPTS);
 
-%>
+ boolean should_be_jsp_body_printed = true;
+
+%><%
+if(should_be_jsp_body_printed) { // возможно, мы уже все сделали, и это тело нам вообще не нужно
+%><!-- this MUST be first line of document/это должна быть ПЕРВАЯ строка html документа -->
+<!%--
+ // ################################################################################
+ //
+ // 7. START OF JSP, VISUAL SECTION - здесь начинается HTML секция JSP, и мы уже
+ //    начали слать содержимое документа в браузер.
+ //
+ //    НО ЕЩЕ не совсем! Дело в том, что вывод JSP буфферезирован, и еще что-то
+ //    можно исправить, если буфер не переполнился и не отправился пользователю.
+ //    (буфер где-то 8192 байта, кстати - это JSP комментарий, он в документ не пойдет)
+ //    Здесь все рамочное оформление, подгрузка css, JavaScript и т.п., как в обычном
+ //    HTML. Именно это позволяет документу выглядеть "прилично", а не так, как я люблю.
+ //    И где-то там, всего одна строчка, которая вызывает warh.process(), который
+ //    разбирает полученный запрос, исполняет его, и рисует в этом месте документ -
+ //    - результат исполнения запроса.
+ //
+ //    А может быть он просто рисует один тэг с id=main и фрагмент JavaScript с
+ //    литералом объекта, описывающего, что-же надо нарисовать?
+ //    С точки зрения бизнес-логики это абсолютно не важно. Можно и так и эдак,
+ //    и даже смешать, главное чтобы в этом можно было потом разобраться, чтобы
+ //    поддерживать и развивать.
+ //
+ // ################################################################################
+ 
+--%><!-- this is second line/это вторая строка -->
 <html>
  <head>
   <title><%= CGI_TITLE %></title>
@@ -294,3 +433,6 @@ private JspWriter out;
   <!-- Привет this is just for UTF-8 testing (must be russian word "Privet") -->
 </body>
 </html>
+<!-- HAPPY KONEC OF SINGLE-JSP-APPLICATION -->
+<% } // close block of if(should_be_jsp_body_printed) 
+%>
