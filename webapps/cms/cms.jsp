@@ -1,7 +1,7 @@
 <%--
  EustroCMS project
  cms.jsp - portable, single-JSP, SPA proof of concept for EustroCMS
- $Id: cms.jsp,v 1.6 2020/05/23 23:30:48 eustrop Exp eustrop $
+ $Id: cms.jsp,v 1.7 2020/05/24 21:43:33 eustrop Exp eustrop $
  (c) EustroSoft.org, Alex V Eustrop & Staff, 2020
  LICENSE: BALES, BSD, MIT (on your choice), see http://bales.eustrosoft.org
 
@@ -44,7 +44,7 @@
 private final static String CGI_NAME = "cms.jsp";
 private final static String CGI_TITLE = "EustroCMS - система управления разнородным ПСПН контентом (РД по TIS/SQL)";
 private final static String CMS_ROOT = "/s/QREditDB/";
-private final static String JSP_VERSION = "$Id: cms.jsp,v 1.6 2020/05/23 23:30:48 eustrop Exp eustrop $";
+private final static String JSP_VERSION = "$Id: cms.jsp,v 1.7 2020/05/24 21:43:33 eustrop Exp eustrop $";
 
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
@@ -72,15 +72,68 @@ public class CMDDef{
  CMDDef(String cmd, String cmpltn, String d, String opts, String access, String name, String desc, String comment)
  {this.cmd=cmd; this.cmpltn=cmpltn; this.d=d; this.opts=opts; this.access=access; this.name=name; this.desc=desc; this.comment=comment;}
 }
+public class CMSException extends Exception
+{
+CMSException(String msg){super(msg);}
+}
+public class CMSExceptionNotImplemented extends CMSException
+{
+CMSExceptionNotImplemented(String cmd){super(cmd + " NOT_IMPLEMENTED");}
+}
+public class CMSExceptionAccessDenied extends CMSException
+{
+CMSExceptionAccessDenied(String cmd, String d){super(cmd + "(" + d + ") ACCESS_DENIED");}
+}
+
 
 public class CMSystem
 {
+  //
+  // CMD commands
+  // 
+public static final String CMD_LS="ls";
+public static final String CMD_VIEW="view";
+public static final String CMD_MV="mv";
+public static final String CMD_RENAME="rename";
+public static final String CMD_MKDIR="mkdir";
+public static final String CMD_RM="rm";
+public static final String CMD_CP="cp";
+public static final String CMD_EDIT="edit";
+public static final String CMD_CREATE="create";
+public static final String CMD_OPEN="open";
+public static final String CMD_WRITE="write";
+public static final String CMD_COMMIT="commit";
+public static final String CMD_ROLLBCK="rollbck";
+public static final String CMD_UPLOAD="upload";
+public static final String CMD_DOWNLD="downld";
 
 //
 // 1.1. Это будет корневой DAO класс - логика манипулирования объектами предметной области
 //
 
-  RList cmd_ls(String d,String[] opts) { return(null); }
+public void checkAccess(String d, String d2, String[] opts) throws CMSExceptionAccessDenied
+{
+}
+
+  // CMD
+
+//  RList ls(String d,String[] opts) throws CMSException { throw new CMSExceptionNotImplemented("ls"); }
+public RList ls(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_LS);}
+//public void view(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_VIEW);}
+public void mv(String d, String d2, String[] opts) throws CMSException { checkAccess(d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_MV);}
+public void rename(String d, String d2, String[] opts) throws CMSException { checkAccess(d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_RENAME);}
+public void mkdir(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_MKDIR);}
+public void rm(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_RM);}
+public void cp(String d, String d2, String[] opts) throws CMSException { checkAccess(d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_CP);}
+//public void edit(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_EDIT);}
+public void create(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_CREATE);}
+public void open(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_OPEN);}
+public void write(String d, Object data, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_WRITE);}
+public void commit(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_COMMIT);}
+public void rollbck(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_ROLLBCK);}
+//public void upload(String d, String d2, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_UPLOAD);}
+//public void downld(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_DOWNLD);}
+
 
   /** Инициализация контекста системы, получение параметров для настройки,
    * загрузка в глобальные статические структуры всего того, что желательно
@@ -113,7 +166,7 @@ public class CMSystem
 //    а также - статических методов манипулирования строками obj2text(), o2html(),..
 //
 // ################################################################################
-public static class WAMessages
+public static final class WAMessages
 {
 
    public final static String PARAM_CMD="cmd";
@@ -123,7 +176,22 @@ public static class WAMessages
   //
   // CMD commands
   // 
-  public static final String CMD_LS="ls";
+public static final String CMD_LS="ls";
+public static final String CMD_VIEW="view";
+public static final String CMD_MV="mv";
+public static final String CMD_RENAME="rename";
+public static final String CMD_MKDIR="mkdir";
+public static final String CMD_RM="rm";
+public static final String CMD_CP="cp";
+public static final String CMD_EDIT="edit";
+public static final String CMD_CREATE="create";
+public static final String CMD_OPEN="open";
+public static final String CMD_WRITE="write";
+public static final String CMD_COMMIT="commit";
+public static final String CMD_ROLLBCK="rollbck";
+public static final String CMD_UPLOAD="upload";
+public static final String CMD_DOWNLD="downld";
+
 
 //
 // static conversion helpful functions
@@ -356,7 +424,7 @@ CMSystem cms = null;
  // DB interaction & result printing methods
  //
 
-  private void exec_cmd_ls(String d,String[] opts) throws IOException
+  private void exec_cmd_ls(String d,String[] opts) throws CMSException
   {
    // логика работы такова:
    // RList ls = cmd_ls(d,opts); // далее db.ls(d,opts) или pspn.cms(wam.CMD_LS,d,opts);
@@ -375,7 +443,7 @@ CMSystem cms = null;
      print_exec_result(cmd,d,d2,opts,"Test");
      switch(cmd)
      {
-      case "ls": exec_cmd_ls(cmd,null);
+      case WAMessages.CMD_LS: exec_cmd_ls(cmd,null);
       default:
      }
     }
