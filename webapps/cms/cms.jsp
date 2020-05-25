@@ -1,7 +1,7 @@
 <%--
  EustroCMS project
  cms.jsp - portable, single-JSP, SPA proof of concept for EustroCMS
- $Id: cms.jsp,v 1.7 2020/05/24 21:43:33 eustrop Exp eustrop $
+ $Id: cms.jsp,v 1.8 2020/05/25 15:53:15 eustrop Exp eustrop $
  (c) EustroSoft.org, Alex V Eustrop & Staff, 2020
  LICENSE: BALES, BSD, MIT (on your choice), see http://bales.eustrosoft.org
 
@@ -43,8 +43,9 @@
 //
 private final static String CGI_NAME = "cms.jsp";
 private final static String CGI_TITLE = "EustroCMS - система управления разнородным ПСПН контентом (РД по TIS/SQL)";
-private final static String CMS_ROOT = "/s/QREditDB/";
-private final static String JSP_VERSION = "$Id: cms.jsp,v 1.7 2020/05/24 21:43:33 eustrop Exp eustrop $";
+private String CMS_ROOT = null;
+private final static String CMS_ROOT_SERVLET_PARAM = "root";
+private final static String JSP_VERSION = "$Id: cms.jsp,v 1.8 2020/05/25 15:53:15 eustrop Exp eustrop $";
 
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
@@ -82,57 +83,79 @@ CMSExceptionNotImplemented(String cmd){super(cmd + " NOT_IMPLEMENTED");}
 }
 public class CMSExceptionAccessDenied extends CMSException
 {
-CMSExceptionAccessDenied(String cmd, String d){super(cmd + "(" + d + ") ACCESS_DENIED");}
+CMSExceptionAccessDenied(String cmd, String d, String d2, String[] opts, String reason){super(cmd + "(" + d + ") ACCESS_DENIED");}
 }
-
 
 public class CMSystem
 {
+private String CMS_ROOT = null;
+private String cms_user = null;
+private long cms_user_id = -1;
+private String cms_user_ws =null;
+private void setCMSRoot(String path){CMS_ROOT=path;}
+private void setCMSUser(String user, long uid, String ws){cms_user=user; cms_user_id=uid; cms_user_ws=ws;}
   //
   // CMD commands
   // 
 public static final String CMD_LS="ls";
 public static final String CMD_VIEW="view";
+public static final String CMD_GET="get";
 public static final String CMD_MV="mv";
 public static final String CMD_RENAME="rename";
 public static final String CMD_MKDIR="mkdir";
+public static final String CMD_RMDIR="mkdir";
 public static final String CMD_RM="rm";
 public static final String CMD_CP="cp";
-public static final String CMD_EDIT="edit";
+//public static final String CMD_EDIT="edit";
 public static final String CMD_CREATE="create";
 public static final String CMD_OPEN="open";
+public static final String CMD_LOCK="lock";
 public static final String CMD_WRITE="write";
 public static final String CMD_COMMIT="commit";
 public static final String CMD_ROLLBCK="rollbck";
 public static final String CMD_UPLOAD="upload";
 public static final String CMD_DOWNLD="downld";
+public static final String CMD_READ="read";
+
+public static final String ACCESS_NO_ROOT = "ACCESS_NO_ROOT";
+public static final String ACCESS_NO_USER = "ACCESS_NO_USER";
+public static final String ACCESS_NO_ACCESS = "ACCESS_NO_ACCESS";
+public static final String ACCESS_NO_READ = "ACCESS_NO_READ";
+public static final String ACCESS_NO_WRITE = "ACCESS_NO_WRITE";
+public static final String ACCESS_NO_CREATE = "ACCESS_NO_CREATE";
 
 //
 // 1.1. Это будет корневой DAO класс - логика манипулирования объектами предметной области
 //
 
-public void checkAccess(String d, String d2, String[] opts) throws CMSExceptionAccessDenied
+public void checkAccess(String cmd, String d, String d2, String[] opts) throws CMSExceptionAccessDenied
 {
+ if(CMS_ROOT == null) throw new CMSExceptionAccessDenied(cmd,d,d2,opts,ACCESS_NO_ROOT);
+ if(cms_user == null) throw new CMSExceptionAccessDenied(cmd,d,d2,opts,ACCESS_NO_USER);
 }
 
   // CMD
 
 //  RList ls(String d,String[] opts) throws CMSException { throw new CMSExceptionNotImplemented("ls"); }
-public RList ls(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_LS);}
-//public void view(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_VIEW);}
-public void mv(String d, String d2, String[] opts) throws CMSException { checkAccess(d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_MV);}
-public void rename(String d, String d2, String[] opts) throws CMSException { checkAccess(d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_RENAME);}
-public void mkdir(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_MKDIR);}
-public void rm(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_RM);}
-public void cp(String d, String d2, String[] opts) throws CMSException { checkAccess(d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_CP);}
-//public void edit(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_EDIT);}
-public void create(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_CREATE);}
-public void open(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_OPEN);}
-public void write(String d, Object data, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_WRITE);}
-public void commit(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_COMMIT);}
-public void rollbck(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_ROLLBCK);}
-//public void upload(String d, String d2, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_UPLOAD);}
-//public void downld(String d, String[] opts) throws CMSException { checkAccess(d,null,opts);  throw new CMSExceptionNotImplemented(CMD_DOWNLD);}
+public RList ls(String d, String[] opts) throws CMSException { checkAccess(CMD_LS,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_LS);}
+//public void view(String d, String[] opts) throws CMSException { checkAccess(CMD_VIEW,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_VIEW);}
+public void mv(String d, String d2, String[] opts) throws CMSException { checkAccess(CMD_MV,d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_MV);}
+public void rename(String d, String d2, String[] opts) throws CMSException { checkAccess(CMD_RENAME,d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_RENAME);}
+public void mkdir(String d, String[] opts) throws CMSException { checkAccess(CMD_MKDIR,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_MKDIR);}
+public void rm(String d, String[] opts) throws CMSException { checkAccess(CMD_RM,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_RM);}
+public void cp(String d, String d2, String[] opts) throws CMSException { checkAccess(CMD_CP,d,d2,opts);  throw new CMSExceptionNotImplemented(CMD_CP);}
+//public void edit(String d, String[] opts) throws CMSException { checkAccess(CMD_EDIT,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_EDIT);}
+public void create(String d, String[] opts) throws CMSException { checkAccess(CMD_CREATE,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_CREATE);}
+public void open(String d, String[] opts) throws CMSException { checkAccess(CMD_OPEN,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_OPEN);}
+public void write(String d, Object data, String[] opts) throws CMSException { checkAccess(CMD_WRITE,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_WRITE);}
+public void commit(String d, String[] opts) throws CMSException { checkAccess(CMD_COMMIT,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_COMMIT);}
+public void rollbck(String d, String[] opts) throws CMSException { checkAccess(CMD_ROLLBCK,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_ROLLBCK);}
+/** возвращает путь к директории, куда можно загрузить файлы, чтобы потом поместить их в основную директорию d, через commit(), если все в порядке */
+public String upload(String d, String d2, String[] opts) throws CMSException { checkAccess(CMD_UPLOAD,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_UPLOAD);}
+/** возвращает InputStream, из которого можно прочитать содержимое файла d как поток байт */
+public java.io.InputStream downld(String d, String[] opts) throws CMSException { checkAccess(CMD_READ,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_DOWNLD);}
+/** возвращает Reader, из которого можно прочитать содержимое файла d как поток байт */
+public java.io.Reader read(String d, String[] opts) throws CMSException { checkAccess(CMD_READ,d,null,opts);  throw new CMSExceptionNotImplemented(CMD_DOWNLD);}
 
 
   /** Инициализация контекста системы, получение параметров для настройки,
@@ -148,11 +171,13 @@ public void rollbck(String d, String[] opts) throws CMSException { checkAccess(d
   } // init_cms_context()
   public void logon(String user,String remote_ws)
   {
+   setCMSUser(user,-1,remote_ws);
    return;
   }
   public void logoff() { return; }
   public boolean check_access(String cmd, String d,String d2){return(true);}
   public void do_log(String msg) {}
+  CMSystem(String pspn_root_path) { setCMSRoot(pspn_root_path);}
 } // END CMSystem class
 
 // ###### END DAO PACKAGE
@@ -405,7 +430,8 @@ public WASkin(String CGI, javax.servlet.jsp.JspWriter out, WAMessages wam)
 public class WARHMain
 {
 private String CGI_NAME = "cms.jsp";
-private String CMS_ROOT = "/s/QREditDB/";
+private String CMS_ROOT = null;
+public void setCMSRoot(String path){CMS_ROOT=path;}
 
 private final static String SZ_EMPTY = "";
 private final static String SZ_NULL = "<<NULL>>";
@@ -501,7 +527,7 @@ CMSystem cms = null;
  String d=request.getParameter(wam.PARAM_D);
  String d2=request.getParameter(wam.PARAM_D2);
  String opts=request.getParameter(wam.PARAM_OPTS);
-    cms=new CMSystem();
+    cms=new CMSystem(CMS_ROOT);
     try{
     // prepare session context if so
     cms.init_cms_context();
@@ -557,6 +583,7 @@ CMSystem cms = null;
  String d=request.getParameter(wam.PARAM_D);
  String d2=request.getParameter(wam.PARAM_D2);
  String opts=request.getParameter(wam.PARAM_OPTS);
+ CMS_ROOT = getServletConfig().getServletContext().getInitParameter(CMS_ROOT_SERVLET_PARAM);
 
  boolean should_be_jsp_body_printed = true;
 
