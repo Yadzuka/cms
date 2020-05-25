@@ -34,7 +34,8 @@ install:
 	cp webapps/cms/ui_proto* ${WORKDIR}/webapps/cms/
 	cp webapps/cms/cms.jsp ${WORKDIR}/webapps/cms/
 	cp webapps/cms/editqrpage.jsp ${WORKDIR}/webapps/cms/
-	cp webapps/cms/WEB-INF/web.xml ${WORKDIR}/webapps/cms/WEB-INF/
+	if [ ! -f ${WORKDIR}/webapps/cms/WEB-INF/web.xml ]; then cp webapps/cms/WEB-INF/web.xml ${WORKDIR}/webapps/cms/WEB-INF/; \
+	 else echo "web.xml exists! skipping it installation"; fi
 	cp webapps/cms/WEB-INF/lib/*jar ${WORKDIR}/webapps/cms/WEB-INF/lib/
 	cp -r webapps/cms/contrib ${WORKDIR}/webapps/cms/
 	cp -r webapps/cms/img ${WORKDIR}/webapps/cms/
