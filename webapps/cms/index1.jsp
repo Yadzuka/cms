@@ -39,6 +39,13 @@
     private final static String ACTION_CREATE = "create";
     private final static String ACTION_MKDIR = "mkdir";
 
+    private final static String ACTION_EDIT = "edit";
+    private final static String ACTION_VIEW_AS_IMG = "image_view";
+    private final static String ACTION_VIEW_AS_VIDEO = "video_view";
+    private final static String ACTION_VIEW_AS_TEXT = "text_view";
+
+    private final static int MAX_FILE_READ_SIZE = 10_000_000;
+
     private final static String [] IMAGE_DEFINITIONS = { "jpg", "jpeg", "png", "svg", "tiff", "bmp", "bat", "odg", "xps" };
     private final static String [] VIDEO_DEFINITIONS = { "ogg", "mp4", "webm" };
     // File differences class
@@ -235,6 +242,9 @@
     // Delete file
     private boolean rm(String fileName) {
         File file = new File(fileName);
+        if(file.isDirectory())
+            if(!(file.listFiles().length == 0))
+                return false;
         return file.delete();
     }
 
@@ -292,23 +302,7 @@
             if(!showedPath.endsWith(unixSlash))
                 showedPath = showedPath + unixSlash;
             actual = new File(currentDirectory);
-            startDiv("container", "main_block");
-            startDiv("row");
-            startDiv("col");
-            printH("Содержание директории: " + showedPath, 3);
-            endDiv();
-            printServerButton();
-            endDiv();
-            startTable("table");
-            startTHead("thead-light");
-            startTr();
-            printTh("col", "Имя");
-            printTh("col", "Размер, байт");
-            printTh("col", "Права");
-            printTh("col", "Последняя модификация");
-            printTh("col", "Операции с файлом");
-            endTr();
-            endTHead();
+            printTableHead();
             startTBody("");
             if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
                 startTr();
@@ -342,11 +336,6 @@
                 printTd("row", "", "right", String.format("%d",f.length()));
                 printTd("row", "", "", readwrite);
                 printTd("row", "", "center", new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified()));
-                startTd("", "row");
-                if(f.isFile()&f.canRead()) {
-                    printA("Скачать файл", "download?d="+encodeValue(showedPath + f.getName()));
-                }
-                endTd();
                 endTr();
 
             } //for( File f : actual.listFiles())
@@ -357,7 +346,6 @@
         finally{ }
         endTBody();
         endTable();
-        endDiv();
     }
 
     // SIC! тут в формах тоже надо менять ссылки (currentDirectory), соответственно это либо в сервлетах надо учитывать либо ещё что
@@ -372,14 +360,15 @@
         startForm("POST", "upload", "multipart/form-data");
         printInput("hidden", "", PARAM_D , "", showedPath);
         printInput("file", "dropdown-item", "file", "", true);
-        printSubmit("Загрузить (Apache Commons)", "dropdown-item");
+        printSubmit("Загрузить", "dropdown-item");
         endForm();
 
-        startForm("POST", "upload_new_version", "multipart/form-data");
-        printInput("hidden", "", PARAM_D , "", showedPath);
-        printInput("file", "dropdown-item", "file", "", true);
-        printSubmit("Загрузить (Servlet V3)", "dropdown-item");
-        endForm();
+        // Download via servlet V3
+        //startForm("POST", "upload_new_version", "multipart/form-data");
+        //printInput("hidden", "", PARAM_D , "", showedPath);
+        //printInput("file", "dropdown-item", "file", "", true);
+        //printSubmit("Загрузить (Servlet V3)", "dropdown-item");
+        //endForm();
 
         startDiv("dropdown-divider"); endDiv();
 
@@ -420,49 +409,86 @@
                 if (fileStatus.equals(ACTION_MKDIR)) {
                     String newDirName = request.getParameter("file");
                     if(mkdir(path + newDirName)) response.sendRedirect(getPathReference(encodeValue(showedPath)));
-                    else wln(path + newDirName);
+                    else { wln("Ошибка в создании директории!"); printA("Вернуться назад", getPathReference(encodeValue(showedPath))); };
                 }
 
                 if (request.getParameter(ACTION_DELETE) != null) {
                     rm(path);
                 }
 
-                if(fileStatus.equals(ACTION_VIEW)) {
-                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { }</style>");
-                    wln("<div id='left_block' class='block' align='right'>");
+                if(fileStatus.equals(ACTION_EDIT)) {
+                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
+                    startDiv("block", "left_block", "left");
+
+                    startDiv("row");
+                    startDiv("col");
+                    printH("Документ: " + showedPath, 5);
+                    endDiv();
+                    endDiv();
 
                     wln("");
-                    printButton("btn btn-light btn-lg", "button", "", "", "", "", getPathReference(encodeValue(goUpside(showedPath)), "Скрыть"));
+                    startForm("GET", CGI_NAME);
+                    printInput("hidden","",PARAM_D, "", goUpside(showedPath));
+                    printSubmit("Скрыть");
+                    endForm();
 
-                    boolean showed = false;
-                    if (fileStatus.equals(ACTION_VIEW)) {
-                        if (!(printImageFile(unixSlash + basename(path))
-                                || printVideoFile(unixSlash + basename(path)))) {
-                            try { //SIC! вот здесь кончается память
-                                // File f = new File(HOME_DIRECTORY + path);
-                                //if(f.length() > 1_000_000) //SIC! примерно так
-                                // throw new IOException("Big file. Cant read");
-                                FileReader fileReader = new FileReader(path);
-                                BufferedReader bufferedReader = new BufferedReader(fileReader);
-                                //char [] symbols = new char[4096];
-                                //int k;
-                                //while((k = bufferedReader.read(symbols)) != -1) SIC! вообще думаю, что в новом треде надо запускать
-                                //sb.append(bufferedReader.read(symbols, 0, k);
+
+                    if (!(printImageFile(unixSlash + basename(path))
+                            || printVideoFile(unixSlash + basename(path)))) {
+                        try { //SIC! вот здесь кончается память
+                            // File f = new File(HOME_DIRECTORY + path);
+                            //if(f.length() > 1_000_000) //SIC! примерно так
+                            // throw new IOException("Big file. Cant read");
+                            FileReader fileReader = new FileReader(path);
+                            BufferedReader bufferedReader = new BufferedReader(fileReader);
+                            //char [] symbols = new char[4096];
+                            //int k;
+                            //while((k = bufferedReader.read(symbols)) != -1) SIC! вообще думаю, что в новом треде надо запускать
+                            //sb.append(bufferedReader.read(symbols, 0, k);
+                            fileBuffer = bufferedReader.readLine();
+                            while (fileBuffer != null) {
+                                sb.append(fileBuffer).append('\n');
                                 fileBuffer = bufferedReader.readLine();
-                                while (fileBuffer != null) {
-                                    sb.append(fileBuffer).append('\n');
-                                    fileBuffer = bufferedReader.readLine();
-                                }
-                                fileReader.close();
-                                bufferedReader.close();
-                            } catch (Exception ex) {
-                                wln("Cant read file");
                             }
-                            printFileForm(showedPath, fileStatus, sb.toString());
+                            fileReader.close();
+                            bufferedReader.close();
+                        } catch (Exception ex) {
+                            wln("Cant read file");
                         }
+                        printFileForm(showedPath, fileStatus, sb.toString());
                     }
-                    wln("</div>");
                 }
+
+                if(fileStatus.equals(ACTION_VIEW)) {
+                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
+                    startDiv("block", "left_block", "left");
+
+                    startDiv("row");
+                    startDiv("col");
+                    printH("Документ: " + showedPath, 5);
+                    endDiv();
+                    endDiv();
+
+                    wln("");
+                    startForm("GET", CGI_NAME);
+                    printInput("hidden","",PARAM_D, "", goUpside(showedPath));
+                    printSubmit("Скрыть");
+                    endForm();
+
+                    printFileViewing(path);
+
+                    startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                    printInput("submit", "", ACTION_EDIT, "", "Редактировать");
+                    printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Посмотреть как текст");
+                    printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Посмотреть как картинку");
+                    printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Посмотреть как видео");
+                    endForm();
+                    startForm("GET", "download");
+                    printInput("hidden", "", "d", "", showedPath);
+                    printSubmit("Скачать", "");
+                    endForm();
+                }
+                wln("</div>");
                 return;
             }
         } catch (Exception ex) {
@@ -470,16 +496,22 @@
         }
     }
 
+    private void printFileViewing(String file) {
+        File showingFile = new File(file);
+        if(showingFile.length() > MAX_FILE_READ_SIZE)
+            wln("Файл больше 10 мб.");
+    }
+
     private boolean printImageFile(String path)  {
         for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
-            if (path.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) { printImage(path, 1280, 720); return true;}
+            if (path.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) { printImage(path, 680, 400); return true;}
         }
         return false;
     }
 
     private boolean printVideoFile(String path)  {
         for(int i = 0; i < VIDEO_DEFINITIONS.length; i++) {
-            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(1280, 720, path);  return true;}
+            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(680, 400, path);  return true;}
         }
         return false;
     }
@@ -493,7 +525,7 @@
     }
 
     private void printImage(String path, int width, int height)  {
-        wln("<img src='download?" + PARAM_D + "=" + encodeValue(showedPath)  + "' alt='sample' height='' width=''>");
+        wln("<img src='download?" + PARAM_D + "=" + encodeValue(showedPath)  + "' alt='sample' height='"+height+"' width='"+width+"'>");
     }
 
     private void saveFile(String path, HttpServletRequest request) throws IOException {
@@ -528,6 +560,23 @@
     private void wln(){w("\n");}
     private void setReference(String reference, String insides) { wln("<a href=\""+reference+"\">"); wln(insides); wln("</a>"); }
 
+    private void printTableHead() {
+        startDiv("row");
+        startDiv("col");
+        printH("Содержание директории: " + showedPath, 5);
+        endDiv();
+        printServerButton();
+        endDiv();
+        startTable("table");
+        startTHead("thead-light");
+        startTr();
+        printTh("col", "Имя");
+        printTh("col", "Размер, байт");
+        printTh("col", "Права");
+        printTh("col", "Последняя модификация");
+        endTr();
+        endTHead();
+    }
 
     private void printInput(String type, String classN, String name, String placeholder, boolean multiple)  {
         if(multiple) wln("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"' multiple/>");
@@ -621,9 +670,13 @@
     </style>
 </head>
 <body>
-<% process(request, response);
-//request.getRequestDispatcher("editqrpage.jsp").forward(request,response); // SIC! редирект
-%>
+    <div class="container" id="main_block">
+        <% process(request, response);
+
+            //request.getRequestDispatcher("editqrpage.jsp").forward(request,response); // SIC! редирект
+        %>
+    </div>
+
 <!--div id="issues" >
 <h3>Задачи и найденные ошибки в проекте, чтоб глаза мозолило</h3>
 <ul>
