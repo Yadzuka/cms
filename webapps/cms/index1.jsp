@@ -37,6 +37,7 @@
     private final static String ACTION_UPDATE = "update";
     private final static String ACTION_DELETE = "delete";
     private final static String ACTION_CREATE = "create";
+    private final static String ACTION_MKDIR = "mkdir";
 
     private final static String [] IMAGE_DEFINITIONS = { "jpg", "jpeg", "png", "svg", "tiff", "bmp", "bat", "odg", "xps" };
     private final static String [] VIDEO_DEFINITIONS = { "ogg", "mp4", "webm" };
@@ -224,9 +225,9 @@
     }
 
     // Make directory
-    private boolean mkdir(String path, String dirName) {
-        Path pathToDir = getPath(path, dirName);
-        File directory = new File(pathToDir.toUri());
+    private boolean mkdir(String path/*, String [] params*/) {
+        // checkAccess(user); SIC! Тут пока что так, как можно, потому что ограничений никаких нет
+        File directory = new File(path);
         if(directory.exists()) return true;
         else return directory.mkdir();
     }
@@ -384,7 +385,12 @@
 
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
         printInput("text", "dropdown-item", "file", "Введите имя файла", false);
-        printSubmit("Создать файл", "dropdown-item");
+        printSubmit("Создать файл", "btn-success");
+        endForm();
+
+        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_MKDIR);
+        printInput("text", "dropdown-item", "file", "Введите имя директории", false);
+        printSubmit("Создать директорию", "btn-success");
         endForm();
 
         startDiv("dropdown-divider"); endDiv();
@@ -411,28 +417,10 @@
                     saveFile(path, request);
                 }
 
-                try { //SIC! вот здесь кончается память
-                    // File f = new File(HOME_DIRECTORY + path);
-                    //if(f.length() > 1_000_000) //SIC! примерно так
-                    // throw new IOException("Big file. Cant read");
-                    FileReader fileReader = new FileReader(path);
-                    BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-                    //char [] symbols = new char[4096];
-                    //int k;
-                    //while((k = bufferedReader.read(symbols)) != -1) SIC! вообще думаю, что в новом треде надо запускать
-                    //sb.append(bufferedReader.read(symbols, 0, k);
-
-
-                    fileBuffer = bufferedReader.readLine();
-                    while (fileBuffer != null) {
-                        sb.append(fileBuffer).append('\n');
-                        fileBuffer = bufferedReader.readLine();
-                    }
-                    fileReader.close();
-                    bufferedReader.close();
-                } catch (Exception ex) {
-                    wln("Cant read file");
+                if (fileStatus.equals(ACTION_MKDIR)) {
+                    String newDirName = request.getParameter("file");
+                    if(mkdir(path + newDirName)) response.sendRedirect(getPathReference(encodeValue(showedPath)));
+                    else wln(path + newDirName);
                 }
 
                 if (request.getParameter(ACTION_DELETE) != null) {
@@ -444,13 +432,34 @@
                     wln("<div id='left_block' class='block' align='right'>");
 
                     wln("");
-                    wln(getPathReference(encodeValue(goUpside(showedPath)), "Скрыть"));
+                    printButton("btn btn-light btn-lg", "button", "", "", "", "", getPathReference(encodeValue(goUpside(showedPath)), "Скрыть"));
 
                     boolean showed = false;
                     if (fileStatus.equals(ACTION_VIEW)) {
                         if (!(printImageFile(unixSlash + basename(path))
-                                || printVideoFile(unixSlash + basename(path))))
+                                || printVideoFile(unixSlash + basename(path)))) {
+                            try { //SIC! вот здесь кончается память
+                                // File f = new File(HOME_DIRECTORY + path);
+                                //if(f.length() > 1_000_000) //SIC! примерно так
+                                // throw new IOException("Big file. Cant read");
+                                FileReader fileReader = new FileReader(path);
+                                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                                //char [] symbols = new char[4096];
+                                //int k;
+                                //while((k = bufferedReader.read(symbols)) != -1) SIC! вообще думаю, что в новом треде надо запускать
+                                //sb.append(bufferedReader.read(symbols, 0, k);
+                                fileBuffer = bufferedReader.readLine();
+                                while (fileBuffer != null) {
+                                    sb.append(fileBuffer).append('\n');
+                                    fileBuffer = bufferedReader.readLine();
+                                }
+                                fileReader.close();
+                                bufferedReader.close();
+                            } catch (Exception ex) {
+                                wln("Cant read file");
+                            }
                             printFileForm(showedPath, fileStatus, sb.toString());
+                        }
                     }
                     wln("</div>");
                 }
