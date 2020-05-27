@@ -12,6 +12,7 @@
          import="java.net.URLEncoder"
          import="java.nio.file.StandardCopyOption" %>
 <%@ page import="java.util.Random" %>
+<%@ page import="javax.swing.*" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -388,6 +389,7 @@
         endDiv();
     }
 
+    // path here means FULL|real path - be careful with this | showedPath path, in turn, means showed path and it could be use for showing for the client
     private void processFileRequest(String path, String fileStatus, HttpServletRequest request, HttpServletResponse response) {
         try {
             if (path != null && fileStatus != null) {
@@ -416,6 +418,34 @@
                     rm(path);
                 }
 
+                if(fileStatus.equals(ACTION_VIEW)) {
+                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
+                    startDiv("block", "left_block", "left");
+
+                    startDiv("row");
+                    startDiv("col");
+                    printH("Документ: " + showedPath, 5);
+                    endDiv();
+                    endDiv();
+
+                    wln("");
+
+                    wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
+
+                    printFileMeta(path);
+
+                    startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                    printInput("submit", "", ACTION_EDIT, "", "Посмотреть");
+                    printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Посмотреть как текст");
+                    printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Посмотреть как картинку");
+                    printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Посмотреть как видео");
+                    endForm();
+                    startForm("GET", "download");
+                    printInput("hidden", "", "d", "", showedPath);
+                    printSubmit("Скачать", "");
+                    endForm();
+                }
+
                 if(fileStatus.equals(ACTION_EDIT)) {
                     wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
                     startDiv("block", "left_block", "left");
@@ -427,24 +457,17 @@
                     endDiv();
 
                     wln("");
-                    startForm("GET", CGI_NAME);
-                    printInput("hidden","",PARAM_D, "", goUpside(showedPath));
-                    printSubmit("Скрыть");
-                    endForm();
 
+                    wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
 
-                    if (!(printImageFile(unixSlash + basename(path))
+                    if(isViewActions(request)) {
+                        viewFileAsSomething(request, response, path);
+                    } else if (!(printImageFile(unixSlash + basename(path))
                             || printVideoFile(unixSlash + basename(path)))) {
-                        try { //SIC! вот здесь кончается память
-                            // File f = new File(HOME_DIRECTORY + path);
-                            //if(f.length() > 1_000_000) //SIC! примерно так
-                            // throw new IOException("Big file. Cant read");
+                        try {
                             FileReader fileReader = new FileReader(path);
                             BufferedReader bufferedReader = new BufferedReader(fileReader);
-                            //char [] symbols = new char[4096];
-                            //int k;
-                            //while((k = bufferedReader.read(symbols)) != -1) SIC! вообще думаю, что в новом треде надо запускать
-                            //sb.append(bufferedReader.read(symbols, 0, k);
+
                             fileBuffer = bufferedReader.readLine();
                             while (fileBuffer != null) {
                                 sb.append(fileBuffer).append('\n');
@@ -459,35 +482,6 @@
                     }
                 }
 
-                if(fileStatus.equals(ACTION_VIEW)) {
-                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
-                    startDiv("block", "left_block", "left");
-
-                    startDiv("row");
-                    startDiv("col");
-                    printH("Документ: " + showedPath, 5);
-                    endDiv();
-                    endDiv();
-
-                    wln("");
-                    startForm("GET", CGI_NAME);
-                    printInput("hidden","",PARAM_D, "", goUpside(showedPath));
-                    printSubmit("Скрыть");
-                    endForm();
-
-                    printFileViewing(path);
-
-                    startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
-                    printInput("submit", "", ACTION_EDIT, "", "Редактировать");
-                    printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Посмотреть как текст");
-                    printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Посмотреть как картинку");
-                    printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Посмотреть как видео");
-                    endForm();
-                    startForm("GET", "download");
-                    printInput("hidden", "", "d", "", showedPath);
-                    printSubmit("Скачать", "");
-                    endForm();
-                }
                 wln("</div>");
                 return;
             }
@@ -496,10 +490,62 @@
         }
     }
 
-    private void printFileViewing(String file) {
+    private void printFileMeta(String file) {
         File showingFile = new File(file);
-        if(showingFile.length() > MAX_FILE_READ_SIZE)
-            wln("Файл больше 10 мб.");
+        // SIC! All metadata goes here
+        startDiv("");
+        wln("Имя файла: " + basename(file) + "."); nLine();
+        wln("Размер: " + showingFile.length() + " байт."); nLine();
+        wln("Права на чтение: " + (showingFile.canRead() ? " есть." : " нет.")); nLine();
+        wln("Права на запись: " + (showingFile.canWrite() ? " есть." : " нет.")); nLine();
+        endDiv();
+
+    }
+
+    private boolean isViewActions(HttpServletRequest request) {
+        if(request.getParameter(ACTION_VIEW_AS_IMG) == null &&
+                request.getParameter(ACTION_VIEW_AS_TEXT) == null &&
+                request.getParameter(ACTION_VIEW_AS_VIDEO) == null)
+            return false;
+        else
+            return true;
+    }
+
+    private void viewFileAsSomething(HttpServletRequest request, HttpServletResponse response, String path) {
+        try {
+            File f = new File(path);
+            if (f.length() > MAX_FILE_READ_SIZE) //SIC! примерно так
+                throw new IOException("Большой файл. Необходимо скачать для просмотра.");
+            // View file as image
+            if(request.getParameter(ACTION_VIEW_AS_IMG) != null) {
+                printImage(path, 600, 480);
+            }
+
+            // View file as video
+            if(request.getParameter(ACTION_VIEW_AS_VIDEO) != null) {
+                printVideo(path, 600, 480);
+            }
+            // View file as text
+            if(request.getParameter(ACTION_VIEW_AS_TEXT) != null) {
+                FileReader reader = new FileReader(path);
+                BufferedReader br = new BufferedReader(reader);
+                StringBuilder builder = new StringBuilder();
+
+                char[] symbols = new char[4096];
+                int symb = -1;
+                while ((symb = br.read(symbols)) != -1) {
+                    builder.append(symbols, 0, symbols.length);
+                }
+                wln("<textarea cols='100' rows='30'>");
+                wln(builder.toString());
+                wln("</textarea>");
+                reader.close();
+                br.close();
+            }
+        }catch (IOException ex) {
+            wln(ex.getMessage());
+        }
+
     }
 
     private boolean printImageFile(String path)  {
@@ -511,12 +557,12 @@
 
     private boolean printVideoFile(String path)  {
         for(int i = 0; i < VIDEO_DEFINITIONS.length; i++) {
-            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(680, 400, path);  return true;}
+            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(path, 680, 400);  return true;}
         }
         return false;
     }
 
-    private void printVideo(int width, int height, String path)  {
+    private void printVideo(String path, int width, int height)  {
         wln("<video width='" + width + "' height='" + height + "' controls='controls'>" +
                 "<source src='download?" + PARAM_D + "=" + encodeValue(showedPath) + "' type='video/ogg'>" +
                 "<source src='download?" + PARAM_D + "=" + encodeValue(showedPath) + "' type='video/webm'>" +
@@ -525,6 +571,9 @@
     }
 
     private void printImage(String path, int width, int height)  {
+        wln("<style> " +
+                " img { object-fit: contain; }"
+        + "</style>"); //SIC! For normal image without stretching
         wln("<img src='download?" + PARAM_D + "=" + encodeValue(showedPath)  + "' alt='sample' height='"+height+"' width='"+width+"'>");
     }
 
@@ -599,7 +648,6 @@
     private void endTHead()  { wln("</thead>"); }
     private void startTBody(String classN)  { wln("<tbody class='" + classN + "'>"); }
     private void endTBody()  { wln("</tbody>"); }
-    private void printTRowln(String classN)  { wln("<"); }
     private void startTr()  { wln("<tr>");}
     private void endTr()  { wln("</tr>");}
     private void printTh(String scope, String text)  { wln("<th scope='"+scope+"'>" + text + "</th>");}
