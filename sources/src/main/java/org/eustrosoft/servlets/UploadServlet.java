@@ -31,6 +31,7 @@ public class UploadServlet extends HttpServlet {
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = request.getRemoteAddr();
+            response.setContentType("text/html;charset=UTF-8");
             out = response.getWriter();
 
             filesCollection = initializeRepository(request, UPLOAD_PATH);
@@ -51,10 +52,18 @@ public class UploadServlet extends HttpServlet {
                 f.write(new File(realPath + f.getName()));
                 log.i(f.getName() + " was uploaded by " + user + " to " + realPath);
             }
-        }catch (Exception e){
+            response.sendRedirect("index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
+        }catch (FileNotFoundException ex) {
+            out.print("Файл(ы) не был(и) выбран(ы).");
+            out.print("<button onclick='window.location.href=\"index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()))+"\"'>Назад</button>");
+            out.flush();
+            log.e(ex + " user:" + user + ".");
+        } catch (Exception e){
+            out.print(e);
+            out.flush();
             log.e(e + " user:" + user + ".");
         } finally {
-            response.sendRedirect("index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
+
         }
     }
 

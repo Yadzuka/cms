@@ -12,7 +12,8 @@
          import="java.net.URLEncoder"
          import="java.nio.file.StandardCopyOption" %>
 <%@ page import="java.util.Random" %>
-<%@ page import="javax.swing.*" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.util.HashMap" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -303,6 +304,7 @@
             if(!showedPath.endsWith(unixSlash))
                 showedPath = showedPath + unixSlash;
             actual = new File(currentDirectory);
+
             printTableHead();
             startTBody("");
             if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
@@ -610,9 +612,21 @@
     private void setReference(String reference, String insides) { wln("<a href=\""+reference+"\">"); wln(insides); wln("</a>"); }
 
     private void printTableHead() {
+        Map<String, String> references = new HashMap<>();
+        String referenceForSpecialPath = currentDirectory.substring(HOME_DIRECTORY.length());
         startDiv("row");
         startDiv("col");
-        printH("Содержание директории: " + showedPath, 5);
+        printH("Содержание директории: ", 5);
+        while(!referenceForSpecialPath.equals(unixSlash)) {
+            references.put(getPathReference(referenceForSpecialPath), basename(referenceForSpecialPath));
+            referenceForSpecialPath = goUpside(referenceForSpecialPath);
+        }
+        references.put(getPathReference(unixSlash), "home");
+
+        references.forEach((x,y) -> {
+            w("/");
+            printA(y, x);
+        });
         endDiv();
         printServerButton();
         endDiv();
