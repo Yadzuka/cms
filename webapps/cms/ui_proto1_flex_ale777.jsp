@@ -52,10 +52,12 @@ return textout;
         padding: 0;
         box-sizing: border-box;
         overflow: visible;
-    /*    height: 100%;
-        width: 100%;  */
-        font-family: "Times New Roman", Times, serif;
-        color: #000;
+        font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: #212529;
+	text-align: left;
        }
       #container {
         display: flex;
@@ -66,23 +68,24 @@ return textout;
      .content {
         display: flex;
         flex-wrap:wrap;
-        width: 900px;
+        max-width: 950px;
         margin: 0 auto;
+        padding:0 15px;
       }
       .row {
         display: flex;
-        border: 2px solid grey;
-        width: inherit;
+        border: 2px solid #dee2e6;
+        width: 100%;
         flex-wrap: nowrap;
-        height: 80px;
+        height: 50px;
       }
       .col {
         display: flex;
-        width: 430px;
+        width: 50%;
         margin-left: 15px;
         margin-right: 15px;
-        margin-top: 5px;
-        margin-bottom: 5px;
+     /*   margin-top: 5px;
+        margin-bottom: 5px; */
       }
 .down_menu {
     display: block;
@@ -95,6 +98,12 @@ return textout;
     padding: 10px;
     text-align: left;
     }
+h2 {
+	font-face:Arial;
+	font-weight:500;
+	font-size:1.75rem;"
+	}
+
 a {
         font-size: 20px;
 	    text-decoration: none;
@@ -106,14 +115,16 @@ a.disabled {
     color: #fa8e47;
     font-family:cursive;
 }
-
 .down-item{
 	padding:10px;
 }
-
+th,td  {
+	border-bottom: 1px solid #dee2e6;
+	padding:10px;
+	color: #495057;
+}
 table {
     border-collapse: collapse;
-    font-size:25px;
    }
 tbody tr:hover {
     background: #eaf4ff;
@@ -151,18 +162,20 @@ tbody tr:hover {
 <div id="container">
   <div class="content" style="align-items:center">
     <div class="row">
-      <div class="col" style="justify-content: flex-start; align-items:center">
-        <h1>Содержание директории:</h1>
+      <div class="col" style="justify-content: flex-start; align-items:center;">
+
+        <h2>Содержание директории:</h2>
+
       </div>
-      <div class="col" style="justify-content: flex-end;align-items:flex-start" >
-        <h1><%out.println(dirpath);%></h1>
+      <div class="col" style="justify-content: flex-end; align-items:center;">
+        <h2><%out.println(dirpath);%></h2>
       </div>
     </div>
 
 <div class="table" style="width: 100%">
-	    <table>
+	    <table width="100%">
         <thead >
-        <tr style="background-color: lightgrey;">
+        <tr style="background-color: #e9ecef;">
             <th scope="col">Имя</th>
             <th scope="col">Путь</th>
             <th scope="col">Свойство</th>
@@ -173,7 +186,7 @@ tbody tr:hover {
         <tbody>
 
                             <tr>
-                            <td scope="row" class="viewer"><i class="icon-share"> . . . </i></td>
+                            <td scope="row" class="viewer"><i class="icon-share"> ...</i></td>
                             <td scope="row">____</td>
                             <td scope="row" align="center">____</td>
                             <td scope="row" align="center">____</td>
