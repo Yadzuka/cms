@@ -250,6 +250,22 @@
         return file.delete();
     }
 
+    // Delete directory (with no files)
+    private boolean rmdir(String path) {
+        File directory = new File(path);
+        if(!isFilesInDirectory(directory))
+            return directory.delete();
+        return false;
+    }
+
+    private boolean isFilesInDirectory(File directory) {
+        File [] filesInDirectory = directory.listFiles();
+        if(filesInDirectory.length == 0)
+            return false;
+        else
+            return true;
+    }
+
     // Creating file
     private boolean touch(String fileName) {
         File file = new File(fileName);
@@ -391,7 +407,7 @@
         endDiv();
     }
 
-    // path here means FULL|real path - be careful with this | showedPath path, in turn, means showed path and it could be use for showing for the client
+    // path here means FULL/real path - be careful with this | showedPath path, in turn, means showed path and it could be use for showing for the client
     private void processFileRequest(String path, String fileStatus, HttpServletRequest request, HttpServletResponse response) {
         try {
             if (path != null && fileStatus != null) {
@@ -469,11 +485,9 @@
                         try {
                             FileReader fileReader = new FileReader(path);
                             BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-                            fileBuffer = bufferedReader.readLine();
-                            while (fileBuffer != null) {
-                                sb.append(fileBuffer).append('\n');
-                                fileBuffer = bufferedReader.readLine();
+                            String readString;
+                            while ((readString = bufferedReader.readLine()) != null) {
+                                sb.append(readString).append("\n");
                             }
                             fileReader.close();
                             bufferedReader.close();
@@ -483,7 +497,6 @@
                         printFileForm(showedPath, fileStatus, sb.toString());
                     }
                 }
-
                 wln("</div>");
                 return;
             }
@@ -534,8 +547,7 @@
                 StringBuilder builder = new StringBuilder();
 
                 char[] symbols = new char[4096];
-                int symb = -1;
-                while ((symb = br.read(symbols)) != -1) {
+                while (br.read(symbols) != -1) {
                     builder.append(symbols, 0, symbols.length);
                 }
                 wln("<textarea cols='100' rows='30'>");
