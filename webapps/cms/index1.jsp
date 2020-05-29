@@ -10,10 +10,11 @@
          import="java.nio.charset.StandardCharsets"
          import="java.io.UnsupportedEncodingException"
          import="java.net.URLEncoder"
-         import="java.nio.file.StandardCopyOption" %>
-<%@ page import="java.util.Random" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="java.util.HashMap" %>
+         import="java.nio.file.StandardCopyOption"
+         import="java.util.Random"
+         import="java.util.Map"
+         import="java.util.HashMap"
+         import="java.util.Map" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -23,7 +24,7 @@
     private JspWriter out;
 
     public static String[] HTML_UNSAFE_CHARACTERS = {"<",">","&","\n"};
-    public static String[] HTML_UNSAFE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","<br>\n"};
+    public static String[] HTML_UNSAFE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","\n"};
     public final static String[] VALUE_CHARACTERS = { "<",">","&","\"","'" };
     public final static String[] VALUE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","&quot;","&#039;"};
 
@@ -76,6 +77,25 @@
                 wln("Can't create directory!");
             } catch (Exception e) { log.e("Error in initUser(request) by user " + userIP); }
         }
+    }
+
+    public static String translate_tokens(String sz, String[] from, String[] to)
+    {
+        if(sz == null) return(sz);
+        StringBuffer sb = new StringBuffer(sz.length() + 256);
+        int p=0;
+        while(p<sz.length())
+        {
+            int i=0;
+            while(i<from.length) // search for token
+            {
+                if(sz.startsWith(from[i],p)) { sb.append(to[i]); p=--p +from[i].length(); break; }
+                i++;
+            }
+            if(i>=from.length) sb.append(sz.charAt(p)); // not found
+            p++;
+        }
+        return(sb.toString());
     }
 
     // Check access
@@ -453,7 +473,7 @@
                     printFileMeta(path);
 
                     startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
-                    printInput("submit", "", ACTION_EDIT, "", "Посмотреть");
+                    printInput("submit", "", ACTION_EDIT, "", "Редактировать");
                     printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Посмотреть как текст");
                     printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Посмотреть как картинку");
                     printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Посмотреть как видео");
@@ -550,9 +570,7 @@
                 while (br.read(symbols) != -1) {
                     builder.append(symbols, 0, symbols.length);
                 }
-                wln("<textarea cols='100' rows='30'>");
-                wln(builder.toString());
-                wln("</textarea>");
+                printText("", 100, 40, builder.toString());
                 reader.close();
                 br.close();
             }
@@ -705,6 +723,7 @@
     private void startForm(String method, String action, String enctype)  { wln("<form method='" + method +"' action='"+action + "' enctype='"+enctype+"'>"); }
     private void endForm() { wln("</form>");  }
     private void printText(String name, int cols, int rows, String innerText) {
+        innerText = translate_tokens(innerText, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
             w("<textarea name='" + name + "' cols=" + cols + " rows=" + rows + ">");
                 if(innerText != null)
                     w(innerText);
