@@ -41,6 +41,7 @@
     private final static String ACTION_DELETE = "delete";
     private final static String ACTION_CREATE = "create";
     private final static String ACTION_MKDIR = "mkdir";
+    private final static String ACTION_DELETE_DIR = "rmdir";
 
     private final static String ACTION_EDIT = "edit";
     private final static String ACTION_VIEW_AS_IMG = "image_view";
@@ -273,9 +274,7 @@
     // Delete directory (with no files)
     private boolean rmdir(String path) {
         File directory = new File(path);
-        if(!isFilesInDirectory(directory))
             return directory.delete();
-        return false;
     }
 
     private boolean isFilesInDirectory(File directory) {
@@ -452,8 +451,15 @@
                     else { wln("Ошибка в создании директории!"); printA("Вернуться назад", getPathReference(encodeValue(showedPath))); };
                 }
 
+                if(fileStatus.equals(ACTION_DELETE_DIR)) {
+                    wln("Hello");
+                    rmdir(path);
+                    //response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                }
+
                 if (request.getParameter(ACTION_DELETE) != null) {
                     rm(path);
+                    response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
                 }
 
                 if(fileStatus.equals(ACTION_VIEW)) {
@@ -500,20 +506,21 @@
 
                     if(isViewActions(request)) {
                         viewFileAsSomething(request, response, path);
-                    } else if (!(printImageFile(unixSlash + basename(path))
-                            || printVideoFile(unixSlash + basename(path)))) {
-                        try {
-                            FileReader fileReader = new FileReader(path);
-                            BufferedReader bufferedReader = new BufferedReader(fileReader);
-                            String readString;
-                            while ((readString = bufferedReader.readLine()) != null) {
-                                sb.append(readString).append("\n");
+                    } else if(printImageFile(unixSlash + basename(path)) || printVideoFile(unixSlash + basename(path))) {
+                        printFormForAnyFile(showedPath, fileStatus);
+                    } else {
+                            try {
+                                FileReader fileReader = new FileReader(path);
+                                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                                String readString;
+                                while ((readString = bufferedReader.readLine()) != null) {
+                                    sb.append(readString).append("\n");
+                                }
+                                fileReader.close();
+                                bufferedReader.close();
+                            } catch (Exception ex) {
+                                wln("Cant read file");
                             }
-                            fileReader.close();
-                            bufferedReader.close();
-                        } catch (Exception ex) {
-                            wln("Cant read file");
-                        }
                         printFileForm(showedPath, fileStatus, sb.toString());
                     }
                 }
@@ -607,6 +614,7 @@
                 " img { object-fit: contain; }"
         + "</style>"); //SIC! For normal image without stretching
         wln("<img src='download?" + PARAM_D + "=" + encodeValue(showedPath)  + "' alt='sample' height='"+height+"' width='"+width+"'>");
+
     }
 
     private void saveFile(String path, HttpServletRequest request) throws IOException {
@@ -652,6 +660,12 @@
             referenceForSpecialPath = goUpside(referenceForSpecialPath);
         }
         references.put(getPathReference(unixSlash), "home");
+
+        if(!showedPath.equals(unixSlash)) {
+            startForm("POST", getFileReference(currentDirectory, ACTION_DELETE_DIR));
+            printSubmit("Удалить директорию");
+            endForm();
+        }
 
         references.forEach((x,y) -> {
             w("/");
@@ -715,6 +729,12 @@
     private void printFileForm(String path, String cmd, String fileText)  {
         startForm("POST", getFileReference(encodeValue(path), cmd));
         printText(FILE_TEXTAREA_NAME, 72, 10, fileText); nLine();
+        printFileEditButtons();
+        endForm();
+    }
+
+    private void printFormForAnyFile(String path, String cmd) {
+        startForm("POST", getFileReference(encodeValue(path), cmd));
         printFileEditButtons();
         endForm();
     }

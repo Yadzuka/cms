@@ -3,6 +3,7 @@ package org.eustrosoft.servlets;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.disk.*;
 import org.apache.commons.fileupload.servlet.*;
+import org.apache.commons.io.FileExistsException;
 import org.eustrosoft.providers.LogProvider;
 
 import java.io.*;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.List;
 
 @MultipartConfig
@@ -47,12 +49,17 @@ public class UploadServlet extends HttpServlet {
             else if(!realPath.startsWith(getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user")))
                 return;
 
-            for (int i = 1; i < filesCollection.size(); i++) {
-                FileItem f = (FileItem)filesCollection.get(i);
-                f.write(new File(realPath + f.getName()));
-                log.i(f.getName() + " was uploaded by " + user + " to " + realPath);
+            try {
+                for (int i = 1; i < filesCollection.size(); i++) {
+                    FileItem f = (FileItem) filesCollection.get(i);
+                    f.write(new File(realPath + f.getName()));
+                    log.i(f.getName() + " was uploaded by " + user + " to " + realPath);
+                }
+                response.sendRedirect("index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
+            } catch (FileExistsException ex) {
+                out.print("Файл уже существует!");
+                out.print("Скоро здесь появится возможность загрузить его новую версию!");
             }
-            response.sendRedirect("index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
         }catch (FileNotFoundException ex) {
             out.print("Файл(ы) не был(и) выбран(ы).");
             out.print("<button onclick='window.location.href=\"index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()))+"\"'>Назад</button>");
