@@ -32,7 +32,9 @@
     // Destination param (test)
     private final static String PARAM_D = "d";
     private final static String PARAM_ACTION = "cmd";
+    private final static String PARAM_FILE = "file";
     private final static String FILE_TEXTAREA_NAME = "file_text";
+
 
     // File manipulating (view, save, update, delete)
     private final static String ACTION_VIEW = "view";
@@ -187,6 +189,10 @@
             if (checkShellInjection(value))
                 throw new RuntimeException("Shell injection");
         }
+        if(PARAM_FILE.equals(param)) {
+            if(checkShellInjection(value))
+                throw new RuntimeException("Shell injection");
+        }
 
         return value;
     }
@@ -258,7 +264,7 @@
     private boolean mkdir(String path/*, String [] params*/) {
         // checkAccess(user); SIC! Тут пока что так, как можно, потому что ограничений никаких нет
         File directory = new File(path);
-        if(directory.exists()) return true;
+        if(directory.exists()) return false;
         else return directory.mkdir();
     }
 
@@ -274,7 +280,9 @@
     // Delete directory (with no files)
     private boolean rmdir(String path) {
         File directory = new File(path);
+        if(directory.listFiles().length == 0)
             return directory.delete();
+        return false;
     }
 
     private boolean isFilesInDirectory(File directory) {
@@ -333,7 +341,7 @@
         }
     }
 
-    private void printMainBlock() { // SIC! тут показывается currentDirectory, а это весь путь с /s/usersdb/, поэтому там ещё все ссылки надо менять и в ссылках тоже (поэтому все так сложно)
+    private void printMainBlock() {
         File actual = null;
         try {
             if(!showedPath.endsWith(unixSlash))
@@ -397,7 +405,7 @@
 
         startForm("POST", "upload", "multipart/form-data");
         printInput("hidden", "", PARAM_D , "", showedPath);
-        printInput("file", "dropdown-item", "file", "", true);
+        printInput(PARAM_FILE, "dropdown-item", PARAM_FILE, "", true);
         printSubmit("Загрузить", "dropdown-item");
         endForm();
 
@@ -411,12 +419,12 @@
         startDiv("dropdown-divider"); endDiv();
 
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
-        printInput("text", "dropdown-item", "file", "Введите имя файла", false);
+        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя файла", false);
         printSubmit("Создать файл", "btn-success");
         endForm();
 
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_MKDIR);
-        printInput("text", "dropdown-item", "file", "Введите имя директории", false);
+        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя директории", false);
         printSubmit("Создать директорию", "btn-success");
         endForm();
 
@@ -434,11 +442,13 @@
                 String fileBuffer = "";
 
                 if (fileStatus.equals(ACTION_CREATE)) {
-                    String newFileName = request.getParameter("file");
+                    String newFileName = getRequestParameter(request, PARAM_FILE);
                     if(touch(path + newFileName))
                         response.sendRedirect(getPathReference(encodeValue(showedPath)));
-                    else
-                        wln(path + " " + fileStatus);
+                    else {
+                        wln("Не удалось создать файл!");
+                        printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
+                    }
                 }
 
                 if (request.getParameter(ACTION_SAVE) != null) {
@@ -446,15 +456,18 @@
                 }
 
                 if (fileStatus.equals(ACTION_MKDIR)) {
-                    String newDirName = request.getParameter("file");
+                    String newDirName = getRequestParameter(request, PARAM_FILE);
                     if(mkdir(path + newDirName)) response.sendRedirect(getPathReference(encodeValue(showedPath)));
-                    else { wln("Ошибка в создании директории!"); printA("Вернуться назад", getPathReference(encodeValue(showedPath))); };
+                    else {
+                        wln("Ошибка в создании директории!");
+                        printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
+                    };
                 }
 
                 if(fileStatus.equals(ACTION_DELETE_DIR)) {
                     wln("Hello");
-                    rmdir(path);
-                    //response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                    boolean answer = rmdir(path);
+                    response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
                 }
 
                 if (request.getParameter(ACTION_DELETE) != null) {
@@ -475,19 +488,31 @@
                     wln("");
 
                     wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
-
-                    printFileMeta(path);
-
                     startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
                     printInput("submit", "", ACTION_EDIT, "", "Редактировать");
-                    printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Посмотреть как текст");
-                    printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Посмотреть как картинку");
-                    printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Посмотреть как видео");
+                    printInput("submit", "", ACTION_DELETE, "", "Удалить");
+                    wln("Посмотреть как: ");
+                    printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Текст");
+                    printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Картинку");
+                    printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Видео");
                     endForm();
                     startForm("GET", "download");
                     printInput("hidden", "", "d", "", showedPath);
                     printSubmit("Скачать", "");
                     endForm();
+
+                    // GET PARAM ACTIONS
+                    /*printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                    printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
+                    printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
+                    printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));*/
+
+
+                    printFileMeta(path);
+                }
+
+                if(fileStatus.equals(ACTION_VIEW_AS_TEXT) || fileStatus.equals(ACTION_VIEW_AS_IMG) || fileStatus.equals(ACTION_VIEW_AS_VIDEO)) {
+                    viewFileAsSomething(request, response, path);
                 }
 
                 if(fileStatus.equals(ACTION_EDIT)) {
@@ -536,10 +561,12 @@
         File showingFile = new File(file);
         // SIC! All metadata goes here
         startDiv("");
-        wln("Имя файла: " + basename(file) + "."); nLine();
         wln("Размер: " + showingFile.length() + " байт."); nLine();
-        wln("Права на чтение: " + (showingFile.canRead() ? " есть." : " нет.")); nLine();
-        wln("Права на запись: " + (showingFile.canWrite() ? " есть." : " нет.")); nLine();
+        // Права: (чтение, запись)
+        wln("Права на: " + (showingFile.canRead() ? " чтение" : "") + (showingFile.canWrite() ? " запись" : ""));
+        // Тип документа: метод по которому угадываю что это
+        //  Категории: 1. текст 2. вики текст 3. хтмл (это все текст - показывать по разному
+        // 4. картинка 5 видео 6. бинарный файл 7. csv-файл 8. tcsv
         endDiv();
 
     }
@@ -617,7 +644,7 @@
 
     }
 
-    private void saveFile(String path, HttpServletRequest request) throws IOException {
+    private void saveFile(String path, HttpServletRequest request) throws IOException, IllegalAccessException {
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(path, false), StandardCharsets.UTF_8));
         wln("Saved");
@@ -662,7 +689,7 @@
         references.put(getPathReference(unixSlash), "home");
 
         if(!showedPath.equals(unixSlash)) {
-            startForm("POST", getFileReference(currentDirectory, ACTION_DELETE_DIR));
+            startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
             printSubmit("Удалить директорию");
             endForm();
         }
