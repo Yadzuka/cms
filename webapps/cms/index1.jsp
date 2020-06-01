@@ -6,15 +6,12 @@
          import="java.nio.file.Files"
          import="org.eustrosoft.providers.LogProvider"
          import="name.fraser.neil.plaintext.diff_match_patch"
-         import="java.util.List"
          import="java.nio.charset.StandardCharsets"
          import="java.io.UnsupportedEncodingException"
          import="java.net.URLEncoder"
          import="java.nio.file.StandardCopyOption"
-         import="java.util.Random"
-         import="java.util.Map"
-         import="java.util.HashMap"
          import="java.util.Map" %>
+<%@ page import="java.util.*" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -348,6 +345,7 @@
                 showedPath = showedPath + unixSlash;
             actual = new File(currentDirectory);
 
+
             printTableHead();
             startTBody("");
             if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
@@ -356,34 +354,13 @@
                 endTr();
             }
 
-            String ico = "";
-            String readwrite = "";
-            for (File f : actual.listFiles()) {
-                if (f.isDirectory() & !f.isFile()) {
-                    ico = getI("", "icon-folder");
-                } else if (!f.isDirectory() & f.isFile()) {
-                    ico = getI("", "icon-file-text2");
-                } else ico = "<i class=\"icon-link\" ></i>";
-                if (f.canWrite() & f.canRead()) {
-                    readwrite = "чтение/запись";
-                } else if (!f.canWrite() & f.canRead()) {
-                    readwrite = "чтение";
-                } else {
-                    readwrite = " ";
-                }
-                startTr();
-                startTd("viewer", "row");
-                if(f.isFile()&f.canRead()) {
-                    printA(ico+" "+f.getName(), getFileReference(encodeValue(showedPath + f.getName()) , ACTION_VIEW));
-                } else {
-                    wln(ico + " " + goToFile(showedPath, f.getName()));
-                }
-                endTd();
-                printTd("row", "", "right", String.format("%d",f.length()));
-                printTd("row", "", "", readwrite);
-                printTd("row", "", "center", new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified()));
-                endTr();
-
+            File [] directories = actual.listFiles(File::isDirectory);
+            File [] files = actual.listFiles(File::isFile);
+            for (File f : directories) {
+                printFileInTable(f);
+            } //for( File f : actual.listFiles())
+            for (File f : files) {
+                printFileInTable(f);
             } //for( File f : actual.listFiles())
         } catch(Exception e) {
             wln("Нераспознанная ошибка: " + e);
@@ -432,6 +409,35 @@
         endDiv();
         endDiv();
         endDiv();
+    }
+
+    private void printFileInTable(File f) {
+        String ico = "";
+        String readwrite = "";
+        if (f.isDirectory() & !f.isFile()) {
+            ico = getI("", "icon-folder");
+        } else if (!f.isDirectory() & f.isFile()) {
+            ico = getI("", "icon-file-text2");
+        } else ico = "<i class=\"icon-link\" ></i>";
+        if (f.canWrite() & f.canRead()) {
+            readwrite = "чтение/запись";
+        } else if (!f.canWrite() & f.canRead()) {
+            readwrite = "чтение";
+        } else {
+            readwrite = " ";
+        }
+        startTr();
+        startTd("viewer", "row");
+        if(f.isFile()&f.canRead()) {
+            printA(ico+" "+f.getName(), getFileReference(encodeValue(showedPath + f.getName()) , ACTION_VIEW));
+        } else {
+            wln(ico + " " + goToFile(showedPath, f.getName()));
+        }
+        endTd();
+        printTd("row", "", "right", String.format("%d",f.length()));
+        printTd("row", "", "", readwrite);
+        printTd("row", "", "center", new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified()));
+        endTr();
     }
 
     // path here means FULL/real path - be careful with this | showedPath path, in turn, means showed path and it could be use for showing for the client

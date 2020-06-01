@@ -34,6 +34,7 @@ public class UploadServlet extends HttpServlet {
             className = this.getClass().getName();
             user = request.getRemoteAddr();
             response.setContentType("text/html;charset=UTF-8");
+            request.setCharacterEncoding("UTF-8");
             out = response.getWriter();
 
             filesCollection = initializeRepository(request, UPLOAD_PATH);
