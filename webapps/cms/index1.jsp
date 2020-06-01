@@ -426,53 +426,56 @@
 
     // path here means FULL/real path - be careful with this | showedPath path, in turn, means showed path and it could be use for showing for the client
     private void processFileRequest(String path, String fileStatus, HttpServletRequest request, HttpServletResponse response) {
+        wln("<style> a {padding: 1px 2px; cursor: pointer; transition: .3s; color: #00F; background-color: #3AF; text-align: center; border: 1px solid #000; font-weight: 300;} " +
+                " transition-property: all; transition-duration: 0.3s; transition-timing-function: ease; transition-delay: 0s;</style>");
         try {
             if (path != null && fileStatus != null) {
                 StringBuilder sb = new StringBuilder();
                 String fileBuffer = "";
 
-                if (fileStatus.equals(ACTION_CREATE)) {
+               if (fileStatus.equals(ACTION_CREATE)) {
                     String newFileName = getRequestParameter(request, PARAM_FILE);
-                    String newDirectoryName = getRequestParameter(request, PARAM_DIRECTORY);
-                    if(touch(path + newFileName) | mkdir(path + newDirectoryName)) // SIC! So important thing - with two vertical slash creates only file, when filename and dirname are in form,
-                                                                                   // otherwise (with one slash) - will be created file and directory as well
+
+                    if(request.getParameter(ACTION_MKDIR) != null) {
+                        mkdir(path + newFileName);
                         response.sendRedirect(getPathReference(encodeValue(showedPath)));
-                    else {
+                    }
+                    else if(request.getParameter(ACTION_CREATE) != null) {
+                        touch(path + newFileName);
+                        response.sendRedirect(getPathReference(encodeValue(showedPath)));
+                    } else {
                         wln("Не удалось создать файл!");
                         printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
                     }
-                }
 
-                if (request.getParameter(ACTION_SAVE) != null) {
+               }
+
+               if (request.getParameter(ACTION_SAVE) != null) {
                     saveFile(path, request);
-                }
+               }
 
-                if (fileStatus.equals(ACTION_MKDIR)) {
+               if (fileStatus.equals(ACTION_MKDIR)) {
                     String newDirName = getRequestParameter(request, PARAM_FILE);
                     if(mkdir(path + newDirName)) response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     else {
                         wln("Ошибка в создании директории!");
                         printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
                     };
-                }
+               }
 
-                if(fileStatus.equals(ACTION_DELETE_DIR)) {
+               if(fileStatus.equals(ACTION_DELETE_DIR)) {
                     boolean answer = rmdir(path);
                     response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
-                }
+               }
 
-                if (request.getParameter(ACTION_DELETE) != null) {
-                    rm(path);
-                    response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
-                }
 
-                if (fileStatus.equals(ACTION_DELETE)) {
+               if (fileStatus.equals(ACTION_DELETE)) {
                     // HERE need to show screen where the client can be sure with deleting file
                     rm(path);
                     response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
-                }
+               }
 
-                if(fileStatus.equals(ACTION_VIEW_AS_TEXT)) {
+               if(fileStatus.equals(ACTION_VIEW_AS_TEXT)) {
                     wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
                     FileReader reader = new FileReader(path);
                     BufferedReader br = new BufferedReader(reader);
@@ -485,92 +488,81 @@
                     printText("", 100, 20, builder.toString());
                     reader.close();
                     br.close();
-                }
+               }
 
-                if(fileStatus.equals(ACTION_VIEW_AS_IMG)) {
+               if(fileStatus.equals(ACTION_VIEW_AS_IMG)) {
                     wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
                     printImage(path, 600, 480);
-                }
+               }
 
-                if(fileStatus.equals(ACTION_VIEW_AS_VIDEO)) {
-                    printVideo(path, 600, 480);
-                }
+               if(fileStatus.equals(ACTION_VIEW_AS_VIDEO)) {
+                   printVideo(path, 600, 480);
+               }
 
-                if(fileStatus.equals(ACTION_VIEW)) {
-                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
-                    startDiv("block", "left_block", "left");
-
-                    startDiv("row");
-                    startDiv("col");
-                    printH("Документ: " + showedPath, 5);
-                    endDiv();
-                    endDiv();
-
-                    wln("");
-
-                    // POST ACTION UNDER FILES (AS VIEW AS SOMETHING AND SO ON)
-                    /*wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
-                    startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
-                    printInput("submit", "", ACTION_EDIT, "", "Редактировать");
-                    printInput("submit", "", ACTION_DELETE, "", "Удалить");
-                    wln("Посмотреть как: ");
-                    printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Текст");
-                    printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Картинку");
-                    printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Видео");
-                    endForm();
-                    startForm("GET", "download");
-                    printInput("hidden", "", "d", "", showedPath);
-                    printSubmit("Скачать", "");
-                    endForm();*/
-
-                    wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
-                    printA("Скачать", "download?d=" + encodeValue(showedPath)); // SIC! maybe download can be framed in constant
-                    printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
-                    printA("Удалить", getFileReference(encodeValue(showedPath), ACTION_DELETE));
-                    wln("Посмотреть как: ");
-                    printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
-                    printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
-                    printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
-
-                    printFileMeta(path);
-                }
-
-                if(fileStatus.equals(ACTION_EDIT)) {
-                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
-                    startDiv("block", "left_block", "left");
-
-                    startDiv("row");
-                    startDiv("col");
-                    printH("Документ: " + showedPath, 5);
-                    endDiv();
-                    endDiv();
-
-                    wln("");
-
-                    wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
-
-                    if(isViewActions(request)) {
-                       // viewFileAsSomething(request, response, path);
-                    } else if(printImageFile(unixSlash + basename(path)) || printVideoFile(unixSlash + basename(path))) {
-                        printFormForAnyFile(showedPath, fileStatus);
-                    } else {
-                            try {
-                                FileReader fileReader = new FileReader(path);
-                                BufferedReader bufferedReader = new BufferedReader(fileReader);
-                                String readString;
-                                while ((readString = bufferedReader.readLine()) != null) {
-                                    sb.append(readString).append("\n");
-                                }
-                                fileReader.close();
-                                bufferedReader.close();
-                            } catch (Exception ex) {
-                                wln("Cant read file");
-                            }
-                        printFileForm(showedPath, fileStatus, sb.toString());
-                    }
-                }
-                wln("</div>");
-                return;
+               if(fileStatus.equals(ACTION_VIEW)) {
+                   wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
+                   startDiv("block", "left_block", "left");
+                   startDiv("row");
+                   startDiv("col");
+                   printH("Документ: " + showedPath, 5);
+                   endDiv();
+                   endDiv();
+                   wln("");
+                   // POST ACTION UNDER FILES (AS VIEW AS SOMETHING AND SO ON)
+                   /*wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
+                   startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                   printInput("submit", "", ACTION_EDIT, "", "Редактировать");
+                   printInput("submit", "", ACTION_DELETE, "", "Удалить");
+                   wln("Посмотреть как: ");
+                   printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Текст");
+                   printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Картинку");
+                   printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Видео");
+                   endForm();
+                   startForm("GET", "download");
+                   printInput("hidden", "", "d", "", showedPath);
+                   printSubmit("Скачать", "");
+                   endForm();*/
+                   wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
+                   printA("Скачать", "download?d=" + encodeValue(showedPath)); // SIC! maybe download can be framed in constant
+                   printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                   printA("Удалить", getFileReference(encodeValue(showedPath), ACTION_DELETE));
+                   wln("Посмотреть как: ");
+                   printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
+                   printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
+                   printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
+                   printFileMeta(path);
+               }
+               if(fileStatus.equals(ACTION_EDIT)) {
+                   wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
+                   startDiv("block", "left_block", "left");
+                   startDiv("row");
+                   startDiv("col");
+                   printH("Документ: " + showedPath, 5);
+                   endDiv();
+                   endDiv();
+                   wln("");
+                   wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
+                   if(isViewActions(request)) {// viewFileAsSomething(request, response, path);
+                   } else if(printImageFile(unixSlash + basename(path)) || printVideoFile(unixSlash + basename(path))) {
+                       printFormForAnyFile(showedPath, fileStatus);
+                   } else {
+                       try {
+                           FileReader fileReader = new FileReader(path);
+                           BufferedReader bufferedReader = new BufferedReader(fileReader);
+                           String readString;
+                           while ((readString = bufferedReader.readLine()) != null) {
+                               sb.append(readString).append("\n");
+                           }
+                           fileReader.close();
+                           bufferedReader.close();
+                       } catch (Exception ex) {
+                           wln("Cant read file");
+                       }
+                       printFileForm(showedPath, fileStatus, sb.toString());
+                   }
+               }
+               wln("</div>");
+               return;
             }
         } catch (Exception ex) {
             w(ex + "Error with opening file");
@@ -584,7 +576,11 @@
         wln("Размер: " + showingFile.length() + " байт."); nLine();
         // Права: (чтение, запись)
         wln("Права на: " + (showingFile.canRead() ? " чтение" : "") + (showingFile.canWrite() ? " запись" : ""));
-        
+
+        boolean isFileType = false;
+        for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
+
+        }
         // Тип документа: метод по которому угадываю что это
         //  Категории: 1. текст 2. вики текст 3. хтмл (это все текст - показывать по разному
         // 4. картинка 5 видео 6. бинарный файл 7. csv-файл 8. tcsv
@@ -716,9 +712,9 @@
         }
 
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
-        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя файла", false);
-        printInput("text", "dropdown-item", PARAM_DIRECTORY, "Введите имя директории", false);
-        printSubmit("Создать", "btn-success");
+        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
+        wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
+        wln("<input type=\"submit\" name=\""+ACTION_MKDIR+"\" value=\"Создать директорию\"/>&nbsp;");
         endForm();
 
         references.forEach((x,y) -> {
