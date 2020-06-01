@@ -30,6 +30,7 @@
     private final static String PARAM_D = "d";
     private final static String PARAM_ACTION = "cmd";
     private final static String PARAM_FILE = "file";
+    private final static String PARAM_DIRECTORY = "directory";
     private final static String FILE_TEXTAREA_NAME = "file_text";
 
 
@@ -125,7 +126,8 @@
 
     // Get directory name
     private String dirname(String path) {
-        return "";
+        File file = new File(path);
+        return file.getParent();
     }
 
     private String encodeValue(String value) { // SIC! тут надо в слеши превращать %2F
@@ -138,22 +140,6 @@
             throw new RuntimeException(ex.getCause());
         }
         return str;
-    }
-
-    private Path getPath(String pathToFile, String fileName)  { // SIC! не знаю зачем этот метод, если на слаши проверяется, может быть потом можно вообще убрать, но задумывался как проверка пути на правильность
-        pathToFile = pathToFile.trim(); fileName = fileName.trim();
-        Path filePath = null;
-
-        if (!(pathToFile.endsWith(unixSlash))) {
-            pathToFile += unixSlash;
-        }
-        try {
-            filePath = Paths.get(pathToFile + fileName);
-        } catch (Exception ex) {
-             wln("File not found!");
-        }
-
-        return filePath;
     }
 
     private boolean isExecutable(String path) {
@@ -186,7 +172,7 @@
             if (checkShellInjection(value))
                 throw new RuntimeException("Shell injection");
         }
-        if(PARAM_FILE.equals(param)) {
+        if(PARAM_FILE.equals(param) || PARAM_DIRECTORY.equals(param)) {
             if(checkShellInjection(value))
                 throw new RuntimeException("Shell injection");
         }
@@ -242,8 +228,8 @@
     // Move file
     private boolean mv(String path, String newPath) {
         try {
-            Path oldPlacement = Paths.get(path); //getPath(path, fileName);
-            Path newPlacement = Paths.get(newPath); //getPath(newPath, fileName);
+            Path oldPlacement = Paths.get(path);
+            Path newPlacement = Paths.get(newPath);
             File file = oldPlacement.toFile();
             file.renameTo(newPlacement.toFile());
             return true;
@@ -315,8 +301,8 @@
     // Copy file with replacing
     private boolean cp(String path, String fileName, String newPath) {
         try {
-            Path placement = getPath(path, fileName);
-            Path copyPlacement = getPath(newPath, fileName);
+            Path placement = Paths.get(path + fileName);
+            Path copyPlacement = Paths.get(newPath + fileName);
             Files.copy(placement, copyPlacement, StandardCopyOption.REPLACE_EXISTING); // SIC! Надо будет посмотреть другие параметры.
                                     // Данный - заменяет файл в целевой папке, если файл с таким именем уже существует
             return true;
@@ -324,7 +310,6 @@
     }
 
     private void process(HttpServletRequest req, HttpServletResponse resp) {
-        // SIC! Что-то вроде fileParam = basename(pathParam); но у меня не получилось (в процессе)
         String dParameter = getRequestParameter(req, PARAM_D, showedPath);
         String fileParameter = basename(dParameter);
         String fileStatus = getRequestParameter(req, PARAM_ACTION);
@@ -345,12 +330,11 @@
                 showedPath = showedPath + unixSlash;
             actual = new File(currentDirectory);
 
-
             printTableHead();
             startTBody("");
             if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
                 startTr();
-                printTd("row", "viewer", "", getA(getI(". . .", "icon-share"), getPathReference(goUpside(showedPath))));
+                printTd("row", "viewer", "", getA(getI(".&nbsp;.&nbsp;.", "icon-share"), getPathReference(goUpside(showedPath))));
                 endTr();
             }
 
@@ -358,10 +342,10 @@
             File [] files = actual.listFiles(File::isFile);
             for (File f : directories) {
                 printFileInTable(f);
-            } //for( File f : actual.listFiles())
+            } //for( File f : actual.listFiles(directories))
             for (File f : files) {
                 printFileInTable(f);
-            } //for( File f : actual.listFiles())
+            } //for( File f : actual.listFiles(files))
         } catch(Exception e) {
             wln("Нераспознанная ошибка: " + e);
             wln("попробуйте другую операцию" );
@@ -449,7 +433,9 @@
 
                 if (fileStatus.equals(ACTION_CREATE)) {
                     String newFileName = getRequestParameter(request, PARAM_FILE);
-                    if(touch(path + newFileName))
+                    String newDirectoryName = getRequestParameter(request, PARAM_DIRECTORY);
+                    if(touch(path + newFileName) | mkdir(path + newDirectoryName)) // SIC! So important thing - with two vertical slash creates only file, when filename and dirname are in form,
+                                                                                   // otherwise (with one slash) - will be created file and directory as well
                         response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     else {
                         wln("Не удалось создать файл!");
@@ -471,7 +457,6 @@
                 }
 
                 if(fileStatus.equals(ACTION_DELETE_DIR)) {
-                    wln("Hello");
                     boolean answer = rmdir(path);
                     response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
                 }
@@ -479,6 +464,36 @@
                 if (request.getParameter(ACTION_DELETE) != null) {
                     rm(path);
                     response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                }
+
+                if (fileStatus.equals(ACTION_DELETE)) {
+                    // HERE need to show screen where the client can be sure with deleting file
+                    rm(path);
+                    response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                }
+
+                if(fileStatus.equals(ACTION_VIEW_AS_TEXT)) {
+                    wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
+                    FileReader reader = new FileReader(path);
+                    BufferedReader br = new BufferedReader(reader);
+                    StringBuilder builder = new StringBuilder();
+
+                    char[] symbols = new char[4096];
+                    while (br.read(symbols) != -1) {
+                        builder.append(symbols, 0, symbols.length);
+                    }
+                    printText("", 100, 20, builder.toString());
+                    reader.close();
+                    br.close();
+                }
+
+                if(fileStatus.equals(ACTION_VIEW_AS_IMG)) {
+                    wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
+                    printImage(path, 600, 480);
+                }
+
+                if(fileStatus.equals(ACTION_VIEW_AS_VIDEO)) {
+                    printVideo(path, 600, 480);
                 }
 
                 if(fileStatus.equals(ACTION_VIEW)) {
@@ -493,7 +508,8 @@
 
                     wln("");
 
-                    wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
+                    // POST ACTION UNDER FILES (AS VIEW AS SOMETHING AND SO ON)
+                    /*wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
                     startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
                     printInput("submit", "", ACTION_EDIT, "", "Редактировать");
                     printInput("submit", "", ACTION_DELETE, "", "Удалить");
@@ -505,20 +521,18 @@
                     startForm("GET", "download");
                     printInput("hidden", "", "d", "", showedPath);
                     printSubmit("Скачать", "");
-                    endForm();
+                    endForm();*/
 
-                    // GET PARAM ACTIONS
-                    /*printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                    wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
+                    printA("Скачать", "download?d=" + encodeValue(showedPath)); // SIC! maybe download can be framed in constant
+                    printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                    printA("Удалить", getFileReference(encodeValue(showedPath), ACTION_DELETE));
+                    wln("Посмотреть как: ");
                     printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
                     printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
-                    printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));*/
-
+                    printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
 
                     printFileMeta(path);
-                }
-
-                if(fileStatus.equals(ACTION_VIEW_AS_TEXT) || fileStatus.equals(ACTION_VIEW_AS_IMG) || fileStatus.equals(ACTION_VIEW_AS_VIDEO)) {
-                    viewFileAsSomething(request, response, path);
                 }
 
                 if(fileStatus.equals(ACTION_EDIT)) {
@@ -536,7 +550,7 @@
                     wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
 
                     if(isViewActions(request)) {
-                        viewFileAsSomething(request, response, path);
+                       // viewFileAsSomething(request, response, path);
                     } else if(printImageFile(unixSlash + basename(path)) || printVideoFile(unixSlash + basename(path))) {
                         printFormForAnyFile(showedPath, fileStatus);
                     } else {
@@ -570,6 +584,7 @@
         wln("Размер: " + showingFile.length() + " байт."); nLine();
         // Права: (чтение, запись)
         wln("Права на: " + (showingFile.canRead() ? " чтение" : "") + (showingFile.canWrite() ? " запись" : ""));
+        
         // Тип документа: метод по которому угадываю что это
         //  Категории: 1. текст 2. вики текст 3. хтмл (это все текст - показывать по разному
         // 4. картинка 5 видео 6. бинарный файл 7. csv-файл 8. tcsv
@@ -586,7 +601,8 @@
             return true;
     }
 
-    private void viewFileAsSomething(HttpServletRequest request, HttpServletResponse response, String path) {
+    // View file as something (video, text, image)
+    /*private void viewFileAsSomething(HttpServletRequest request, HttpServletResponse response, String path) {
         try {
             File f = new File(path);
             if (f.length() > MAX_FILE_READ_SIZE) //SIC! примерно так
@@ -610,15 +626,14 @@
                 while (br.read(symbols) != -1) {
                     builder.append(symbols, 0, symbols.length);
                 }
-                printText("", 100, 40, builder.toString());
+                printText("", 100, 20, builder.toString());
                 reader.close();
                 br.close();
             }
         }catch (IOException ex) {
             wln(ex.getMessage());
         }
-
-    }
+    }*/
 
     private boolean printImageFile(String path)  {
         for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
@@ -700,6 +715,12 @@
             endForm();
         }
 
+        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
+        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя файла", false);
+        printInput("text", "dropdown-item", PARAM_DIRECTORY, "Введите имя директории", false);
+        printSubmit("Создать", "btn-success");
+        endForm();
+
         references.forEach((x,y) -> {
             w("/");
             printA(y, x);
@@ -776,6 +797,7 @@
     private void startForm(String method, String action, String enctype)  { wln("<form method='" + method +"' action='"+action + "' enctype='"+enctype+"'>"); }
     private void endForm() { wln("</form>");  }
     private void printText(String name, int cols, int rows, String innerText) {
+        wln("<style> textarea { resize: both; } </style>");
         innerText = translate_tokens(innerText, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
             w("<textarea name='" + name + "' cols=" + cols + " rows=" + rows + ">");
                 if(innerText != null)
