@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	<link rel="shortcut icon" href="beacon.png" type="image/png">
+   <link rel="icon" href="beacon.png" type="image/png">
+	<title>CMS CMD menu</title>
+<style>
+body {
+	width: 100%;
+	height: 100vh;
+	color: #333;
+	background: #DEF;
+	font-size: 1em;
+	font-family: "Tahoma", sans-serif;
+	line-height: 135%;
+	padding:15px;
+}
+.btn.btn-link {
+  color:black;
+}
+
+</style>
+
+</head>
+<body>
+
+<header>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+ 	  <a class="navbar-brand" href="#">
+    <img src="beacon.png" width="30" height="30" class="d-inline-block align-center" alt="beacon.png">
+    Main
+      </a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto" style='justify-content: space-around; width: 70%;'>
+<div>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="mn_box_document" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Document</a>
+	    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#ls">Content</a>
+          <a class="dropdown-item" href="#view">View</a>
+          <a class="dropdown-item" href="#mv">Move</a>
+          <a class="dropdown-item" href="#rename">Rename</a>
+          <a class="dropdown-item" href="#mkdir">Create</a>
+          <a class="dropdown-item" href="#rmdir">Delete</a>
+          <a class="dropdown-item" href="#lock">Block</a>
+          <a class="dropdown-item" href="#unlock">Unblock</a>
+          <a class="dropdown-item" href="#create">#create#</a>
+        </div>
+      </li>
+</div>
+<div>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="mn_box_repository" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Repository</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#rename">Rename</a>
+          <a class="dropdown-item" href="#ci">To save a version</a>
+          <a class="dropdown-item" href="#co">Restored version</a>
+          <a class="dropdown-item" href="#lock">Block</a>
+          <a class="dropdown-item" href="#unlock">Unblock</a>
+          <a class="dropdown-item" href="#create">Create</a>
+          <a class="dropdown-item" href="#commit">Apply the changes</a>
+          <a class="dropdown-item" href="#rollbck">Undo the changes</a>
+        </div>
+      </li>
+</div>
+<div>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="mn_box_directory" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Directory</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#ls">Content</a>
+          <a class="dropdown-item" href="#view">View</a>
+          <a class="dropdown-item" href="#mv">Move</a>
+          <a class="dropdown-item" href="#rename">Rename</a>
+          <a class="dropdown-item" href="#mkdir">Create directory</a>
+          <a class="dropdown-item" href="#rmdir">Delete a directory</a>
+          <a class="dropdown-item" href="#lock">Block</a>
+          <a class="dropdown-item" href="#unlock">Unblock</a>
+          <a class="dropdown-item" href="#create">Create</a>
+        </div>
+    </li>
+</div>
+<div>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="mn_box_meta-data" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Meta-data</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="mn_box1_script" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Document</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#ls">Content</a>
+          <a class="dropdown-item" href="#lock">Block</a>
+          <a class="dropdown-item" href="#unlock">Unblock</a>
+          <a class="dropdown-item" href="#create">Create</a>
+          <a class="dropdown-item" href="#chown">Change the [group] of the directory owner</a>
+          <a class="dropdown-item" href="#chmod">Change permissions</a>
+          <a class="dropdown-item" href="#set">Set document meta parameters</a>
+        </div>
+
+
+          <a class="nav-link dropdown-toggle" href="#" id="mn_box_script" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Directory</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#ls">Content</a>
+          <a class="dropdown-item" href="#lock">Block</a>
+          <a class="dropdown-item" href="#unlock">Unblock</a>
+          <a class="dropdown-item" href="#create">Create</a>
+          <a class="dropdown-item" href="#chown">Change the [group] of the directory owner</a>
+          <a class="dropdown-item" href="#chmod">Change permissions</a>
+          <a class="dropdown-item" href="#set">Set document meta parameters</a>
+        </div>
+        </div>
+      </li>
+</div>
+
+<div>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="mn_box_script" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Script</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#exec">Execute</a>
+          <a class="dropdown-item" href="#lexec">To execute locally</a>
+          <a class="dropdown-item" href="#rename">Rename</a>
+          <a class="dropdown-item" href="#lock">Block</a>
+          <a class="dropdown-item" href="#unlock">Unblock</a>
+          <a class="dropdown-item" href="#create">Create</a>
+        </div>
+      </li>
+</div>
+<div>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="mn_box_network" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Network</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#get">HTTP/GET</a>
+          <a class="dropdown-item" href="#post">HTTP/POST</a>
+          <a class="dropdown-item" href="#sln">Create a symbolic link</a>
+          <a class="dropdown-item" href="#fetch">Upload using the url</a>
+		  <a class="dropdown-item" href="#upload">Upload</a>
+          <a class="dropdown-item" href="#downld">Download</a>
+        </div>
+      </li>
+</div>
+<div>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="mn_box_network" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Help</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#help">Help</a>
+          <a class="dropdown-item" href="#about">About</a>
+        </div>
+      </li>
+</div>
+</ul>
+</div>
+</nav>
+</header>
+
+
+
+<footer class="fixed-bottom" style="background-color: #dfdfdf; height: 50px; font-size: 1em; font-family: sans-serif; font-style:italic"> <!-- page-footer font-small blue  -->
+ <div class="footer-copyright text-center py-3">© Eustrosoft, ConcepTIS v0.3 - stable version of UI (see for UI variants)  </div>
+</footer>
+
+<script>
+let left_menu = document.getElementById("left_menu");
+let right_menu = document.getElementById("right_menu");
+let left_close = document.getElementsByClassName("close")[0];
+let right_close = document.getElementsByClassName("close")[1];
+left_close.onclick = function () {
+    if (left_menu.style.display == "none") {left_menu.style.display = "block"}
+    else {left_menu.style.display = "none"}
+}
+right_close.onclick = function () {
+  if (right_menu.style.display == "none") {right_menu.style.display = "block"}
+    else {right_menu.style.display = "none"};
+ }
+</script>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
+</html>
