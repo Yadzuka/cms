@@ -377,7 +377,8 @@
         //printSubmit("Загрузить (Servlet V3)", "dropdown-item");
         //endForm();
 
-        startDiv("dropdown-divider"); endDiv();
+        // SERVER BUTTONS THAT MAY CREATE DIRECTORIES AND FILES
+        /*startDiv("dropdown-divider"); endDiv();
 
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
         printInput("text", "dropdown-item", PARAM_FILE, "Введите имя файла", false);
@@ -387,7 +388,7 @@
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_MKDIR);
         printInput("text", "dropdown-item", PARAM_FILE, "Введите имя директории", false);
         printSubmit("Создать директорию", "btn-success");
-        endForm();
+        endForm();*/
 
         startDiv("dropdown-divider"); endDiv();
         endDiv();
