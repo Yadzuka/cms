@@ -427,8 +427,8 @@
 
     // path here means FULL/real path - be careful with this | showedPath path, in turn, means showed path and it could be use for showing for the client
     private void processFileRequest(String path, String fileStatus, HttpServletRequest request, HttpServletResponse response) {
-        wln("<style> a {padding: 1px 2px; cursor: pointer; transition: .3s; color: #00F; background-color: #3AF; text-align: center; border: 1px solid #000; font-weight: 300;} " +
-                " transition-property: all; transition-duration: 0.3s; transition-timing-function: ease; transition-delay: 0s;</style>");
+        wln("<style> a {padding: 5px 7px; cursor: pointer; transition: .3s; color: #000; border-radius: 80px;" +
+                "background-color: lightgray; text-align: center; border-style: none; font-weight: 400; box-shadow: inset -7px -4px 7px 0px darkgrey, 5px 5px 10px;} </style>");
         try {
             if (path != null && fileStatus != null) {
                 StringBuilder sb = new StringBuilder();
@@ -464,14 +464,24 @@
                     };
                }
 
-               if(fileStatus.equals(ACTION_DELETE_DIR)) {
-                    boolean answer = rmdir(path);
-                    response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+
+               if (fileStatus.equals(ACTION_DELETE_DIR)) {
+                   if(request.getParameter("yes_delete") != null) {
+                       wln(showedPath);
+                       rmdir(path);
+                       response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                   } else if(request.getParameter("no_delete") != null) {
+                       wln("Удалить не удалось");
+                       response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                   } else {
+                       acceptDeleteDirectory();
+                   }
                }
 
 
                if (fileStatus.equals(ACTION_DELETE)) {
-                    // HERE need to show screen where the client can be sure with deleting file
+                   //SIC!
+
                     rm(path);
                     response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
                }
@@ -543,7 +553,7 @@
                    endDiv();
                    wln("");
                    wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
-                   if(isViewActions(request)) {// viewFileAsSomething(request, response, path);
+                   if(isViewActions(request)) {  // viewFileAsSomething(request, response, path);
                    } else if(printImageFile(unixSlash + basename(path)) || printVideoFile(unixSlash + basename(path))) {
                        printFormForAnyFile(showedPath, fileStatus);
                    } else {
@@ -568,6 +578,15 @@
         } catch (Exception ex) {
             w(ex + "Error with opening file");
         }
+    }
+
+    // DIRECTORY DELETING (ACCEPT)
+    private void acceptDeleteDirectory() {
+        wln("Точно хотите удалить директорию?");
+        startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
+        wln("<input type='submit' name='yes_delete' value='Да'/>");
+        wln("<input type='submit' name='no_delete' value='Нет'/>");
+        endForm();
     }
 
     private void printFileMeta(String file) {
@@ -697,7 +716,9 @@
     private void printTableHead() {
         Map<String, String> references = new HashMap<>();
         String referenceForSpecialPath = currentDirectory.substring(HOME_DIRECTORY.length());
+
         startDiv("row");
+
         startDiv("col");
         printH("Содержание директории: ", 5);
         while(!referenceForSpecialPath.equals(unixSlash)) {
@@ -712,17 +733,20 @@
             endForm();
         }
 
-        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
-        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
-        wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
-        wln("<input type=\"submit\" name=\""+ACTION_MKDIR+"\" value=\"Создать директорию\"/>&nbsp;");
-        endForm();
-
         references.forEach((x,y) -> {
             w("/");
             printA(y, x);
         });
         endDiv();
+
+        startDiv("col");
+        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
+        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
+        wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
+        wln("<input type=\"submit\" name=\""+ACTION_MKDIR+"\" value=\"Создать директорию\"/>&nbsp;");
+        endForm();
+        endDiv();
+
         printServerButton();
         endDiv();
         startTable("table");
