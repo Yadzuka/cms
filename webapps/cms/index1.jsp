@@ -40,6 +40,7 @@
     private final static String ACTION_UPDATE = "update";
     private final static String ACTION_DELETE = "delete";
     private final static String ACTION_CREATE = "create";
+    private final static String ACTION_COPY = "cp";
     private final static String ACTION_MKDIR = "mkdir";
     private final static String ACTION_DELETE_DIR = "rmdir";
 
@@ -60,6 +61,8 @@
     private String HOME_DIRECTORY;
     private String currentDirectory = HOME_DIRECTORY;
     private String showedPath;
+
+    Map<String, String> references;
 
     private final static String unixSlash = "/";
 
@@ -299,14 +302,14 @@
     }
 
     // Copy file with replacing
-    private boolean cp(String path, String fileName, String newPath) {
+    private boolean cp(String path, String newPath) {
         try {
-            Path placement = Paths.get(path + fileName);
-            Path copyPlacement = Paths.get(newPath + fileName);
+            Path placement = Paths.get(path);
+            Path copyPlacement = Paths.get(newPath);
             Files.copy(placement, copyPlacement, StandardCopyOption.REPLACE_EXISTING); // SIC! Надо будет посмотреть другие параметры.
                                     // Данный - заменяет файл в целевой папке, если файл с таким именем уже существует
             return true;
-        } catch (Exception ex) { return false; }
+        } catch (Exception ex) { return false;}
     }
 
     private void process(HttpServletRequest req, HttpServletResponse resp) {
@@ -314,6 +317,14 @@
         String fileParameter = basename(dParameter);
         String fileStatus = getRequestParameter(req, PARAM_ACTION);
         currentDirectory = dParameter;
+
+        references = new HashMap<>();
+        String referenceForSpecialPath = currentDirectory.substring(HOME_DIRECTORY.length());
+        while(!referenceForSpecialPath.equals(unixSlash)) {
+            references.put(getPathReference(referenceForSpecialPath), basename(referenceForSpecialPath));
+            referenceForSpecialPath = goUpside(referenceForSpecialPath);
+        }
+        references.put(getPathReference(unixSlash), "home");
 
         boolean isFileAction = fileStatus != null;
         if (isFileAction) {
@@ -369,26 +380,6 @@
         printInput(PARAM_FILE, "dropdown-item", PARAM_FILE, "", true);
         printSubmit("Загрузить", "dropdown-item");
         endForm();
-
-        // Download via servlet V3
-        //startForm("POST", "upload_new_version", "multipart/form-data");
-        //printInput("hidden", "", PARAM_D , "", showedPath);
-        //printInput("file", "dropdown-item", "file", "", true);
-        //printSubmit("Загрузить (Servlet V3)", "dropdown-item");
-        //endForm();
-
-        // SERVER BUTTONS THAT MAY CREATE DIRECTORIES AND FILES
-        /*startDiv("dropdown-divider"); endDiv();
-
-        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
-        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя файла", false);
-        printSubmit("Создать файл", "btn-success");
-        endForm();
-
-        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_MKDIR);
-        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя директории", false);
-        printSubmit("Создать директорию", "btn-success");
-        endForm();*/
 
         startDiv("dropdown-divider"); endDiv();
         endDiv();
@@ -513,11 +504,12 @@
                }
 
                if(fileStatus.equals(ACTION_VIEW_AS_VIDEO)) {
+                   wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
                    printVideo(path, 600, 480);
                }
 
                if(fileStatus.equals(ACTION_VIEW)) {
-                   wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
+                   wln("<style> #left_block { } input { margin: 5px; }</style>");
                    startDiv("block", "left_block", "left");
                    startDiv("row");
                    startDiv("col");
@@ -534,9 +526,24 @@
                    printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
                    printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
                    nLine(); nLine(); printFileMeta(path);
+                   nLine();
+
+                   startForm("POST", getFileReference(encodeValue(showedPath), ACTION_COPY));
+                   printInput("hidden", "", PARAM_FILE, "", basename(showedPath));
+                   printInput("text", "", PARAM_DIRECTORY, "Напишите папку", "");
+                   printSubmit("Скопировать");
+                   endForm();
                }
+
+               if(fileStatus.equals(ACTION_COPY)) {
+                   String targetPath = request.getParameter(PARAM_DIRECTORY) + request.getParameter(PARAM_FILE);
+                   String targetDir = currentDirectory.substring(0, currentDirectory.substring(showedPath.length()).length());
+                   cp(currentDirectory, targetDir + targetPath);
+                   response.sendRedirect(getFileReference(showedPath, ACTION_VIEW));
+               }
+
                if(fileStatus.equals(ACTION_EDIT)) {
-                   wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
+                   wln("<style>  #left_block { } input { margin: 5px; }</style>");
                    startDiv("block", "left_block", "left");
                    startDiv("row");
                    startDiv("col");
@@ -593,7 +600,6 @@
         wln("Размер: " + showingFile.length() + " байт."); nLine();
         // Права: (чтение, запись)
         wln("Права на: " + (showingFile.canRead() ? " чтение" : "") + (showingFile.canWrite() ? " запись" : ""));
-
         boolean isFileType = false;
         for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
 
@@ -711,18 +717,9 @@
     private void setReference(String reference, String insides) { wln("<a href=\""+reference+"\">"); wln(insides); wln("</a>"); }
 
     private void printTableHead() {
-        Map<String, String> references = new HashMap<>();
-        String referenceForSpecialPath = currentDirectory.substring(HOME_DIRECTORY.length());
-
         startDiv("row");
-
         startDiv("col");
         printH("Содержание директории: ", 5);
-        while(!referenceForSpecialPath.equals(unixSlash)) {
-            references.put(getPathReference(referenceForSpecialPath), basename(referenceForSpecialPath));
-            referenceForSpecialPath = goUpside(referenceForSpecialPath);
-        }
-        references.put(getPathReference(unixSlash), "home");
 
         if(!showedPath.equals(unixSlash)) {
             startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
