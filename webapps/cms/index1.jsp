@@ -1,17 +1,14 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java"
          import="java.io.*"
          import="java.text.SimpleDateFormat"
-         import="java.nio.file.Paths"
-         import="java.nio.file.Path"
-         import="java.nio.file.Files"
          import="org.eustrosoft.providers.LogProvider"
          import="name.fraser.neil.plaintext.diff_match_patch"
          import="java.nio.charset.StandardCharsets"
          import="java.io.UnsupportedEncodingException"
          import="java.net.URLEncoder"
-         import="java.nio.file.StandardCopyOption"
          import="java.util.Map" %>
 <%@ page import="java.util.*" %>
+<%@ page import="java.nio.file.*" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -43,6 +40,7 @@
     private final static String ACTION_COPY = "cp";
     private final static String ACTION_MKDIR = "mkdir";
     private final static String ACTION_DELETE_DIR = "rmdir";
+    private final static String ACTION_RENAME = "rename";
 
     private final static String ACTION_EDIT = "edit";
     private final static String ACTION_VIEW_AS_IMG = "image_view";
@@ -241,9 +239,12 @@
 
     // Change filename in specific path
     private boolean rename(String fileName, String newFileName) {
-        File file = new File(currentDirectory + fileName);
-        file.renameTo(new File(currentDirectory + newFileName));
-        return true;
+        File file = new File(goUpside(currentDirectory) + fileName);
+        File dest = new File(goUpside(currentDirectory) + newFileName);
+        if(file.renameTo(dest))
+            return true;
+        else
+            return false;
     }
 
     // Make directory
@@ -528,11 +529,24 @@
                    nLine(); nLine(); printFileMeta(path);
                    nLine();
 
+                   startForm("POST", getFileReference(encodeValue(showedPath), ACTION_RENAME));
+                   wln("Переименовать файл: ");
+                   printInput("text", "", PARAM_FILE, "Напишите имя файла", "");
+                   printSubmit("Переименовать");
+                   endForm();
+
                    startForm("POST", getFileReference(encodeValue(showedPath), ACTION_COPY));
+                   wln("Скопировать файл (в конце и начале необходимо поставить слеши):");
                    printInput("hidden", "", PARAM_FILE, "", basename(showedPath));
                    printInput("text", "", PARAM_DIRECTORY, "Напишите папку", "");
                    printSubmit("Скопировать");
                    endForm();
+               }
+
+               if(fileStatus.equals(ACTION_RENAME)) {
+                   String newFileName = request.getParameter(PARAM_FILE);
+                   rename(basename(showedPath), newFileName);
+                   response.sendRedirect(getFileReference(goUpside(showedPath) + newFileName, ACTION_VIEW));
                }
 
                if(fileStatus.equals(ACTION_COPY)) {
