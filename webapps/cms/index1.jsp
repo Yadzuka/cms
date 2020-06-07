@@ -471,19 +471,25 @@
                        rmdir(path);
                        response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
                    } else if(request.getParameter("no_delete") != null) {
-                       wln("Удалить не удалось");
-                       response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                       response.sendRedirect(getPathReference(encodeValue(showedPath)));
                    } else {
-                       acceptDeleteDirectory();
+                       acceptDeleteFile("директорию", ACTION_DELETE_DIR);
                    }
                }
 
 
                if (fileStatus.equals(ACTION_DELETE)) {
                    //SIC!
-
-                    rm(path);
-                    response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                   if(request.getParameter("yes_delete") != null) {
+                       wln(showedPath);
+                       rm(path);
+                       response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                   } else if(request.getParameter("no_delete") != null) {
+                       response.sendRedirect(getFileReference(encodeValue(showedPath), ACTION_VIEW));
+                       response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                   } else {
+                       acceptDeleteFile("файл", ACTION_DELETE);
+                   }
                }
 
                if(fileStatus.equals(ACTION_VIEW_AS_TEXT)) {
@@ -519,20 +525,6 @@
                    endDiv();
                    endDiv();
                    wln("");
-                   // POST ACTION UNDER FILES (AS VIEW AS SOMETHING AND SO ON)
-                   /*wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
-                   startForm("POST", getFileReference(encodeValue(showedPath), ACTION_EDIT));
-                   printInput("submit", "", ACTION_EDIT, "", "Редактировать");
-                   printInput("submit", "", ACTION_DELETE, "", "Удалить");
-                   wln("Посмотреть как: ");
-                   printInput("submit", "", ACTION_VIEW_AS_TEXT, "", "Текст");
-                   printInput("submit", "", ACTION_VIEW_AS_IMG, "", "Картинку");
-                   printInput("submit", "", ACTION_VIEW_AS_VIDEO, "", "Видео");
-                   endForm();
-                   startForm("GET", "download");
-                   printInput("hidden", "", "d", "", showedPath);
-                   printSubmit("Скачать", "");
-                   endForm();*/
                    wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
                    printA("Скачать", "download?d=" + encodeValue(showedPath)); // SIC! maybe download can be framed in constant
                    printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
@@ -541,7 +533,7 @@
                    printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
                    printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
                    printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
-                   printFileMeta(path);
+                   nLine(); nLine(); printFileMeta(path);
                }
                if(fileStatus.equals(ACTION_EDIT)) {
                    wln("<style> body { display: inline-flex; } #main_block { margin: 0; } #left_block { } input { margin: 5px; }</style>");
@@ -580,10 +572,15 @@
         }
     }
 
-    // DIRECTORY DELETING (ACCEPT)
-    private void acceptDeleteDirectory() {
-        wln("Точно хотите удалить директорию?");
-        startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
+    // File DELETING (ACCEPT) (could be as file and directory as well)
+    private void acceptDeleteFile(String deleteWhat, String ACTION) {
+        wln("Точно хотите удалить " + deleteWhat + "?");
+        if(ACTION.equals(ACTION_DELETE))
+            startForm("POST", getFileReference(showedPath, ACTION_DELETE));
+        else if(ACTION.equals(ACTION_DELETE_DIR))
+            startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
+        else
+            return;
         wln("<input type='submit' name='yes_delete' value='Да'/>");
         wln("<input type='submit' name='no_delete' value='Нет'/>");
         endForm();
@@ -732,14 +729,13 @@
             printSubmit("Удалить директорию");
             endForm();
         }
+        endDiv();
 
+        startDiv("col");
         references.forEach((x,y) -> {
             w("/");
             printA(y, x);
         });
-        endDiv();
-
-        startDiv("col");
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
         printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
         wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
