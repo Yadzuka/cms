@@ -50,6 +50,14 @@ String[] menu_lang= new String[dim_menu_lang];
 String[] menu_lang_ru = new String[]{"Русский","Английский","Китайский"};
 String[] menu_lang_en = new String[]{"Russian","English","Chinese"};
 
+public static final int MNU_LANG_RU = 0;
+public static final int MNU_LANG_EN = 1;
+public static final int MNU_LANG_ZH = 2;
+
+public static final String LANG_RU = "ru";
+public static final String LANG_EN = "en";
+public static final String LANG_ZH = "zh";
+
 %>
 
 <!DOCTYPE html>
@@ -58,8 +66,8 @@ String[] menu_lang_en = new String[]{"Russian","English","Chinese"};
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-	<link rel="shortcut icon" href="beacon.png" type="image/png">
-   <link rel="icon" href="beacon.png" type="image/png">
+	<link rel="shortcut icon" href="img/beacon.png" type="image/png">
+   <link rel="icon" href="img/beacon.png" tyPe="image/png">
 	<title>CMS CMD menu</title>
 <style>
 body {
@@ -97,11 +105,15 @@ body {
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
  	  <a class="navbar-brand" href="#">
-    <img src="beacon.png" width="30" height="30" class="d-inline-block align-center" alt="beacon.png"><%=menu_main[0]%></a>
+    <img src="img/beacon.png" width="30" height="30" class="d-inline-block align-center" alt="beacon.png"><%=menu_main[0]%></a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
 <%
+String lang = LANG_RU;
+
+lang = request.getParameter("lang"); //SIC!
+
 
 menu_main = menu_main_ru;
 menu_directory = menu_directory_ru;
@@ -112,6 +124,18 @@ menu_meta = menu_meta_ru;
 menu_network = menu_network_ru;
 menu_help = menu_help_ru;
 menu_lang = menu_lang_ru;
+
+if(LANG_EN.equals(lang)) {
+menu_main = menu_main_en;
+menu_directory = menu_directory_en;
+menu_repository = menu_repository_en;
+menu_document = menu_document_en;
+menu_script = menu_script_en;
+menu_meta = menu_meta_en;
+menu_network = menu_network_en;
+menu_help = menu_help_en;
+menu_lang = menu_lang_en;
+}
 
 
 %>
@@ -249,6 +273,9 @@ menu_lang = menu_lang_ru;
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="#help"><%=menu_help[0]%></a>
           <a class="dropdown-item" href="#about"><%=menu_help[1]%></a>
+          <a class="dropdown-item" href="?lang=ru"><%=menu_lang[MNU_LANG_RU]%></a>
+          <a class="dropdown-item" href="?lang=en"><%=menu_lang[MNU_LANG_EN]%></a>
+          <a class="dropdown-item" href="?lang=zh"><%=menu_lang[MNU_LANG_ZH]%></a>
         </div>
       </li>
 </div>
@@ -256,11 +283,11 @@ menu_lang = menu_lang_ru;
 </div>
 <div class="btn-group btn-group-toggle" data-toggle="buttons">
   <label class="btn btn-outline-secondary active">
-    <input type="radio" name="options" id="option1" checked><%=menu_lang[0]%></label>
+    <input type="radio" name="options" id="option1" checked><%=menu_lang[MNU_LANG_RU]%></label>
   <label class="btn btn-outline-secondary">
-    <input type="radio" name="options" id="option2"><%=menu_lang[1]%></label>
+    <input type="radio" name="options" id="option2"><%=menu_lang[MNU_LANG_EN]%></label>
   <label class="btn btn-outline-secondary">
-    <input type="radio" name="options" id="option3"><%=menu_lang[2]%></label>
+    <input type="radio" name="options" id="option3"><%=menu_lang[MNU_LANG_ZH]%></label>
 </div>
 </nav>
 </header>
@@ -272,12 +299,14 @@ menu_lang = menu_lang_ru;
 </footer>
 
 <script>
+/*
  let ru = document.getElementById("option1");
  let eng = document.getElementById("option2");
  let chi = document.getElementById("option3");
  ru.onclick= function () {alert(ru.id)};
  eng.onclick= function () {alert(eng.id)};
  chi.onclick= function () {alert(chi.id)};
+*/
 </script>
 
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>

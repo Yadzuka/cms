@@ -15,6 +15,7 @@ You can select one from the next variants of UI<br>
 <li> <a href='ui_proto1_flex_ale777.jsp'>Прототип интерфейса №1, с использованием flex (ale777)</a>
 <li> <a href='ui_proto2_ale777.html'>Прототип интерфейса №2, на примере ConcepTIS (ale777)</a>
 <li> <a href='ui_proto3.html'>Прототип интерфейса №3, (ale777)</a>
+<li> <a href='ui_proto3_ale777.jsp'>Прототип интерфейса №3, jsp (ale777)</a>
 </ul>
 <h2>Официальные репозитории:</h2>
 <ul>
