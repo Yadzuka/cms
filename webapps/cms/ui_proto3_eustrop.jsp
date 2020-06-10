@@ -31,7 +31,7 @@ null,null,null,null,null,null,null,null,null, // this item ignored
 //"-",	MNU_SCRIPT,	Y,MT_DROPDOWN,	null,	"Script","Скрипты",脚本,null,
 //"--",	MNU_LANG_ZH,	Y,MT_LANG,	null,	"中文","中文","中文",null,
 "-",	"main",	Y,MT_HREF,	"./",	"Main","Главная","主要",null,
-"-",	"doc",	Y,MT_DROPDOWN,	null,	"Document","Документы","文件",
+"-",	"doc",	Y,MT_DROPDOWN,	null,	"Document","Документы","文件",null,
  "--",	"view",	Y,MT_CMD,	null,   "View","Просмотр","看",null,
  "--",	"mv",	Y,MT_CMD,	null,   "Move",	"Переместить","迁移" ,null,
  "--",	"rename",Y,MT_CMD,	null,   "Rename","Переименовать","改名",null,
@@ -108,28 +108,78 @@ public void closeMenu(){MENU_LEVEL--;print_closeMenu();}
 public void printMenuItem(String id,String type,String action, String caption){print_MenuItem(id,type,action,caption);}
 
 //
-// private methods - implementeation of public ones
+// private methods - implementation of public ones
 //
 public void print_MenuPage()
 {
  //
+ int item_size=CAPTION_CUSTOM+1;
+ int menu_count=MENU.length/(item_size);
+ int i = 0;
+ int current_level=0;
+ w("<pre>");
+ for(i=0;i<menu_count;i++)
+ {
+  int item=i*item_size;
+  if(MENU[item]==null)continue;
+  int level=MENU[item].length();
+  String id=MENU[item + MENU_II_ID];
+  String enabled=MENU[item + MENU_II_ENABLED];
+  String type=MENU[item + MENU_II_TYPE];
+  String action=MENU[item + MENU_II_ACTION];
+  String caption=MENU[item + MENU_II_CAPTION];
+  w(MENU[item]); w("\t"); w(caption); w("\t"); w(MENU[item + CAPTION_ZH]); wln();
+  if(level == 1)
+  {
+  }
+ }
+ w("</pre>");
 }
 //set of WASkin methods for creating menu
 public void print_beginMenuNavBar(){
- //print_begingMenuNavBar();
+      w("<nav class=\"navbar navbar-expand-lg navbar-light bg-light\">\n");
+      //w(" <a class=\"navbar-brand\" href=\"#\">\n");
+      //w("    <img src=\"img/beacon.png\" width=\"30\" height=\"30\" class=\"d-inline-block align-center\" alt=\"beacon.png\">&lt;=menu_main[0]%&gt;\n");
+      //w("&lt;=menu_main[0]%&gt;</a>\n");
+      //w("    <img src=\"img/beacon.png\" width=\"30\" height=\"30\" class=\"d-inline-block align-center\" alt=\"beacon.png\">\n");
+      w("  <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarSupportedContent\" aria-controls=\"navbarSupportedContent\" aria-expanded=\"false\" aria-label=\"Toggle navigation\">\n");
+      w("    <span class=\"navbar-toggler-icon\"></span>\n");
+      w("  </button>\n");
+      w("<div class=\"collapse navbar-collapse\" id=\"navbarSupportedContent\">\n");
+      w("<ul class=\"navbar-nav mr-auto\" style='justify-content: space-around; width: 70%;'>\n");
 }
 public void print_closeMenuNavBar(){
- //print_closeMenuNavBar();
+      //w("</div>\n");
+      w("</ul> </div> </nav>\n");
 }
 public void print_beginMenu(){
-MENU_LEVEL++;print_beginMenu();
+      w("<div>\n");
+      w("      <li class=\"nav-item dropdown\">\n");
 }
 public void print_closeMenu(){
- MENU_LEVEL--;print_closeMenu();
+      w("      </li>\n");
+      w("</div>\n");
+}
+public void print_beginMenu2(){
+      w("        <div class=\"dropdown-menu\" aria-labelledby=\"navbarDropdown\">\n");
+}
+public void print_closeMenu2(){
+      w("        </div>\n");
 }
 public void print_MenuItem(String id,String type,String action, String caption){
-//print_MenuItem(id,type,action,caption);
-}
+      w("        <a id='" + id + "' ");
+      if(MT_DROPDOWN.equals(type)) {
+      w(" class=\"nav-link dropdown-toggle\" href=\"#\" role=\"button\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\"");
+      }
+      else {
+      w(" class=\"dropdown-item\" href=\"");
+      w(action);
+      w("\"");
+      }
+      w(" >");
+      w(caption);
+      w("</a>\n");
+} //print_MenuItem
 //
 // basic WASkin methods
 //
@@ -188,55 +238,12 @@ body {
 
 <header>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
- <a class="navbar-brand" href="#">
-    <img src="img/beacon.png" width="30" height="30" class="d-inline-block align-center" alt="beacon.png">&lt;=menu_main[0]%&gt;</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
 <%
-// printMenu();
+setMenuOut(out);
+beginMenuNavBar();
 %>
-<div class="collapse navbar-collapse" id="navbarSupportedContent">
-<ul class="navbar-nav mr-auto" style='justify-content: space-around; width: 70%;'>
-<div>
-      <li class="nav-item dropdown">
-        <a class="btn btn-outline-secondary dropdown-toggle" href="#" id="mn_directory"
-           role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">&lt;=menu_main[3]%&gt;</a>
-	<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="#ls">&lt;=menu_directory[0]%&gt;</a>
-          <a class="dropdown-item" href="#view">&lt;=menu_directory[1]%&gt;</a>
-          <a class="dropdown-item" href="#mv">&lt;=menu_directory[2]%&gt;</a>
-          <a class="dropdown-item" href="#rename">&lt;=menu_directory[3]%&gt;</a>
-          <a class="dropdown-item" href="#mkdir">&lt;=menu_directory[4]%&gt;</a>
-          <a class="dropdown-item" href="#rmdir">&lt;=menu_directory[5]%&gt;</a>
-          <a class="dropdown-item" href="#lock">&lt;=menu_directory[6]%&gt;</a>
-          <a class="dropdown-item" href="#unlock">&lt;=menu_directory[7]%&gt;</a>
-          <a class="dropdown-item" href="#create">&lt;=menu_directory[8]%&gt;</a>
-        </div>
-      </li>
-</div>
-<div>
-      <li class="nav-item dropdown">
-		 <div class="btn-group">
-
-  <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-  <button type="button" class="btn btn-outline-secondary">&lt;=menu_main[2]%&gt;</button>
-    <span class="sr-only">Toggle Dropdown</span>
-  </button>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="#rename">&lt;=menu_repository[0]%&gt;</a>
-          <a class="dropdown-item" href="#ci">&lt;=menu_repository[1]%&gt;</a>
-          <a class="dropdown-item" href="#co">&lt;=menu_repository[2]%&gt;</a>
-          <a class="dropdown-item" href="#lock">&lt;=menu_repository[3]%&gt;</a>
-          <a class="dropdown-item" href="#unlock">&lt;=menu_repository[4]%&gt;</a>
-          <a class="dropdown-item" href="#create">&lt;=menu_repository[5]%&gt;</a>
-          <a class="dropdown-item" href="#commit">&lt;=menu_repository[6]%&gt;</a>
-          <a class="dropdown-item" href="#rollbck">&lt;=menu_repository[7]%&gt;</a>
-        </div>
-        </div>
-      </li>
-</div>
+<!--
+ -->
 <div>
     <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="mn_document" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">&lt;=menu_main[1]%&gt;</a>
@@ -246,21 +253,6 @@ body {
           <a class="dropdown-item" href="#mv">&lt;=menu_document[2]%&gt;</a>
           <a class="dropdown-item" href="#rename">&lt;=menu_document[3]%&gt;</a>
           <a class="dropdown-item" href="#rm">&lt;=menu_document[4]%&gt;</a>
-          <a class="dropdown-item" href="#unrm">&lt;=menu_document[5]%&gt;</a>
-          <a class="dropdown-item" href="#restore">&lt;=menu_document[6]%&gt;</a>
-          <a class="dropdown-item" href="#cp">&lt;=menu_document[7]%&gt;</a>
-          <a class="dropdown-item" href="#edit">&lt;=menu_document[8]%&gt;</a>
-          <a class="dropdown-item" href="#lock">&lt;=menu_document[9]%&gt;</a>
-          <a class="dropdown-item" href="#unlock">&lt;=menu_document[10]%&gt;</a>
-          <a class="dropdown-item" href="#create">&lt;=menu_document[11]%&gt;</a>
-          <a class="dropdown-item" href="#open">&lt;=menu_document[12]%&gt;</a>
-          <a class="dropdown-item" href="#write">&lt;=menu_document[13]%&gt;</a>
-          <a class="dropdown-item" href="#wread">&lt;=menu_document[14]%&gt;</a>
-          <a class="dropdown-item" href="#read">&lt;=menu_document[15]%&gt;</a>
-          <a class="dropdown-item" href="#insert">&lt;=menu_document[16]%&gt;</a>
-          <a class="dropdown-item" href="#update">&lt;=menu_document[17]%&gt;</a>
-          <a class="dropdown-item" href="#delete">&lt;=menu_document[18]%&gt;</a>
-          <a class="dropdown-item" href="#select">&lt;=menu_document[19]%&gt;</a>
         </div>
     </li>
 </div>
@@ -268,6 +260,7 @@ body {
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="mn_meta-data" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">&lt;=menu_main[4]%&gt;</a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#ls">&lt;=menu_document[0]%&gt;</a>
           <a class="nav-link dropdown-toggle" href="#" id="mn_meta_doc" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Document</a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="#ls">&lt;=menu_meta[0]%&gt;</a>
@@ -278,8 +271,7 @@ body {
           <a class="dropdown-item" href="#chmod">&lt;=menu_meta[5]%&gt;</a>
           <a class="dropdown-item" href="#set">&lt;=menu_meta[6]%&gt;</a>
         </div>
-
-
+          <a class="dropdown-item" href="#ls">&lt;=menu_document[0]%&gt;</a>
           <a class="nav-link dropdown-toggle" href="#" id="mn_meta_dir" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Directory</a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="#ls">&lt;=menu_meta[0]%&gt;</a>
@@ -294,6 +286,7 @@ body {
       </li>
 </div>
 
+<!--
 <div>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="mn_script" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -317,7 +310,7 @@ body {
           <a class="dropdown-item" href="#post">&lt;=menu_network[1]%&gt;</a>
           <a class="dropdown-item" href="#sln">&lt;=menu_network[2]%&gt;</a>
           <a class="dropdown-item" href="#fetch">&lt;=menu_network[3]%&gt;</a>
-		      <a class="dropdown-item" href="#upload">&lt;=menu_network[4]%&gt;</a>
+	  <a class="dropdown-item" href="#upload">&lt;=menu_network[4]%&gt;</a>
           <a class="dropdown-item" href="#downld">&lt;=menu_network[5]%&gt;</a>
         </div>
       </li>
@@ -335,8 +328,16 @@ body {
         </div>
       </li>
 </div>
-</ul> </div> </nav>
+-->
+<%
+closeMenuNavBar();
+%>
 </header>
+<div id='main'>
+<%
+printMenuPage();
+%>
+</div>
 
 
 
