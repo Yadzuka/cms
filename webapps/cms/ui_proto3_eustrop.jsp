@@ -103,8 +103,9 @@ public void printMenuPage() {print_MenuPage(); }
 //set of WASkin methods for creating menu
 public void beginMenuNavBar(){print_beginMenuNavBar(); }
 public void closeMenuNavBar(){print_closeMenuNavBar();}
-public void beginMenu(){MENU_LEVEL++;print_beginMenu();} // do nothing or something
-public void closeMenu(){MENU_LEVEL--;print_closeMenu();}
+public void beginMenu(){MENU_LEVEL++;if(MENU_LEVEL==1){print_beginMenu();}else{print_beginMenu2();}} // do nothing or something
+public void closeMenu(){MENU_LEVEL--;if(MENU_LEVEL==0){print_closeMenu();}else{print_closeMenu2();}}
+public int currentMenuLevel(){return(MENU_LEVEL);}
 public void printMenuItem(String id,String type,String action, String caption){print_MenuItem(id,type,action,caption);}
 
 //
@@ -117,23 +118,28 @@ public void print_MenuPage()
  int menu_count=MENU.length/(item_size);
  int i = 0;
  int current_level=0;
- w("<pre>");
+ int level=0;
+ //w("<pre>");
  for(i=0;i<menu_count;i++)
  {
   int item=i*item_size;
   if(MENU[item]==null)continue;
-  int level=MENU[item].length();
+  level=MENU[item].length();
   String id=MENU[item + MENU_II_ID];
   String enabled=MENU[item + MENU_II_ENABLED];
   String type=MENU[item + MENU_II_TYPE];
   String action=MENU[item + MENU_II_ACTION];
   String caption=MENU[item + MENU_II_CAPTION];
-  w(MENU[item]); w("\t"); w(caption); w("\t"); w(MENU[item + CAPTION_ZH]); wln();
-  if(level == 1)
-  {
-  }
+  if(level == 1 && current_level == 1){closeMenu();current_level--;}
+  if(level > current_level) for(;level>current_level;current_level++){beginMenu();}
+  if(level < current_level) for(;level<=current_level;current_level--){closeMenu();}
+  printMenuItem(id,type,action,caption);
+  //w("<a href='#'>" + level + " ");
+  //w(MENU[item]); w("\t"); w(caption); w("\t"); w(MENU[item + CAPTION_ZH]); 
+  //wln("</a>");
  }
- w("</pre>");
+  for(;0<current_level;current_level--){closeMenu();}
+ //w("</pre>");
 }
 //set of WASkin methods for creating menu
 public void print_beginMenuNavBar(){
@@ -167,6 +173,7 @@ public void print_closeMenu2(){
       w("        </div>\n");
 }
 public void print_MenuItem(String id,String type,String action, String caption){
+if(action==null)action="#";
       w("        <a id='" + id + "' ");
       if(MT_DROPDOWN.equals(type)) {
       w(" class=\"nav-link dropdown-toggle\" href=\"#\" role=\"button\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\"");
@@ -241,9 +248,10 @@ body {
 <%
 setMenuOut(out);
 beginMenuNavBar();
+printMenuPage();
+closeMenuNavBar();
 %>
-<!--
- -->
+<!-- а вот это все мы удалим (85 строк) : 85dd
 <div>
     <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="mn_document" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">&lt;=menu_main[1]%&gt;</a>
@@ -286,7 +294,6 @@ beginMenuNavBar();
       </li>
 </div>
 
-<!--
 <div>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="mn_script" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -329,19 +336,19 @@ beginMenuNavBar();
       </li>
 </div>
 -->
-<%
-closeMenuNavBar();
-%>
 </header>
 <div id='main'>
-<%
-printMenuPage();
-%>
+<H1> Здесь будет результат выполнения текущей команды </H1>
 </div>
 
 
 
-<!-- FOOTER -->
+<!-- FOOTER (<pre> tag inserted to avoid tail of page loss) -->
+<pre>
+
+
+
+</pre>
 
 <footer class="fixed-bottom" style="background-color: #dfdfdf; height: 50px; font-size: 1em; font-family: sans-serif; font-style:italic">
  <div class="footer-copyright text-center py-3">© Eustrosoft, ConcepTIS v0.4 - stable version of UI (see for UI variants)</div>
