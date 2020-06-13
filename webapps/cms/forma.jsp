@@ -34,22 +34,27 @@
 
     private boolean fillFormWithData(String newFileName) {
         try {
-            /*File newFormFile = new File(ROOT_PATH + newFileName);
+            File newFormFile = new File(ROOT_PATH + newFileName);
             if(!newFormFile.exists()) {
                 newFormFile.createNewFile();
-            }*/
+            }
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader
-                            (new FileInputStream(contract), Charset.forName("UTF-8")));
+                            (new FileInputStream(card), Charset.forName("UTF-8")));
             BufferedWriter writer = new BufferedWriter
                     (new OutputStreamWriter
                             (new FileOutputStream(ROOT_PATH + newFileName), Charset.forName("UTF-8")));
             String str = "";
+            String changedString = "";
             while((str = reader.readLine()) != null) {
-                //cw(str);
+                for(int i = 0; i < fieldNames.length; i++) {
+                    str = str.replaceAll(">" + fieldNames[i] + "<", ">"  + documentData.get(fieldNames[i]).toString() + "<");
+                }
+                writer.write(str);
             }
             writer.close();
             reader.close();
+            w("Written!");
             return true;
         } catch (IOException ex) {
             w("Exception occurred " + ex.getLocalizedMessage());
@@ -85,7 +90,7 @@
 
     if(request.getParameter(FILL) != null) {
         if(fillData(request)) {
-            fillFormWithData("sdas.docx");
+            fillFormWithData("sdas.xml");
         } else {
             w("Данные не загружены!");
         }
@@ -154,7 +159,7 @@
     ФИО:<br><input type="text" name="clientpayname"><br>
     E-mail:<br><input type="text" name="clientpaymail"><br>
     Тел./факс:<br><input type="text" name="clientpaytel"><br>
-    <input type="submit" name="fill">
+    <input type="submit" name="fill" value="Создать форму">
 </form>
 
 </body>
