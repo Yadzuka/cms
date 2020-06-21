@@ -486,18 +486,14 @@
 
                if(fileStatus.equals(ACTION_VIEW_AS_TEXT)) {
                     wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
-                    FileReader reader = new FileReader(path);
-                    BufferedReader br = new BufferedReader(reader);
-                    StringBuilder builder = new StringBuilder();
-
-                    char[] symbols = new char[4096];
-                    while (br.read(symbols) != -1) {
-                        wln();
-                        builder.append(symbols, 0, symbols.length);
-                    }
+                    BufferedReader br = new BufferedReader(new FileReader(path));
+                    String bufferString = "";
                     nLine();
-                    wln(builder.toString());
-                    reader.close();
+                    while ((bufferString = br.readLine()) != null) {
+                        bufferString = translate_tokens(bufferString, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
+                        wln(bufferString);
+                        nLine();
+                    }
                     br.close();
                }
 
