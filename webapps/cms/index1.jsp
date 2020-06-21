@@ -319,13 +319,13 @@
         String fileStatus = getRequestParameter(req, PARAM_ACTION);
         currentDirectory = dParameter;
 
-        references = new HashMap<>();
+        references = new LinkedHashMap<>();
         String referenceForSpecialPath = currentDirectory.substring(HOME_DIRECTORY.length());
         while(!referenceForSpecialPath.equals(unixSlash)) {
             references.put(getPathReference(referenceForSpecialPath), basename(referenceForSpecialPath));
             referenceForSpecialPath = goUpside(referenceForSpecialPath);
         }
-        references.put(getPathReference(unixSlash), "home");
+        references.put(getPathReference(unixSlash), "root");
 
         boolean isFileAction = fileStatus != null;
         if (isFileAction) {
@@ -492,9 +492,11 @@
 
                     char[] symbols = new char[4096];
                     while (br.read(symbols) != -1) {
+                        wln();
                         builder.append(symbols, 0, symbols.length);
                     }
-                    printText("", 100, 20, builder.toString());
+                    nLine();
+                    wln(builder.toString());
                     reader.close();
                     br.close();
                }
@@ -741,12 +743,13 @@
             endForm();
         }
         endDiv();
-
         startDiv("col");
-        references.forEach((x,y) -> {
-            w("/");
-            printA(y, x);
-        });
+        List<String> allKeys = new ArrayList<>(references.keySet());
+        Collections.reverse(allKeys);
+        for(int i = 0; i < allKeys.size(); i++) {
+            printA("/" + references.get(allKeys.get(i)), allKeys.get(i));
+        }
+
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
         printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
         wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
