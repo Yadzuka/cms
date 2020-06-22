@@ -319,13 +319,13 @@
         String fileStatus = getRequestParameter(req, PARAM_ACTION);
         currentDirectory = dParameter;
 
-        references = new HashMap<>();
+        references = new LinkedHashMap<>();
         String referenceForSpecialPath = currentDirectory.substring(HOME_DIRECTORY.length());
         while(!referenceForSpecialPath.equals(unixSlash)) {
             references.put(getPathReference(referenceForSpecialPath), basename(referenceForSpecialPath));
             referenceForSpecialPath = goUpside(referenceForSpecialPath);
         }
-        references.put(getPathReference(unixSlash), "home");
+        references.put(getPathReference(unixSlash), "root");
 
         boolean isFileAction = fileStatus != null;
         if (isFileAction) {
@@ -486,16 +486,14 @@
 
                if(fileStatus.equals(ACTION_VIEW_AS_TEXT)) {
                     wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
-                    FileReader reader = new FileReader(path);
-                    BufferedReader br = new BufferedReader(reader);
-                    StringBuilder builder = new StringBuilder();
-
-                    char[] symbols = new char[4096];
-                    while (br.read(symbols) != -1) {
-                        builder.append(symbols, 0, symbols.length);
+                    BufferedReader br = new BufferedReader(new FileReader(path));
+                    String bufferString = "";
+                    nLine();
+                    while ((bufferString = br.readLine()) != null) {
+                        bufferString = translate_tokens(bufferString, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
+                        wln(bufferString);
+                        nLine();
                     }
-                    printText("", 100, 20, builder.toString());
-                    reader.close();
                     br.close();
                }
 
@@ -741,12 +739,13 @@
             endForm();
         }
         endDiv();
-
         startDiv("col");
-        references.forEach((x,y) -> {
-            w("/");
-            printA(y, x);
-        });
+        List<String> allKeys = new ArrayList<>(references.keySet());
+        Collections.reverse(allKeys);
+        for(int i = 0; i < allKeys.size(); i++) {
+            printA("/" + references.get(allKeys.get(i)), allKeys.get(i));
+        }
+
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
         printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
         wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
