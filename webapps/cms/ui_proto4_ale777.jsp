@@ -25,7 +25,7 @@ null,null,null,null,null,null,null,null,null, // this item ignored
 "--",	"edit",	Y,MT_DROPDOWN,	null,   "Edit","Редактировать","编辑",null,
 "---",	"text",	Y,MT_CMD,	null,   "as text","как текст","文本",null,
 "---",	"rm",	Y,MT_CMD,	null,   "Delete","Удалить","删除",null,
-"--",	"locks",Y,MT_DROPDOWN,	null,	"Locks","Блокировки","锁",null,
+//"--",	"locks",Y,MT_DROPDOWN,	null,	"Locks","Блокировки","锁",null,
 "---",	"lock",	Y,MT_CMD,	null,   "Lock","Заблокировать","锁",null,
 "---",	"unlock",Y,MT_CMD,	null,   "Unlock","Разблокиовать","开锁",null,
 "-",	"repo",	Y,MT_DROPDOWN,	null,	"Repo","Репозитории","仓库",null,
@@ -104,10 +104,10 @@ print_beginMenu2();
 public void closeMenu(){
 MENU_LEVEL--;
 if(MENU_LEVEL==0){
-w("<br>"+"c1");
+//w("<br>"+"c1");
 print_closeMenu();
 }else{
-w("<br>"+"c2");
+//w("<br>"+"c2");
 print_closeMenu();
 }
 }
@@ -123,6 +123,7 @@ public void print_MenuPage()
  int i = 0;
  int item_level=0;
  int level=1;
+ MENU_LEVEL=0;
  for(i=0;i<menu_count;i++)
  {
   int item=i*item_size;
@@ -133,49 +134,30 @@ public void print_MenuPage()
   String type=MENU[item + MENU_II_TYPE];
   String action=MENU[item + MENU_II_ACTION];
   String caption=MENU[item + MENU_II_CAPTION];
-  //w("<br>i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
+//w("<br>"+"i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
 
-/*if(level == 1 && item_level == 1 && MENU_LEVEL==1) closeMenu();
- if(level == 1 && item_level == 1){beginMenu();printMenuItem(id,type,action,caption);}
-else{
-if(level==MENU_LEVEL && MENU_LEVEL>=2) printMenuItem(id,type,action,caption);
-}
-if(level > MENU_LEVEL) {item_level++;beginMenu();printMenuItem(id,type,action,caption);}
-
-if(level < MENU_LEVEL) {for(;level<=item_level;item_level--){closeMenu();}beginMenu();item_level++;printMenuItem(id,type,action,caption);}
-*/
-//w("id="+id+"  caption="+caption+"  current_level="+String.valueOf(MENU_LEVEL)+"</br>");
-//if (i==10){printMenuItem(id,type,action,caption);beginMenu();item_level++;continue;}
 if (i==1){beginMenu();item_level++;printMenuItem(id,type,action,caption);continue;}
 if (MENU_LEVEL==1 && (level-MENU_LEVEL)==0){closeMenu();beginMenu();printMenuItem(id,type,action,caption);continue;}
-if (MENU_LEVEL==1 && (level-MENU_LEVEL)>0){beginMenu();item_level++;printMenuItem(id,type,action,caption);continue;}
+if (MENU_LEVEL>=1 && (level-MENU_LEVEL)>0){beginMenu();item_level++;printMenuItem(id,type,action,caption);continue;}
 
 if (MENU_LEVEL>=2 && (level-MENU_LEVEL)==0){printMenuItem(id,type,action,caption);continue;}
-if (MENU_LEVEL>=2 && (level-MENU_LEVEL)>0){beginMenu();item_level++;printMenuItem(id,type,action,caption);continue;}
 
-if (MENU_LEVEL>=2 && (level-MENU_LEVEL)<0){
-w("<br>i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
-while (level!=item_level) {
-
-closeMenu();item_level--;
-w("<br>i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
-}
-printMenuItem(id,type,action,caption);
-w("<br>i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
-//closeMenu();
-//item_level--;
-//w("<br>i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
+if ((MENU_LEVEL-level)==1 && MENU_LEVEL==3){closeMenu();item_level--;printMenuItem(id,type,action,caption);continue;}
+if ((MENU_LEVEL-level)==2 && MENU_LEVEL==3){for(;level<=item_level;item_level--){closeMenu();}
 beginMenu();
 item_level++;
-w("<br>i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
-//}
-continue;
+printMenuItem(id,type,action,caption);
+continue;}
+if ((MENU_LEVEL-level)==1 && MENU_LEVEL==2){for(;level<=item_level;item_level--){closeMenu();}
+beginMenu();
+item_level++;
+printMenuItem(id,type,action,caption);
+continue;}
+//w("<br>"+"i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
 }
-
 }
 //for(;0<current_level;current_level--){closeMenu();}
 //w("</pre>");
-}
 
 //set of WASkin methods for creating menu
 public void print_MenuItem(String id,String type,String action, String caption){
@@ -185,14 +167,14 @@ if(MT_DROPDOWN.equals(type)) {
 //w("<br>"+" nav-caption id="+id);
 w("class='nav-link dropdown-toggle' href='#' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'");
 }else{
-//  w("<br>"+"  item id="+id);
+//w("<br>"+"  item id="+id);
 	w("class='dropdown-item' href='");
 	w(action);
     w("'");
 }
-  w(">");
-  w(caption);
-  w("</a>");
+	w(">");
+    w(caption);
+    w("</a>");
 }
 
 public void print_beginMenu(){
