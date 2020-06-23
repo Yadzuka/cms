@@ -200,8 +200,8 @@ lang = LANG_EN;
 %>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">
-    <img src="beacon.png" width="30" height="30" class="d-inline-block align-center" alt="beacon.png"><%=menu[IND_MAIN_MAIN]%></a>
+   <!-- <a class="navbar-brand" href="#">
+    <img src="beacon.png" width="30" height="30" class="d-inline-block align-center" alt="beacon.png"><%=menu[IND_MAIN_MAIN]%></a> -->
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -239,15 +239,13 @@ lang = LANG_EN;
 
 <div>
       <li class="nav-item dropdown">
-     <div class="btn-group">
-
-  <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <!--   <div class="btn-group">
+   <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
   <button type="button" class="btn btn-outline-secondary"><%=menu[IND_MAIN_REPO]%></button>
     <span class="sr-only">Toggle Dropdown</span>
-  </button>
+  </button> -->
 
-    <!--    <a class="nav-link dropdown-toggle" href="#" id="mn_repository" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%=menu[IND_MAIN_REPO]%></a>
-    -->
+       <a class="nav-link dropdown-toggle" href="#" id="mn_repository" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%=menu[IND_MAIN_REPO]%></a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="?repo=rename"><%=menu[IND_REPO_RENAME]%></a>
           <a class="dropdown-item" href="?repo=ci"><%=menu[IND_REPO_CI]%></a>
@@ -258,12 +256,12 @@ lang = LANG_EN;
           <a class="dropdown-item" href="?repo=commit"><%=menu[IND_REPO_COMMIT]%></a>
           <a class="dropdown-item" href="?repo=rollbck"><%=menu[IND_REPO_ROLLBCK]%></a>
         </div>
-        </div>
+    <!--    </div> -->
       </li>
 </div>
 <div>
       <li class="nav-item dropdown">
-        <a class="btn btn-outline-secondary dropdown-toggle" href="#" id="mn_directory" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%=menu[IND_MAIN_DIR]%></a>
+        <a class="nav-link dropdown-toggle" href="#" id="mn_directory" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%=menu[IND_MAIN_DIR]%></a>
       <div class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="?dir=ls"><%=menu[IND_DIR_LS]%></a>
           <a class="dropdown-item" href="?dir=view"><%=menu[IND_DIR_VIEW]%></a>
