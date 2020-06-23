@@ -25,7 +25,7 @@ null,null,null,null,null,null,null,null,null, // this item ignored
 "--",	"edit",	Y,MT_DROPDOWN,	null,   "Edit","Редактировать","编辑",null,
 "---",	"text",	Y,MT_CMD,	null,   "as text","как текст","文本",null,
 "---",	"rm",	Y,MT_CMD,	null,   "Delete","Удалить","删除",null,
-//"--",	"locks",Y,MT_DROPDOWN,	null,	"Locks","Блокировки","锁",null,
+"--",	"locks",Y,MT_DROPDOWN,	null,	"Locks","Блокировки","锁",null,
 "---",	"lock",	Y,MT_CMD,	null,   "Lock","Заблокировать","锁",null,
 "---",	"unlock",Y,MT_CMD,	null,   "Unlock","Разблокиовать","开锁",null,
 "-",	"repo",	Y,MT_DROPDOWN,	null,	"Repo","Репозитории","仓库",null,
@@ -92,23 +92,19 @@ public void closeMenuNavBar(){print_closeMenuNavBar();}
 public void beginMenu(){
 MENU_LEVEL++;
 if(MENU_LEVEL==1){
-//w("<br>"+"b1");
 print_beginMenu();
 }
 else
 {
-//w("<br>"+"b2");
 print_beginMenu2();
 }
 } // do nothing or something
 public void closeMenu(){
 MENU_LEVEL--;
 if(MENU_LEVEL==0){
-//w("<br>"+"c1");
 print_closeMenu();
 }else{
-//w("<br>"+"c2");
-print_closeMenu();
+print_closeMenu2();
 }
 }
 
@@ -153,7 +149,6 @@ beginMenu();
 item_level++;
 printMenuItem(id,type,action,caption);
 continue;}
-//w("<br>"+"i="+i+" id="+id+"  type=" + type +"  level="+level+" item_level="+item_level+"  MENU_LEVEL=" + MENU_LEVEL);
 }
 }
 //for(;0<current_level;current_level--){closeMenu();}
@@ -164,43 +159,43 @@ public void print_MenuItem(String id,String type,String action, String caption){
 if(action==null)action="#";
 w("        <a id='" + id + "' ");
 if(MT_DROPDOWN.equals(type)) {
-//w("<br>"+" nav-caption id="+id);
 w("class='nav-link dropdown-toggle' href='#' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'");
 }else{
-//w("<br>"+"  item id="+id);
 	w("class='dropdown-item' href='");
 	w(action);
     w("'");
 }
 	w(">");
     w(caption);
-    w("</a>");
+    w("</a>\n");
 }
 
 public void print_beginMenu(){
-      w("<li class='nav-item dropdown'>");
+      w("<li class='nav-item dropdown'>\n");
 }
 public void print_closeMenu(){
-      w("</li>");
+     w("</li>\n");
 }
 public void print_beginMenu2(){
-      w("<div class='dropdown-menu' aria-labelledby='navbarDropdown'>");
+      w("<div class='dropdown-menu' aria-labelledby='navbarDropdown'>\n");
 }
 public void print_closeMenu2(){
-      w("</div>");
+      w("</div>\n");
 }
 public void print_beginMenuNavBar(){
-w("<nav class='navbar navbar-expand-lg navbar-light' style='background-color: #e3f2fd;'>");
+w("<nav class='navbar navbar-expand-lg navbar-light' style='background-color: #e3f2fd;'>\n");
 //w("<a class='navbar-brand' href='#'>Navbar</a>");
-w("<button class='navbar-toggler' type='button' data-toggle='show' data-target='#navbarSupportedContent' aria-controls='navbarSupportedContent' aria-expanded='false' aria-label='Toggle navigation'>");
-w("<span class='navbar-toggler-icon'></span>");
-w("</button>");
-w("<div class='collapse navbar-collapse' id='navbarSupportedContent'>");
-w("<ul class='navbar-nav mr-auto'>");
+w("<button class='navbar-toggler' type='button' data-toggle='show' data-target='#navbarSupportedContent' aria-controls='navbarSupportedContent' aria-expanded='false' aria-label='Toggle navigation'>\n");
+w("<span class='navbar-toggler-icon'></span>\n");
+w("</button>\n");
+w("<div class='collapse navbar-collapse' id='navbarSupportedContent'>\n");
+w("<ul class='navbar-nav mr-auto'>\n");
 w("<!-- print_beginMenuNavBar -->");
 }
 public void print_closeMenuNavBar(){
-     w("</ul> </div> </nav>\n");
+     print_closeMenu2();
+     print_closeMenu();
+     w("</ul>\n</div>\n</nav>\n");
 }
 //
 // basic WASkin methods
