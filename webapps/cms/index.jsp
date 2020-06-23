@@ -17,6 +17,7 @@ You can select one from the next variants of UI<br>
 <li> <a href='ui_proto3.html'>Прототип интерфейса №3, (ale777)</a>
 <li> <a href='ui_proto3_ale777.jsp'>Прототип интерфейса №3, jsp (ale777)</a>
 <li> <a href='ui_proto3_eustrop.jsp'>Прототип интерфейса №3 (как надо внутри), jsp (eustrop)</a>
+<li> <a href='ui_proto4_ale777.jsp'>Прототип интерфейса №4, jsp (ale777)</a>
 <li> <a href='forma.jsp'>Форма для заполнения договора</a>
 </ul>
 <h2>Официальные репозитории:</h2>
