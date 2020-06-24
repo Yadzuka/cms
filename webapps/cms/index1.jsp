@@ -711,7 +711,7 @@
             String dilimiter = ";";
             String[] cells;
             wln("<br/>");
-            startTable("table table-bordered");
+            startTable("table table-borderedce ");
             startTBody("");
             while ((singleLine = br.readLine()) != null) {
                 cells = singleLine.split(dilimiter);

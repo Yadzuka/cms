@@ -8,12 +8,13 @@
     private File contract;
 
     private static String ROOT_PATH;
+    private static String USER_PATH;
     private static final String FILL = "fill";
     private static final String FILE_FORM = "ForForm.xml";
     private static final String FILE_ROS = "ROSdocument.xml";
 
     Map documentData = new Hashtable<String, String>(64);
-    String [] fieldNames = { "number", "town", "datum", "executor", "executorsmall", "executorposition", "executorname", "executorlaw", "executorplace", "executormail",
+    String [] fieldNames = { "filename", "newfilename", "number", "town", "datum", "executor", "executorsmall", "executorposition", "executorname", "executorlaw", "executorplace", "executormail",
             "executorbank", "executoraccount", "executorbankBIK", "executorbankaccount", "executorINN", "executorKPP", "executorOKPO",
             "executorOKVED", "executoradmtel", "executoradmfax", "executortechmail", "executortechtel", "executortechfax", "client", "clientbank",
             "clientaccount", "clientbankBIK", "clientbankaccount", "clientINN", "clientKPP", "clientOKPO", "clientOKVED", "clientadmname", "clientadmmail",
@@ -64,7 +65,7 @@
 
     private void initialize(ServletContext context) {
 
-        ROOT_PATH = context.getInitParameter("root");
+        ROOT_PATH = context.getInitParameter("root") + context.getInitParameter("user") + "/";
         card = new File(ROOT_PATH + FILE_FORM);
         contract = new File(ROOT_PATH + FILE_ROS);
     }
@@ -90,7 +91,7 @@
 
     if(request.getParameter(FILL) != null) {
         if(fillData(request)) {
-            fillFormWithData("sdas.xml");
+            fillFormWithData(request.getParameter("newfilename"));
         } else {
             w("Данные не загружены!");
         }
@@ -101,6 +102,8 @@
 <body>
 
 <form method="post" action="forma.jsp">
+    Файл xml для печати (должен находиться в корневой папке): <input type="text" name="filename"/><br> <br>
+    Новое имя файла: <input type="text" name="newfilename"/><hr>
     <h1>Введите общие данные договора:</h1>
     Номер:<br><input type="text" name="number"><br>
     Город, в котором заключен договор:<br><input type="text" name="town"><br>
