@@ -46,11 +46,13 @@
     private final static String ACTION_VIEW_AS_IMG = "image_view";
     private final static String ACTION_VIEW_AS_VIDEO = "video_view";
     private final static String ACTION_VIEW_AS_TEXT = "text_view";
+    private final static String ACTION_VIEW_AS_TABLE = "table_view";
 
     private final static int MAX_FILE_READ_SIZE = 10_000_000;
 
     private final static String [] IMAGE_DEFINITIONS = { "jpg", "jpeg", "png", "svg", "tiff", "bmp", "bat", "odg", "xps" };
     private final static String [] VIDEO_DEFINITIONS = { "ogg", "mp4", "webm" };
+    private final static String CSV_FORMAT = "csv";
     // File differences class
     private final diff_match_patch diffMatchPatch = new diff_match_patch();
 
@@ -507,6 +509,11 @@
                    printVideo(path, 600, 480);
                }
 
+               if(fileStatus.equals(ACTION_VIEW_AS_TABLE)) {
+                   wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
+                   printTable(path);
+               }
+
                if(fileStatus.equals(ACTION_VIEW)) {
                    wln("<style> #left_block { } input { margin: 5px; }</style>");
                    startDiv("block", "left_block", "left");
@@ -524,6 +531,7 @@
                    printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
                    printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
                    printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
+                   printA("Таблицу", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TABLE));
                    nLine(); nLine(); printFileMeta(path);
                    nLine();
 
@@ -626,7 +634,8 @@
     private boolean isViewActions(HttpServletRequest request) {
         if(request.getParameter(ACTION_VIEW_AS_IMG) == null &&
                 request.getParameter(ACTION_VIEW_AS_TEXT) == null &&
-                request.getParameter(ACTION_VIEW_AS_VIDEO) == null)
+                request.getParameter(ACTION_VIEW_AS_VIDEO) == null &&
+                request.getParameter(ACTION_VIEW_AS_TABLE) == null)
             return false;
         else
             return true;
@@ -693,8 +702,34 @@
                 " img { object-fit: contain; }"
         + "</style>"); //SIC! For normal image without stretching
         wln("<img src='download?" + PARAM_D + "=" + encodeValue(showedPath)  + "' alt='sample' height='"+height+"' width='"+width+"'>");
-
     }
+
+    private void printTable(String path) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(path));
+            String singleLine = "";
+            String dilimiter = ";";
+            String[] cells;
+            wln("<br/>");
+            startTable("table table-bordered");
+            startTBody("");
+            while ((singleLine = br.readLine()) != null) {
+                cells = singleLine.split(dilimiter);
+                startTr();
+                for (int i = 0; i < cells.length; i++) {
+                    startTd("");
+                    wln(cells[i]);
+                    endTd();
+                }
+                endTr();
+            }
+            endTBody();
+            endTable();
+        }catch(IOException ex) {
+            wln("Не удалось показать таблицу.");
+        }
+    }
+
 
     private void saveFile(String path, HttpServletRequest request) throws IOException, IllegalAccessException {
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
