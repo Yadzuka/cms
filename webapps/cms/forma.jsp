@@ -2,18 +2,79 @@
 <%@ page import="java.util.*" %>
 <%@ page import="java.io.*" %>
 <%@ page import="java.nio.charset.Charset" %>
+<%@ page import="java.util.zip.*" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
 <%!
     JspWriter out;
-    private File card;
-    private File contract;
+    private File fileToWrite;
 
     private static String ROOT_PATH;
     private static String USER_PATH;
+    private static final String PARAM_OLD_FILE = "filename";
+    private static final String PARAM_NEW_FILE = "newfilename";
     private static final String FILL = "fill";
-    private static final String FILE_FORM = "ForForm.xml";
-    private static final String FILE_ROS = "ROSdocument.xml";
+
 
     Map documentData = new Hashtable<String, String>(64);
+
+    String [] formFieldNames = {"ABONENT_CODE",
+            "DOGOVOR_NUM",
+            "DOGOVOR_DATE",
+            "ABONENT_NAME_FULL",
+            "ABONENT_NAME_SHORT",
+            "ABONENT_NAME_EN",
+            "ABONENT_ADDR_JUR",
+            "ABONENT_ADDR_POST",
+            "ABONENT_ADDR_SVC",
+            "ABONENT_TEL",
+            "ABONENT_FAX",
+            "ABONENT_EMAIL",
+            "ABONENT_WEB",
+            "ABONENT_INN",
+            "ABONENT_KPP",
+            "ABONENT_OGRN",
+            "ABONENT_BANK_NAME",
+            "ABONENT_BANK_BIK",
+            "ABONENT_BANK_KS",
+            "ABONENT_RS_NUM",
+            "ABONENT_SIGN_DOLZHN",
+            "ABONENT_SIGN_DOLZHN_GEN",
+            "ABONENT_SIGN_NAME_FULL",
+            "ABONENT_SIGN_NAME_FULL_GEN",
+            "ABONENT_SIGN_NAME_SHORT",
+            "ABONENT_SIGN_NAME_SHORT_GEN",
+            "ABONENT_SIGN_NAME_REASON_GEN",
+    };
+
+    String [] formFieldDesc = {"Код абонента",
+            "Номер договора",
+            "Дата договора",
+            "Имя абонента (полное)",
+            "Имя абонента (короткое)",
+            "Имя абонента (англ.)",
+            "Абонент адрес джур",
+            "Абонент адрес пост",
+            "Абонент адрес ссв",
+            "Телефон абонента",
+            "Факс абонента",
+            "Емайл абонента",
+            "Веб абонента",
+            "Инн абонента",
+            "Кпп абонента",
+            "Оргн абонента",
+            "Имя банка абонента",
+            "Бик банка абонента",
+            "КС банка абонента",
+            "РС номер абонента",
+            "Должность абонента",
+            "Ген должность абонента",
+            "Полное имя абонента",
+            "Полное ген имя абонента",
+            "Короткое ген имя абонента",
+            "Абонент синг нейм шорт ген",
+            "Абонент сигн шорт нейм",
+    };
+
     String [] fieldNames = { "filename", "newfilename", "number", "town", "datum", "executor", "executorsmall", "executorposition", "executorname", "executorlaw", "executorplace", "executormail",
             "executorbank", "executoraccount", "executorbankBIK", "executorbankaccount", "executorINN", "executorKPP", "executorOKPO",
             "executorOKVED", "executoradmtel", "executoradmfax", "executortechmail", "executortechtel", "executortechfax", "client", "clientbank",
@@ -23,57 +84,56 @@
 
     private boolean fillData(HttpServletRequest request) {
         try {
-            for (int i = 0; i < fieldNames.length; i++) {
-                documentData.put(fieldNames[i], request.getParameter(fieldNames[i]));
+            for (int i = 0; i < formFieldNames.length; i++) {
+                documentData.put(formFieldNames[i], request.getParameter(formFieldNames[i]));
             }
             return true;
         } catch (Exception ex) {
-            w("Exception occurred " + ex.getLocalizedMessage());
+            w(ex.getMessage());
             return false;
         }
     }
 
-    private boolean fillFormWithData(String newFileName) {
+    private boolean fillFormWithData(String oldFileName, String newFileName) {
         try {
             File newFormFile = new File(ROOT_PATH + newFileName);
             if(!newFormFile.exists()) {
                 newFormFile.createNewFile();
+            } else {
+                w("Извините, такой файл уже существует, введите новое имя."); return false;
             }
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader
-                            (new FileInputStream(card), Charset.forName("UTF-8")));
+                            (new FileInputStream(ROOT_PATH + oldFileName), Charset.forName("UTF-8")));
             BufferedWriter writer = new BufferedWriter
                     (new OutputStreamWriter
                             (new FileOutputStream(ROOT_PATH + newFileName), Charset.forName("UTF-8")));
+
             String str = "";
-            String changedString = "";
             while((str = reader.readLine()) != null) {
-                for(int i = 0; i < fieldNames.length; i++) {
-                    str = str.replaceAll(">" + fieldNames[i] + "<", ">"  + documentData.get(fieldNames[i]).toString() + "<");
+                for(int i = 0; i < formFieldNames.length; i++) {
+                    str = str.replaceAll(">" + formFieldNames[i] + "<", ">"  + documentData.get(formFieldNames[i]).toString() + "<");
                 }
                 writer.write(str);
             }
             writer.close();
             reader.close();
-            w("Written!");
+            w("Файл записан!");
             return true;
         } catch (IOException ex) {
-            w("Exception occurred " + ex.getLocalizedMessage());
+            w(ex.getMessage());
             return false;
         }
     }
 
-    private void initialize(ServletContext context) {
-
+    private void initialize(ServletContext context, HttpServletRequest request) {
         ROOT_PATH = context.getInitParameter("root") + context.getInitParameter("user") + "/";
-        card = new File(ROOT_PATH + FILE_FORM);
-        contract = new File(ROOT_PATH + FILE_ROS);
     }
 
     private void w(String str) {
         try {
             out.println(str);
-        } catch (Exception ex) { /* Something goes here*/}
+        } catch (Exception ex) { /* Something goes here*/ }
     }
 %>
 <!DOCTYPE html>
@@ -87,23 +147,34 @@
     this.out = out;
     ServletContext context = this.getServletContext();
     response.setCharacterEncoding("UTF-8");
-    initialize(context);
+    initialize(context, request);
 
     if(request.getParameter(FILL) != null) {
         if(fillData(request)) {
-            fillFormWithData(request.getParameter("newfilename"));
+            fillFormWithData(request.getParameter("oldFileName"), request.getParameter("newfilename"));
         } else {
             w("Данные не загружены!");
         }
     }
 %>
-
-
 <body>
 
 <form method="post" action="forma.jsp">
-    Файл xml для печати (должен находиться в корневой папке): <input type="text" name="filename"/><br> <br>
-    Новое имя файла: <input type="text" name="newfilename"/><hr>
+
+    Файл xml для печати (должен находиться в корневой папке): <input type="text" name="filename" value='<% w(request.getParameter(PARAM_OLD_FILE)); %>'/><br> <br>
+    Новое имя файла: <input type="text" name="newfilename" value='<% w(request.getParameter(PARAM_NEW_FILE)); %>'/><hr>
+
+    <%
+        String value = "";
+        for(int i = 0; i < formFieldNames.length; i++) {
+            if(request.getParameter(formFieldNames[i]) == null) value = "";
+            else value = request.getParameter(formFieldNames[i]);
+            w("<br>" + formFieldDesc[i] + ": <input type='text' name='" + formFieldNames[i] + "' value='" + value + "'/><br>");
+        }
+    %>
+
+    <input type="submit" name="fill" value="Создать форму">
+    <!--
     <h1>Введите общие данные договора:</h1>
     Номер:<br><input type="text" name="number"><br>
     Город, в котором заключен договор:<br><input type="text" name="town"><br>
@@ -162,7 +233,7 @@
     ФИО:<br><input type="text" name="clientpayname"><br>
     E-mail:<br><input type="text" name="clientpaymail"><br>
     Тел./факс:<br><input type="text" name="clientpaytel"><br>
-    <input type="submit" name="fill" value="Создать форму">
+     -->
 </form>
 
 </body>
