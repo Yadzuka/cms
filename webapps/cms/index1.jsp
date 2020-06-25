@@ -718,6 +718,7 @@
                 startTr();
                 for (int i = 0; i < cells.length; i++) {
                     startTd("");
+                    cells[i] = translate_tokens(cells[i], HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
                     wln(cells[i]);
                     endTd();
                 }
