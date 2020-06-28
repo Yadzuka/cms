@@ -333,18 +333,18 @@
         if (isFileAction) {
             processFileRequest(dParameter, fileStatus, req, resp);
         } else {
-            printMainBlock();
+            printMainBlock(req);
         }
     }
 
-    private void printMainBlock() {
+    private void printMainBlock(HttpServletRequest request) {
         File actual = null;
         try {
             if(!showedPath.endsWith(unixSlash))
                 showedPath = showedPath + unixSlash;
             actual = new File(currentDirectory);
 
-            printTableHead();
+            printTableHead(request);
             startTBody("");
             if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
                 startTr();
@@ -425,9 +425,7 @@
                 "background-color: lightgray; text-align: center; border-style: none; font-weight: 400; box-shadow: inset -7px -4px 7px 0px darkgrey, 5px 5px 10px;} </style>");
         try {
             if (path != null && fileStatus != null) {
-                StringBuilder sb = new StringBuilder();
-                String fileBuffer = "";
-
+                printHeadPath(request);
                if (fileStatus.equals(ACTION_CREATE)) {
                     String newFileName = getRequestParameter(request, PARAM_FILE);
 
@@ -458,7 +456,6 @@
                     };
                }
 
-
                if (fileStatus.equals(ACTION_DELETE_DIR)) {
                    if(request.getParameter("yes_delete") != null) {
                        wln(showedPath);
@@ -470,7 +467,6 @@
                        acceptDeleteFile("директорию", ACTION_DELETE_DIR);
                    }
                }
-
 
                if (fileStatus.equals(ACTION_DELETE)) {
                    //SIC!
@@ -547,6 +543,20 @@
                    printInput("text", "", PARAM_DIRECTORY, "Напишите папку", "");
                    printSubmit("Скопировать");
                    endForm();
+
+                   if(!isVideo(path) && !isImage(path)) {
+                       nLine();
+                       FileReader fileReader = new FileReader(path);
+                       BufferedReader bufferedReader = new BufferedReader(fileReader);
+                       wln("Первые 100 строк файла:"); nLine();
+                       String buff = "";
+                       int numOfStrings = 0;
+                       while(numOfStrings != 100 && (buff = bufferedReader.readLine()) != null) {
+                           buff = translate_tokens(buff, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
+                           wln(buff); nLine();
+                           numOfStrings++;
+                       }
+                   }
                }
 
                if(fileStatus.equals(ACTION_RENAME)) {
@@ -563,6 +573,9 @@
                }
 
                if(fileStatus.equals(ACTION_EDIT)) {
+                   StringBuilder sb = new StringBuilder();
+                   String fileBuffer = "";
+
                    wln("<style>  #left_block { } input { margin: 5px; }</style>");
                    startDiv("block", "left_block", "left");
                    startDiv("row");
@@ -641,52 +654,34 @@
             return true;
     }
 
-    // View file as something (video, text, image)
-    /*private void viewFileAsSomething(HttpServletRequest request, HttpServletResponse response, String path) {
-        try {
-            File f = new File(path);
-            if (f.length() > MAX_FILE_READ_SIZE) //SIC! примерно так
-                throw new IOException("Большой файл. Необходимо скачать для просмотра.");
-            // View file as image
-            if(request.getParameter(ACTION_VIEW_AS_IMG) != null) {
-                printImage(path, 600, 480);
-            }
-
-            // View file as video
-            if(request.getParameter(ACTION_VIEW_AS_VIDEO) != null) {
-                printVideo(path, 600, 480);
-            }
-            // View file as text
-            if(request.getParameter(ACTION_VIEW_AS_TEXT) != null) {
-                FileReader reader = new FileReader(path);
-                BufferedReader br = new BufferedReader(reader);
-                StringBuilder builder = new StringBuilder();
-
-                char[] symbols = new char[4096];
-                while (br.read(symbols) != -1) {
-                    builder.append(symbols, 0, symbols.length);
-                }
-                printText("", 100, 20, builder.toString());
-                reader.close();
-                br.close();
-            }
-        }catch (IOException ex) {
-            wln(ex.getMessage());
-        }
-    }*/
-
-    private boolean printImageFile(String path)  {
-        for(int i = 0; i < IMAGE_DEFINITIONS.length; i++) {
-            if (path.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) { printImage(path, 680, 400); return true;}
-        }
+    private boolean isImage(String path) {
+        for(int i = 0; i < IMAGE_DEFINITIONS.length; i++)
+            if (path.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) return true;
         return false;
     }
 
-    private boolean printVideoFile(String path)  {
-        for(int i = 0; i < VIDEO_DEFINITIONS.length; i++) {
-            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) { printVideo(path, 680, 400);  return true;}
-        }
+    private boolean isVideo(String path) {
+        for(int i = 0; i < VIDEO_DEFINITIONS.length; i++)
+            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) return true;
         return false;
+    }
+
+    private boolean printImageFile(String path)  {
+        if (isImage(path)) {
+            printImage(path, 680, 400);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean printVideoFile(String path)  {
+        if(isVideo(path)) {
+            printVideo(path, 680, 400);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void printVideo(String path, int width, int height)  {
@@ -731,7 +726,6 @@
         }
     }
 
-
     private void saveFile(String path, HttpServletRequest request) throws IOException, IllegalAccessException {
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
                 (new FileOutputStream(path, false), StandardCharsets.UTF_8));
@@ -764,7 +758,7 @@
     private void wln(){w("\n");}
     private void setReference(String reference, String insides) { wln("<a href=\""+reference+"\">"); wln(insides); wln("</a>"); }
 
-    private void printTableHead() {
+    private void printTableHead(HttpServletRequest request) {
         startDiv("row");
         startDiv("col");
         printH("Содержание директории: ", 5);
@@ -776,19 +770,13 @@
         }
         endDiv();
         startDiv("col");
-        List<String> allKeys = new ArrayList<>(references.keySet());
-        Collections.reverse(allKeys);
-        for(int i = 0; i < allKeys.size(); i++) {
-            printA("/" + references.get(allKeys.get(i)), allKeys.get(i));
-        }
-
+        printHeadPath(request);
         startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
         printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
         wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
         wln("<input type=\"submit\" name=\""+ACTION_MKDIR+"\" value=\"Создать директорию\"/>&nbsp;");
         endForm();
         endDiv();
-
         printServerButton();
         endDiv();
         startTable("table");
@@ -800,6 +788,17 @@
         printTh("col", "Последняя модификация");
         endTr();
         endTHead();
+    }
+
+    private void printHeadPath(HttpServletRequest request) {
+        List<String> allKeys = new ArrayList<>(references.keySet());
+        Collections.reverse(allKeys);
+        Boolean is_view = getRequestParameter(request, PARAM_ACTION, null) != null;
+        int size = allKeys.size();
+        if(is_view) size--;
+        for(int i = 0; i < size; i++) {
+            printA("/" + references.get(allKeys.get(i)), allKeys.get(i));
+        }
     }
 
     private void printInput(String type, String classN, String name, String placeholder, boolean multiple)  {
