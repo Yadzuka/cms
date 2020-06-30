@@ -425,7 +425,6 @@
                 "background-color: lightgray; text-align: center; border-style: none; font-weight: 400; box-shadow: inset -7px -4px 7px 0px darkgrey, 5px 5px 10px;} </style>");
         try {
             if (path != null && fileStatus != null) {
-                printHeadPath(request);
                if (fileStatus.equals(ACTION_CREATE)) {
                     String newFileName = getRequestParameter(request, PARAM_FILE);
 
@@ -511,11 +510,14 @@
                }
 
                if(fileStatus.equals(ACTION_VIEW)) {
-                   wln("<style> #left_block { } input { margin: 5px; }</style>");
+                   wln("<style> #left_block { } input { margin: 5px; } .col { max-width: max-content; } </style>");
                    startDiv("block", "left_block", "left");
                    startDiv("row");
                    startDiv("col");
-                   printH("Документ: " + showedPath, 5);
+                   printH("Документ: ", 5);
+                   endDiv();
+                   startDiv("col");
+                   printHeadPath(request);
                    endDiv();
                    endDiv();
                    wln("");
