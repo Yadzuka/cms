@@ -9,6 +9,9 @@
          import="java.util.Map" %>
 <%@ page import="java.util.*" %>
 <%@ page import="java.nio.file.*" %>
+<%@ page import="java.nio.file.attribute.PosixFilePermission" %>
+<%@ page import="java.nio.file.attribute.PosixFilePermissions" %>
+<%@ page import="java.nio.file.attribute.FileAttribute" %>
 <%!
     // Page info
     private final static String CGI_NAME = "index1.jsp"; // Page domain name
@@ -254,7 +257,11 @@
         // checkAccess(user); SIC! Тут пока что так, как можно, потому что ограничений никаких нет
         File directory = new File(path);
         if(directory.exists()) return false;
-        else return directory.mkdir();
+        else {
+            directory.mkdir();
+            setPermissions(directory);
+            return true;
+        }
     }
 
     // Delete file
@@ -284,8 +291,14 @@
 
     // Creating file
     private boolean touch(String fileName) {
-        File file = new File(fileName);
-        try { return file.createNewFile(); } catch (IOException ex) { return false; }
+        try {
+            File file = new File(fileName);
+            if(file.exists())
+                return false;
+            file.createNewFile();
+            setPermissions(file);
+            return true;
+        } catch (IOException ex) { return false; }
     }
 
     private String cat(String fileName) {
@@ -313,6 +326,20 @@
                                     // Данный - заменяет файл в целевой папке, если файл с таким именем уже существует
             return true;
         } catch (Exception ex) { return false;}
+    }
+
+    private void setPermissions(File file) {
+        try {
+            Set<PosixFilePermission> perms = new HashSet<>();
+            perms.add(PosixFilePermission.OWNER_READ);
+            perms.add(PosixFilePermission.OWNER_WRITE);
+            perms.add(PosixFilePermission.GROUP_WRITE);
+            perms.add(PosixFilePermission.GROUP_READ);
+            perms.add(PosixFilePermission.OTHERS_READ);
+            Files.setPosixFilePermissions(file.toPath(), perms);
+        } catch (IOException ex) {
+
+        }
     }
 
     private void process(HttpServletRequest req, HttpServletResponse resp) {

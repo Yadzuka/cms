@@ -14,7 +14,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @MultipartConfig
 public class UploadServlet extends HttpServlet {
@@ -51,9 +56,18 @@ public class UploadServlet extends HttpServlet {
                 return;
 
             try {
+                Set<PosixFilePermission> perms = new HashSet<>();
                 for (int i = 1; i < filesCollection.size(); i++) {
                     FileItem f = (FileItem) filesCollection.get(i);
                     f.write(new File(realPath + f.getName()));
+
+                    perms.add(PosixFilePermission.OWNER_READ);
+                    perms.add(PosixFilePermission.OWNER_WRITE);
+                    perms.add(PosixFilePermission.GROUP_WRITE);
+                    perms.add(PosixFilePermission.GROUP_READ);
+                    perms.add(PosixFilePermission.OTHERS_READ);
+                    Files.setPosixFilePermissions(Paths.get(realPath + f.getName()), perms);
+
                     log.i(f.getName() + " was uploaded by " + user + " to " + realPath);
                 }
                 response.sendRedirect("index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
