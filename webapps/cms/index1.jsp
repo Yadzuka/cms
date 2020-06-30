@@ -259,7 +259,7 @@
         if(directory.exists()) return false;
         else {
             directory.mkdir();
-            setPermissions(directory);
+            setPermissionsForDir(directory);
             return true;
         }
     }
@@ -296,7 +296,7 @@
             if(file.exists())
                 return false;
             file.createNewFile();
-            setPermissions(file);
+            setPermissionsForFile(file);
             return true;
         } catch (IOException ex) { return false; }
     }
@@ -328,7 +328,7 @@
         } catch (Exception ex) { return false;}
     }
 
-    private void setPermissions(File file) {
+    private void setPermissionsForFile(File file) {
         try {
             Set<PosixFilePermission> perms = new HashSet<>();
             perms.add(PosixFilePermission.OWNER_READ);
@@ -338,7 +338,22 @@
             perms.add(PosixFilePermission.OTHERS_READ);
             Files.setPosixFilePermissions(file.toPath(), perms);
         } catch (IOException ex) {
+        }
+    }
 
+    private void setPermissionsForDir(File file) {
+        try {
+            Set<PosixFilePermission> perms = new HashSet<>();
+            perms.add(PosixFilePermission.OWNER_READ);
+            perms.add(PosixFilePermission.OWNER_WRITE);
+            perms.add(PosixFilePermission.OWNER_EXECUTE);
+            perms.add(PosixFilePermission.GROUP_WRITE);
+            perms.add(PosixFilePermission.GROUP_READ);
+            perms.add(PosixFilePermission.GROUP_EXECUTE);
+            perms.add(PosixFilePermission.OTHERS_READ);
+            perms.add(PosixFilePermission.OTHERS_EXECUTE);
+            Files.setPosixFilePermissions(file.toPath(), perms);
+        } catch (IOException ex) {
         }
     }
 
