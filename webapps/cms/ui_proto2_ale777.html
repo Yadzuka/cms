@@ -21,14 +21,6 @@ body {
 .btn.btn-link {
   color:black;
 }
-@media (max-width: 992px) {
-#left_menu{
-  display: none;
-}
-#right_menu{
-  display: none;
-}
-}
 .close{
   position:relative;
   top: -15px;
@@ -38,8 +30,16 @@ body {
     width: 3px;
     background-color: darkgray;
 }
-#line,#r_line:hover {
+#l_line,#r_line:hover {
  cursor:pointer;
+}
+@media (max-width: 992px) {
+#left_menu{
+  display: none;
+}
+#right_menu{
+  display: none;
+}
 }
 </style>
 
@@ -169,7 +169,7 @@ body {
   </button>
 </div>
 
-<main class="container-fluid py-md-3" role="main" style="height: auto;">
+<main id="menu" class="container-fluid py-md-3" role="main" style="height: auto;">
           <h1 class="bd-title text-center" id="content">Навигация</h1>
           <p class="bd-lead text-center">"Рабочий стол" для навигационных компонентов.</p>
 </main>
@@ -220,22 +220,76 @@ body {
 </div>
 
 <footer class="fixed-bottom" style="background-color: #dfdfdf; height: 50px; font-size: 1em; font-family: sans-serif; font-style:italic"> <!-- page-footer font-small blue  -->
- <div class="footer-copyright text-center py-3">© Eustrosoft, ConcepTIS v0.3 - stable version of UI (see for UI variants)  </div>
+ <div class="footer-copyright text-center py-3">© Eustrosoft, ConcepTIS v0.4 - stable version of UI (see for UI variants)</div>
 </footer>
 
 <script>
+
+const LEFT_BUTTON='<svg class="bi bi-arrow-bar-right" width="0.75em" height="0.75em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.146 4.646a.5.5 0 01.708 0l3 3a.5.5 0 010 .708l-3 3a.5.5 0 01-.708-.708L12.793 8l-2.647-2.646a.5.5 0 010-.708z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M6 8a.5.5 0 01.5-.5H13a.5.5 0 010 1H6.5A.5.5 0 016 8zm-2.5 6a.5.5 0 01-.5-.5v-11a.5.5 0 011 0v11a.5.5 0 01-.5.5z" clip-rule="evenodd"/></svg>';
+const RIGHT_BUTTON='<svg class="bi bi-arrow-bar-left" width="0.75em" height="0.75em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.854 4.646a.5.5 0 00-.708 0l-3 3a.5.5 0 000 .708l3 3a.5.5 0 00.708-.708L3.207 8l2.647-2.646a.5.5 0 000-.708z" clip-rule= "evenodd"/><path fill-rule="evenodd" d="M10 8a.5.5 0 00-.5-.5H3a.5.5 0 000 1h6.5A.5.5 0 0010 8zm2.5 6a.5.5 0 01-.5-.5v-11a.5.5 0 011 0v11a.5.5 0 01-.5.5z" clip-rule="evenodd"/></svg>';
+
 let left_menu = document.getElementById("left_menu");
 let right_menu = document.getElementById("right_menu");
+let menu = document.getElementById("menu");
+
+const START_LINE_LEFT=left_menu.offsetWidth+53; /* box1.offsetWidth */
+const START_LINE_RIGHT=right_menu.offsetWidth+53;
+const DIM_BOX_LEFT=left_menu.offsetWidth-4;
+const DIM_BOX_RIGHT=right_menu.offsetWidth-4;
+
+let l_line=document.getElementById('l_line');
+let r_line=document.getElementById('r_line');
+
 let left_close = document.getElementsByClassName("close")[0];
 let right_close = document.getElementsByClassName("close")[1];
+
 left_close.onclick = function () {
-    if (left_menu.style.display == "none") {left_menu.style.display = "block"}
-    else {left_menu.style.display = "none"}
+    if (left_menu.style.display == "none") {left_menu.style.display = "block";left_close.innerHTML=RIGHT_BUTTON;}
+    else {left_menu.style.display = "none";left_close.innerHTML=LEFT_BUTTON;}
 }
 right_close.onclick = function () {
-  if (right_menu.style.display == "none") {right_menu.style.display = "block"}
-    else {right_menu.style.display = "none"};
- }
+  if (right_menu.style.display == "none") {right_menu.style.display = "block";right_close.innerHTML=LEFT_BUTTON;}
+    else {right_menu.style.display = "none";right_close.innerHTML=RIGHT_BUTTON;};
+}
+
+l_line.addEventListener('mousedown', dragAndDrop);
+r_line.addEventListener('mousedown', dragAndDrop);
+
+      function dragAndDrop(event) {
+
+        let dim_change = event.currentTarget;
+
+        dim_change.ondragstart = function() {return false;};
+
+        document.addEventListener('mousemove', onMouseMove);
+
+        function moveAt(pageX) {
+          dim_change.style.left = pageX+'px';
+          dim_change.style.top = 12+'px';
+          let delta=START_LINE-pageX;
+          let width_box1=DIM_BOX-delta;
+          let width_box2=DIM_BOX+delta;
+          if(width_box1>=0 && width_box2>=0){
+            box1.style.width=width_box1+'px';
+            box2.style.width=width_box2+'px';
+          }
+          else{
+          mouseUp();
+          }
+        }
+        function onMouseMove(event) {
+           console.log(event.pageX);
+          moveAt(event.pageX);
+        }
+        document.addEventListener('mouseup', mouseUp);
+        function mouseUp(){
+        document.removeEventListener('mousemove', onMouseMove);
+        dim_change.onmouseup = null;
+        }
+}
+
+
+
 </script>
 
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
