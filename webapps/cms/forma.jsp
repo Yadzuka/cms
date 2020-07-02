@@ -16,68 +16,15 @@
     private static final String PARAM_TAB = "tabname";
     private static final String FILL = "fill";
     private static final String TAB = "\t";
+    private static final String CHANGE_FORM = "change_form";
     private String TAB_FILENAME = "conf.tab";
+    private String ACTION = "forma.jsp";
 
     Map documentData = new Hashtable<String, String>(64);
 
-    ArrayList<String> formFieldNames = new ArrayList<>(); /*{
-            "ABONENT_CODE",
-            "DOGOVOR_NUM",
-            "DOGOVOR_DATE",
-            "ABONENT_NAME_FULL",
-            "ABONENT_NAME_SHORT",
-            "ABONENT_NAME_EN",
-            "ABONENT_ADDR_JUR",
-            "ABONENT_ADDR_POST",
-            "ABONENT_ADDR_SVC",
-            "ABONENT_TEL",
-            "ABONENT_FAX",
-            "ABONENT_EMAIL",
-            "ABONENT_WEB",
-            "ABONENT_INN",
-            "ABONENT_KPP",
-            "ABONENT_OGRN",
-            "ABONENT_BANK_NAME",
-            "ABONENT_BANK_BIK",
-            "ABONENT_BANK_KS",
-            "ABONENT_RS_NUM",
-            "ABONENT_SIGN_DOLZHN",
-            "ABONENT_SIGN_DOLZHN_GEN",
-            "ABONENT_SIGN_NAME_FULL",
-            "ABONENT_SIGN_NAME_FULL_GEN",
-            "ABONENT_SIGN_NAME_SHORT",
-            "ABONENT_SIGN_NAME_SHORT_GEN",
-            "ABONENT_SIGN_NAME_REASON_GEN",
-    };*/
-
-    ArrayList<String> formFieldDesc = new ArrayList<>(); /*{"Код абонента",
-            "Номер договора",
-            "Дата договора",
-            "Имя абонента (полное)",
-            "Имя абонента (короткое)",
-            "Имя абонента (англ.)",
-            "Абонент адрес джур",
-            "Абонент адрес пост",
-            "Абонент адрес ссв",
-            "Телефон абонента",
-            "Факс абонента",
-            "Емайл абонента",
-            "Веб абонента",
-            "Инн абонента",
-            "Кпп абонента",
-            "Оргн абонента",
-            "Имя банка абонента",
-            "Бик банка абонента",
-            "КС банка абонента",
-            "РС номер абонента",
-            "Должность абонента",
-            "Ген должность абонента",
-            "Полное имя абонента",
-            "Полное ген имя абонента",
-            "Короткое ген имя абонента",
-            "Абонент синг нейм шорт ген",
-            "Абонент сигн шорт нейм",
-    };*/
+    ArrayList<String> formField = new ArrayList<>();
+    ArrayList<String> formFieldNames = new ArrayList<>();
+    ArrayList<String> formFieldDesc = new ArrayList<>();
 
     String [] fieldNames = { "filename", "newfilename", "number", "town", "datum", "executor", "executorsmall", "executorposition", "executorname", "executorlaw", "executorplace", "executormail",
             "executorbank", "executoraccount", "executorbankBIK", "executorbankaccount", "executorINN", "executorKPP", "executorOKPO",
@@ -131,6 +78,8 @@
 
     private void initialize(ServletContext context, HttpServletRequest request) {
         ROOT_PATH = context.getInitParameter("root") + context.getInitParameter("user") + "/";
+
+        formField = new ArrayList<>();
         formFieldNames = new ArrayList<>();
         formFieldDesc = new ArrayList<>();
         try {
@@ -147,8 +96,11 @@
                 else {
                     fields = str.split("\t");
 
-                    formFieldNames.add(fields[0]);
-                    formFieldDesc.add(fields[1]);
+                    if(fields[0].length() == 2) {
+                        formField.add(fields[1]);
+                        formFieldNames.add(fields[4]);
+                        formFieldDesc.add(fields[5]);
+                    }
                 }
             }
 
@@ -177,6 +129,25 @@
         w("\n <br/>");
     }
 %>
+<%
+    this.out = out;
+    ServletContext context = this.getServletContext();
+    response.setCharacterEncoding("UTF-8");
+
+    if(request.getParameter("change_form") != null) {
+        TAB_FILENAME = request.getParameter(PARAM_TAB);
+    } else {
+        TAB_FILENAME = "conf.tab";
+    }
+
+    boolean is_redirected = false;
+    try {
+        is_redirected = (boolean) request.getAttribute("FORWARD_REQUEST");
+    } catch (NullPointerException ex) {
+
+    }
+    if(!is_redirected) {
+%>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -185,13 +156,15 @@
     </title>
     <meta charset="UTF-8">
 </head>
+<body>
 <%
-    this.out = out;
-    ServletContext context = this.getServletContext();
-    response.setCharacterEncoding("UTF-8");
-    initialize(context, request);
-
-    if(request.getParameter(FILL) != null) {
+        initialize(context, request);
+    } else
+        ACTION = "index2.jsp?action=dogen";
+    if(request.getParameter(CHANGE_FORM) != null) {
+        initialize(context, request);
+    }
+    else if(request.getParameter(FILL) != null) {
         if(fillData(request)) {
             fillFormWithData(request.getParameter(PARAM_OLD_FILE), request.getParameter(PARAM_NEW_FILE), request.getParameter(PARAM_TAB));
         } else {
@@ -199,10 +172,10 @@
         }
     }
 %>
-<body>
 
-    <form method="post" action="forma.jsp">
-        Конфигурационный файл .tab: <input type="text" name="<% w(PARAM_TAB); %>" value="<% w(TAB_FILENAME); %>"/> <br/>
+<form method="post" action="<%w(ACTION);%>">
+    Конфигурационный файл .tab: <input type="text" name="<%=PARAM_TAB%>" value="<% w(TAB_FILENAME); %>"/>
+    <input name="change_form" type="submit" value="Создать форму из файла"/> <br/>
     Файл xml для печати (должен находиться в корневой папке): <input type="text" name="filename" value='<% getURLparameter(request, PARAM_ACTION);%>'/><br><br>
     Новое имя файла: <input type="text" name="newfilename" value='<% getURLparameter(request, PARAM_ACTION); %>'/><hr>
     <%
@@ -210,10 +183,16 @@
         for(int i = 0; i < formFieldNames.size(); i++) {
             if(request.getParameter(formFieldNames.get(i)) == null) value = "";
             else value = request.getParameter(formFieldNames.get(i));
-            w("<br>" + formFieldDesc.get(i) + ": <input type='text' name='" + formFieldNames.get(i) + "' value='" + value + "'/><br>");
+            w("<br>" + formFieldNames.get(i) + ": <input type='text' name='" + formField.get(i) + "' value='" + value + "'/>" + formFieldDesc.get(i) + "<br>");
         }
     %>
     <input type="submit" name="fill" value="Создать форму"/>
     </form>
+<%
+    if(!is_redirected) {
+%>
 </body>
 </html>
+<%
+    }
+%>
