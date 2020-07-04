@@ -322,25 +322,31 @@ closeMenuNavBar();
 let items=document.getElementsByTagName('a');
 for (let i=0;i<items.length;i++) items[i].addEventListener('click',drop);
 function drop(event) {
-     //if (event.target.nodeName != 'A') return;
-    // event.preventDefault();
-    // event.stopPropagation();
+
+let shown=document.querySelectorAll('.show')
 let parent = event.target.parentElement;
 let child = event.target.parentElement.nextElementSibling;
+if (shown.length>1 && parent.className=='nav-item dropdown') for(let show of shown) show.classList.remove('show');
+    //if (event.target.nodeName != 'A') return;
+    // event.preventDefault();
+    // event.stopPropagation();
 parent.classList.toggle('show');
 child.classList.toggle('show');
-if (parent.className=="dropdown-item dropdown show"){
+if (parent.className.indexOf('nav-item dropdown')!=-1){
+child.style.left = parent.offsetLeft+'px';
+}else{
+console.log(parent.className);
 menu_left= event.target.offsetParent.offsetLeft + event.target.offsetParent.offsetWidth + 'px';
 menu_top= event.target.offsetParent.offsetTop + event.target.offsetParent.offsetHeight - 10 + 'px';
 child.style.left=menu_left;
 child.style.top=menu_top;
-//alert(this.className);
-}else{
-menu_left= parent.offsetLeft+'px';
-child.style.left=menu_left;
 }
+
+
 };
-/*  $(document).ready(function () {
+/*
+
+$(document).ready(function () {
   $('.navbar .dropdown-item.dropdown').on('click', function (e) {
     alarm('click');
     var $el = $(this).children('.dropdown-toggle');
