@@ -14,7 +14,7 @@
 <%@ page import="java.nio.file.attribute.FileAttribute" %>
 <%!
     // Page info
-    private final static String CGI_NAME = "index1.jsp"; // Page domain name
+    private static String CGI_NAME = "index1.jsp"; // Page domain name
     private final static String CGI_TITLE = "CMS system"; // Upper page info
     private final static String JSP_VERSION = "$id$"; // Id for jsp version
     private static LogProvider log;
@@ -463,8 +463,8 @@
 
     // path here means FULL/real path - be careful with this | showedPath path, in turn, means showed path and it could be use for showing for the client
     private void processFileRequest(String path, String fileStatus, HttpServletRequest request, HttpServletResponse response) {
-        wln("<style> a {padding: 5px 7px; cursor: pointer; transition: .3s; color: #000; border-radius: 80px;" +
-                "background-color: lightgray; text-align: center; border-style: none; font-weight: 400; box-shadow: inset -7px -4px 7px 0px darkgrey, 5px 5px 10px;} </style>");
+        //wln("<style> a {padding: 5px 7px; cursor: pointer; transition: .3s; color: #000; border-radius: 80px;" +
+          //      "background-color: lightgray; text-align: center; border-style: none; font-weight: 400; box-shadow: inset -7px -4px 7px 0px darkgrey, 5px 5px 10px;} </style>");
         try {
             if (path != null && fileStatus != null) {
                if (fileStatus.equals(ACTION_CREATE)) {
@@ -815,7 +815,7 @@
         endDiv();
         startDiv("col");
         printHeadPath(request);
-        startForm("POST", "index1.jsp?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
+        startForm("POST", CGI_NAME + "?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
         printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
         wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
         wln("<input type=\"submit\" name=\""+ACTION_MKDIR+"\" value=\"Создать директорию\"/>&nbsp;");
@@ -918,6 +918,9 @@
     initUser(request);
     request.setCharacterEncoding("UTF-8");
     log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
+
+    boolean is_forwarded = (boolean) request.getAttribute("FORWARD_REQUEST");
+    if(!is_forwarded) {
     //-------------------------INIT SECTION ENDED------------------------//
 %>
 <!DOCTYPE HTML>
@@ -945,33 +948,20 @@
 </head>
 <body>
     <div class="container" id="main_block">
-        <% process(request, response);
+        <%
+            process(request, response);
 
-            //request.getRequestDispatcher("editqrpage.jsp").forward(request,response); // SIC! редирект
         %>
     </div>
-
-<!--div id="issues" >
-<h3>Задачи и найденные ошибки в проекте, чтоб глаза мозолило</h3>
-<ul>
-<li> 01. Трекера задач нет, буду писать сюда ;)
-<li> 02. path=%2Fs%2Fusersdb%2Fyadzuka%2F - это плохо, path=/s/usersdb/yadzuka - лучше, но все-равно плохо
-<li> 03. path=/s/usersdb/yadzuka - плохо, path=/yadzuka - приемлимо, и даже нормально, то что это /s/usersdb/ пользователю знать не обязательно
-<li> 04. Вот этот блок (div), с id="issues", можно загрузить из отдельного файла, через include другой issues.jsp, но это задача Александру
-<li> 05. И в догонку к ней - через JS и стили сделать его сокрытие/показывание
-<li> 06. Makefile - пустой
-<li> 07. README.md - должен быть в wiki формате Markdown (см википедию) о чем говорит расширение .md
-<li> 08. в webapps/cms/WEB-INF/lib/ класть надо commons-fileupload-1.4.jar и commons-io-2.6.jar а не в /usr/local/apache-tomcat-9.0/lib/
-<li> 09. IOException от wln() - не надо гонять по всему стеку, его надо поймать и проигнорировать в самом низу, метод wln() есть у нас для этого
-<li> 10. при загрузке файлов получаю NullPointer Exception, но файлы грузятся... кто-то где-то накосячил
-<li> 11. загрузил я видеоролик, большой, 500 Mb, и решил его просмотреть, и посмотрел я на тот, как на сервере кончилась оперативная память, и понял я, что кто-то не понял, что память конечна и, видимо просто грузит весь файл в память, прежде чем отдать его клиенту, и опечалился я, и кончились у меня силы, и выпил я с горя водки, и пошел я спать... ;)
-<li> 12. ...но вернулся я, чтобы дописать - строка 495 - зло, 513 - зло, 515 - зло, 523, 525 - зло. Не надо злоупотреблять if-ми вообще, а внутри jsp или php, где вперемешку html и серверная императивная логика - особенно. 
-<li> 13. и самое главное, весь код от строки 484, до строки 540 должен превратиться в вызов всего одного метода warh.process(), пример можно посмотреть здесь <a href='https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/tisc/tiscui.jsp'>ConcepTIS/src/java/webapps/tisc/tiscui.jsp</a> строки 119-121, также см строки 43-50, а потом здесь : <a href='https://bitbucket.org/eustrop/conceptis/src/default/src/java/webapps/tisc/tisc.jsp'>ConcepTIS/src/default/src/java/webapps/tisc/tisc.jsp</a>. Все порождение html кода содержательной части документа, зависящей от параметров запроса мы переносим в методы, которые затем перенесем в отдельные классы. В JSP остается только обрамляющая часть HTML-кода, общая для любой страницы, все остальное "рисуется" либо java на сервере, либо JavaScript в браузере. Но для прототипирования и отладки внешнего вида мы иногда пишем так, как написано сейчас, главное - вовремя остановиться. И здесь силы меня оставили совсем 13 мая 2020 г 1:53 мин.
-</ul>
-</div-->
 <script src="contrib/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="contrib/nmp/popper.js-1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="contrib/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 </body>
 </body>
 </html>
+<%
+    } else {
+        CGI_NAME = "index2.jsp";
+        process(request, response);
+    }
+%>
