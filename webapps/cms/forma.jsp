@@ -34,8 +34,8 @@
 
     private boolean fillData(HttpServletRequest request) {
         try {
-            for (int i = 0; i < formFieldNames.size(); i++) {
-                documentData.put(formFieldNames.get(i), request.getParameter(formFieldNames.get(i)));
+            for (int i = 0; i < formField.size(); i++) {
+                documentData.put(formField.get(i), request.getParameter(formField.get(i)));
             }
             return true;
         } catch (Exception ex) {
@@ -44,7 +44,7 @@
         }
     }
 
-    private boolean fillFormWithData(String oldFileName, String newFileName, String tabFileName) {
+    private boolean fillFormWithData(String oldFileName, String newFileName) {
         try {
             File newFormFile = new File(ROOT_PATH + newFileName);
             if(!newFormFile.exists()) {
@@ -61,10 +61,10 @@
 
             String str = "";
             while((str = reader.readLine()) != null) {
-                for(int i = 0; i < formFieldNames.size(); i++) {
-                    str = str.replaceAll(formFieldNames.get(i), documentData.get(formFieldNames.get(i)).toString());
+                for(int i = 0; i < formField.size(); i++) {
+                    str = str.replaceAll(formField.get(i), documentData.get(formField.get(i)).toString());
                 }
-                writer.write(str);
+                writer.write(str + "\n");
             }
             writer.close();
             reader.close();
@@ -133,6 +133,7 @@
     this.out = out;
     ServletContext context = this.getServletContext();
     response.setCharacterEncoding("UTF-8");
+    initialize(context, request);
 
     if(request.getParameter("change_form") != null) {
         TAB_FILENAME = request.getParameter(PARAM_TAB);
@@ -158,7 +159,6 @@
 </head>
 <body>
 <%
-        initialize(context, request);
     } else
         ACTION = "index2.jsp?action=dogen";
     if(request.getParameter(CHANGE_FORM) != null) {
@@ -166,7 +166,7 @@
     }
     else if(request.getParameter(FILL) != null) {
         if(fillData(request)) {
-            fillFormWithData(request.getParameter(PARAM_OLD_FILE), request.getParameter(PARAM_NEW_FILE), request.getParameter(PARAM_TAB));
+            fillFormWithData(request.getParameter(PARAM_OLD_FILE), request.getParameter(PARAM_NEW_FILE));
         } else {
             w("Данные не загружены!");
         }
