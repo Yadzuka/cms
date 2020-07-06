@@ -2,7 +2,6 @@
          import="java.util.*"
          import="java.io.*"
 %>
-<%@ page import="com.sun.org.apache.xpath.internal.operations.Bool" %>
 <%!
     private static final String CGI_MAIN = "index2.jsp";
 
@@ -119,14 +118,7 @@
     private static final String MENU_ID_PREFIX = "mnu";
     private static final String MENU_ID_SEP = "_";
     private int MENU_LEVEL=0; //current level of menu
-    /*
-    String[] MENU_PATH = new String[MAX_MENU_PATH]; // current path to menu
-    private String get_menu_id(String id){
-    MENU_PATH[MENU_LEVEL]=id; id=MENU_ID_PREFIX;
-    for(int i=0;i<MENU_LEVEL;i++){id=id + MENU_ID_SEP + MENU_PATH[i];}
-    return(id);
-    }
-    */
+
 // print whole menu for curent page
     public void printMenuPage() {print_MenuPage(); }
     //set of WASkin methods for creating menu
@@ -142,7 +134,6 @@
         if(MENU_LEVEL==0){print_closeMenu();
         }else{print_closeMenu2();}
     }
-    //public int currentMenuLevel(){return(MENU_LEVEL);}
     public void printMenuItem(String id,String type,String action, String caption){print_MenuItem(id,type,action,caption);}
     // private methods - implementation of public ones
     public void print_MenuPage()
@@ -159,28 +150,38 @@
             if(MENU[item]==null)continue;
             level=MENU[item].length();
             String id=MENU[item + MENU_II_ID];
-            //id=get_menu_id(id);
             String enabled=MENU[item + MENU_II_ENABLED];
             String type=MENU[item + MENU_II_TYPE];
             String action=MENU[item + MENU_II_ACTION];
             String caption=MENU[item + MENU_II_CAPTION];
-            if (i==1){beginMenu(id);item_level++;printMenuItem(id,type,action,caption);continue;}
-            if (MENU_LEVEL==1 && (level-MENU_LEVEL)==0){closeMenu();beginMenu(id);printMenuItem(id,type,action,caption);continue;}
-            if (MENU_LEVEL>=1 && (level-MENU_LEVEL)>0){beginMenu(id);item_level++;printMenuItem(id,type,action,caption);continue;}
 
-            if (MENU_LEVEL>=2 && (level-MENU_LEVEL)==0){printMenuItem(id,type,action,caption);continue;}
-
-            if ((MENU_LEVEL-level)==1 && MENU_LEVEL==3){closeMenu();item_level--;printMenuItem(id,type,action,caption);continue;}
-            if ((MENU_LEVEL-level)==2 && MENU_LEVEL==3){for(;level<=item_level;item_level--){closeMenu();}
+            if (i==1){
+                beginMenu(id);item_level++;printMenuItem(id,type,action,caption);continue;
+            } if (MENU_LEVEL==1 && (level-MENU_LEVEL)==0){
+                closeMenu();beginMenu(id);printMenuItem(id,type,action,caption);continue;
+            } if (MENU_LEVEL>=1 && (level-MENU_LEVEL)>0){
+                beginMenu(id);item_level++;printMenuItem(id,type,action,caption);continue;
+            } if (MENU_LEVEL>=2 && (level-MENU_LEVEL)==0){
+                printMenuItem(id,type,action,caption);continue;
+            } if ((MENU_LEVEL-level)==1 && MENU_LEVEL==3){
+                closeMenu();item_level--;printMenuItem(id,type,action,caption);continue;
+            } if ((MENU_LEVEL-level)==2 && MENU_LEVEL==3){
+                for(;level<=item_level;item_level--){
+                    closeMenu();
+                }
                 beginMenu(id);
                 item_level++;
                 printMenuItem(id,type,action,caption);
-                continue;}
-            if ((MENU_LEVEL-level)==1 && MENU_LEVEL==2){for(;level<=item_level;item_level--){closeMenu();}
+                continue;
+            } if ((MENU_LEVEL-level)==1 && MENU_LEVEL==2) {
+                for(;level<=item_level;item_level--){
+                    closeMenu();
+                }
                 beginMenu(id);
                 item_level++;
                 printMenuItem(id,type,action,caption);
-                continue;}
+                continue;
+            }
         }
     }
     //set of WASkin methods for creating menu
@@ -222,7 +223,7 @@
     }
     public void print_beginMenuNavBar(){
         w("<nav class='navbar navbar-expand-lg navbar-light' style='background-color: #e3f2fd;'>\n");
-//w("<a class='navbar-brand' href='#'>Navbar</a>");
+
         w("<button class='navbar-toggler' type='button' data-toggle='collapse' data-target='#navbarCollapse' aria-controls='navbarCollapse' aria-expanded='false' aria-label='Toggle navigation'>\n");
         w("<span class='navbar-toggler-icon'></span>\n");
         w("</button>\n");
@@ -232,7 +233,6 @@
     public void print_closeMenuNavBar(){
         w("</ul>\n</div>\n</nav>\n");
     }
-    //
 // basic WASkin methods
 //
     private JspWriter out;
@@ -242,8 +242,7 @@
         try { out.print(s); }
         catch (Exception e) { is_error = true; }
     }
-    //  private void wln(String s){ w(s);w("\n");}
-    //  private void wln(){w("\n");}
+    private void wln(String s){ w(s);w("\n");}
     void setMenuOut(JspWriter m_out) {out = m_out;}
 
 %>
@@ -254,7 +253,6 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS-->
@@ -295,6 +293,8 @@
 </head>
 <body>
 <%
+    request.setCharacterEncoding("UTF-8");
+    response.setCharacterEncoding("UTF-8");
     setMenuOut(out);
     String lang = LANG_RU;
     try {lang = request.getParameter("lang");
@@ -341,23 +341,26 @@
     let items=document.getElementsByTagName('a');
     for (let i=0;i<items.length;i++) items[i].addEventListener('click',drop);
     function drop(event) {
+
+        let shown=document.querySelectorAll('.show')
+        let parent = event.target.parentElement;
+        let child = event.target.parentElement.nextElementSibling;
+        if (shown.length>1 && parent.className=='nav-item dropdown') for(let show of shown) show.classList.remove('show');
         //if (event.target.nodeName != 'A') return;
         // event.preventDefault();
         // event.stopPropagation();
-        let parent = event.target.parentElement;
-        let child = event.target.parentElement.nextElementSibling;
         parent.classList.toggle('show');
         child.classList.toggle('show');
-        if (parent.className=="dropdown-item dropdown show"){
+        if (parent.className.indexOf('nav-item dropdown')!=-1){
+            child.style.left = parent.offsetLeft+'px';
+        }else{
+            console.log(parent.className);
             menu_left= event.target.offsetParent.offsetLeft + event.target.offsetParent.offsetWidth + 'px';
             menu_top= event.target.offsetParent.offsetTop + event.target.offsetParent.offsetHeight - 10 + 'px';
             child.style.left=menu_left;
             child.style.top=menu_top;
-//alert(this.className);
-        }else{
-            menu_left= parent.offsetLeft+'px';
-            child.style.left=menu_left;
         }
+
     };
 </script>
 </body>

@@ -472,7 +472,7 @@
 
                     if(request.getParameter(ACTION_MKDIR) != null) {
                         mkdir(path + newFileName);
-                        response.sendRedirect(getPathReference(encodeValue(showedPath)));
+                        //response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     }
                     else if(request.getParameter(ACTION_CREATE) != null) {
                         touch(path + newFileName);
@@ -652,7 +652,7 @@
                return;
             }
         } catch (Exception ex) {
-            w(ex + "Error with opening file");
+            w(ex + ": error occured.");
         }
     }
 
@@ -919,7 +919,10 @@
     request.setCharacterEncoding("UTF-8");
     log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
 
-    boolean is_forwarded = (boolean) request.getAttribute("FORWARD_REQUEST");
+    boolean is_forwarded = false;
+    try {
+        is_forwarded = (boolean) request.getAttribute("FORWARD_REQUEST");
+    } catch (Exception ex) { }
     if(!is_forwarded) {
     //-------------------------INIT SECTION ENDED------------------------//
 %>
@@ -950,7 +953,6 @@
     <div class="container" id="main_block">
         <%
             process(request, response);
-
         %>
     </div>
 <script src="contrib/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
