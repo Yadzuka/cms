@@ -14,48 +14,50 @@
 <%@ page import="java.nio.file.attribute.FileAttribute" %>
 <%!
     // Page info
-    private static String CGI_NAME = "index1.jsp"; // Page domain name
-    private final static String CGI_TITLE = "CMS system"; // Upper page info
-    private final static String JSP_VERSION = "$id$"; // Id for jsp version
-    private static LogProvider log;
+    class Main{
+    private String CGI_NAME = "index1.jsp"; // Page domain name
+    private String VERSION = "0.1";
+    private final String CGI_TITLE = "CMS system"; // Upper page info
+    private final String JSP_VERSION = "$id$"; // Id for jsp version
+    private LogProvider log;
     private JspWriter out;
 
-    public static String[] HTML_UNSAFE_CHARACTERS = {"<",">","&","\n"};
-    public static String[] HTML_UNSAFE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","\n"};
-    public final static String[] VALUE_CHARACTERS = { "<",">","&","\"","'" };
-    public final static String[] VALUE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","&quot;","&#039;"};
+    public String[] HTML_UNSAFE_CHARACTERS = {"<",">","&","\n"};
+    public String[] HTML_UNSAFE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","\n"};
+    public final String[] VALUE_CHARACTERS = { "<",">","&","\"","'" };
+    public final String[] VALUE_CHARACTERS_SUBST = {"&lt;","&gt;","&amp;","&quot;","&#039;"};
 
     // Files and directories manipulating
     // Destination param (test)
-    private final static String PARAM_D = "d";
-    private final static String PARAM_ACTION = "cmd";
-    private final static String PARAM_FILE = "file";
-    private final static String PARAM_DIRECTORY = "directory";
-    private final static String FILE_TEXTAREA_NAME = "file_text";
+    private final String PARAM_D = "d";
+    private final String PARAM_ACTION = "cmd";
+    private final String PARAM_FILE = "file";
+    private final String PARAM_DIRECTORY = "directory";
+    private final String FILE_TEXTAREA_NAME = "file_text";
 
 
     // File manipulating (view, save, update, delete)
-    private final static String ACTION_VIEW = "view";
-    private final static String ACTION_SAVE = "save";
-    private final static String ACTION_UPDATE = "update";
-    private final static String ACTION_DELETE = "delete";
-    private final static String ACTION_CREATE = "create";
-    private final static String ACTION_COPY = "cp";
-    private final static String ACTION_MKDIR = "mkdir";
-    private final static String ACTION_DELETE_DIR = "rmdir";
-    private final static String ACTION_RENAME = "rename";
+    private final String ACTION_VIEW = "view";
+    private final String ACTION_SAVE = "save";
+    private final String ACTION_UPDATE = "update";
+    private final String ACTION_DELETE = "delete";
+    private final String ACTION_CREATE = "create";
+    private final String ACTION_COPY = "cp";
+    private final String ACTION_MKDIR = "mkdir";
+    private final String ACTION_DELETE_DIR = "rmdir";
+    private final String ACTION_RENAME = "rename";
 
-    private final static String ACTION_EDIT = "edit";
-    private final static String ACTION_VIEW_AS_IMG = "image_view";
-    private final static String ACTION_VIEW_AS_VIDEO = "video_view";
-    private final static String ACTION_VIEW_AS_TEXT = "text_view";
-    private final static String ACTION_VIEW_AS_TABLE = "table_view";
+    private final String ACTION_EDIT = "edit";
+    private final String ACTION_VIEW_AS_IMG = "image_view";
+    private final String ACTION_VIEW_AS_VIDEO = "video_view";
+    private final String ACTION_VIEW_AS_TEXT = "text_view";
+    private final String ACTION_VIEW_AS_TABLE = "table_view";
 
-    private final static int MAX_FILE_READ_SIZE = 10_000_000;
+    private final int MAX_FILE_READ_SIZE = 10_000_000;
 
-    private final static String [] IMAGE_DEFINITIONS = { "jpg", "jpeg", "png", "svg", "tiff", "bmp", "bat", "odg", "xps" };
-    private final static String [] VIDEO_DEFINITIONS = { "ogg", "mp4", "webm" };
-    private final static String CSV_FORMAT = "csv";
+    private final String [] IMAGE_DEFINITIONS = { "jpg", "jpeg", "png", "svg", "tiff", "bmp", "bat", "odg", "xps" };
+    private final String [] VIDEO_DEFINITIONS = { "ogg", "mp4", "webm" };
+    private final String CSV_FORMAT = "csv";
     // File differences class
     private final diff_match_patch diffMatchPatch = new diff_match_patch();
 
@@ -64,10 +66,10 @@
     private String HOME_DIRECTORY;
     private String currentDirectory = HOME_DIRECTORY;
     private String showedPath;
+    private final String unixSlash = "/";
 
     Map<String, String> references;
 
-    private final static String unixSlash = "/";
 
     private void initUser(HttpServletRequest request) {
         userIP = request.getRemoteAddr();
@@ -86,7 +88,7 @@
         }
     }
 
-    public static String translate_tokens(String sz, String[] from, String[] to)
+    public String translate_tokens(String sz, String[] from, String[] to)
     {
         if(sz == null) return(sz);
         StringBuffer sb = new StringBuffer(sz.length() + 256);
@@ -377,6 +379,7 @@
         } else {
             printMainBlock(req);
         }
+        printFooter();
     }
 
     private void printMainBlock(HttpServletRequest request) {
@@ -472,7 +475,7 @@
 
                     if(request.getParameter(ACTION_MKDIR) != null) {
                         mkdir(path + newFileName);
-                        //response.sendRedirect(getPathReference(encodeValue(showedPath)));
+                        response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     }
                     else if(request.getParameter(ACTION_CREATE) != null) {
                         touch(path + newFileName);
@@ -845,6 +848,13 @@
         }
     }
 
+    private void printFooter() {
+        wln("<footer>");
+        wln("<hr/>");
+        wln("Version: " + VERSION);
+        wln("</footer>");
+    }
+
     private void printInput(String type, String classN, String name, String placeholder, boolean multiple)  {
         if(multiple) wln("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"' multiple/>");
         else wln("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"'/>");
@@ -911,18 +921,21 @@
             wln("</textarea>");
     }
     private void nLine() { wln("<br/>"); }
+    }
 %>
 <% // этот блок инициализирующего кода выполняется уже в процессе обработки запроса, но в самом начале. я перенес его _до_ тела html документа
-    this.out = out;
+    Main main = new Main();
+    main.out = out;
     long enter_time = System.currentTimeMillis();
-    initUser(request);
+    main.initUser(request);
     request.setCharacterEncoding("UTF-8");
-    log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
+    main.log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
 
     boolean is_forwarded = false;
-    try {
-        is_forwarded = (boolean) request.getAttribute("FORWARD_REQUEST");
-    } catch (Exception ex) { }
+    main.CGI_NAME = "index2.jsp";
+    try { is_forwarded = (boolean) request.getAttribute("FORWARD_REQUEST"); }
+    catch (Exception ex) { is_forwarded = false; main.CGI_NAME = "index1.jsp"; }
+
     if(!is_forwarded) {
     //-------------------------INIT SECTION ENDED------------------------//
 %>
@@ -950,11 +963,13 @@
     </style>
 </head>
 <body>
+    <% } %>
     <div class="container" id="main_block">
         <%
-            process(request, response);
+            main. process(request, response);
         %>
     </div>
+    <% if(!is_forwarded) { %>
 <script src="contrib/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="contrib/nmp/popper.js-1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="contrib/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
@@ -962,8 +977,5 @@
 </body>
 </html>
 <%
-    } else {
-        CGI_NAME = "index2.jsp";
-        process(request, response);
     }
 %>
