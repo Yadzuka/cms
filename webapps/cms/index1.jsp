@@ -122,6 +122,7 @@
         checkAccess(path);
     }
 
+    class FileInfo {
     // Get file name
     private String basename(String path) {
         try {
@@ -138,6 +139,21 @@
         return file.getParent();
     }
 
+    private boolean isExecutable(String path) {
+        Path pathToFile = Paths.get(path);
+        return Files.isExecutable(pathToFile);
+    }
+
+    private boolean isDir(String path) {
+        Path pathToFile = Paths.get(path);
+        return Files.isDirectory(pathToFile);
+    }
+    }
+    private boolean checkShellInjection(String param){ return param.contains(".."); }
+    private String getRequestParameter(ServletRequest request, String param)  {
+        return getRequestParameter(request, param, null);
+    }
+
     private String encodeValue(String value) { // SIC! тут надо в слеши превращать %2F
         String regexForSlashes = "%2F";
         String str;
@@ -148,22 +164,6 @@
             throw new RuntimeException(ex.getCause());
         }
         return str;
-    }
-
-    private boolean isExecutable(String path) {
-        Path pathToFile = Paths.get(path);
-        return Files.isExecutable(pathToFile);
-    }
-
-    private boolean isDir(String path) {
-        Path pathToFile = Paths.get(path);
-        return Files.isDirectory(pathToFile);
-    }
-
-    private boolean checkShellInjection(String param){ return param.contains(".."); }
-
-    private String getRequestParameter(ServletRequest request, String param)  {
-        return getRequestParameter(request, param, null);
     }
 
     private String getRequestParameter(ServletRequest request, String param, String default_value)  { // SIC! Используется только для директорий & при создании одного параметра тут все менять надо
@@ -189,7 +189,8 @@
     }
 
     private String goToFile(String showedPath, String fileName) { // SIC! Только для папок - не знаю зачем тут проверка ( на всякий случай), но может потом надо убрать вообще
-        if(isDir(currentDirectory + fileName)) {
+        FileInfo fileInfo = new FileInfo();
+        if(fileInfo.isDir(currentDirectory + fileName)) {
             String targetPath = encodeValue(showedPath + fileName + unixSlash);
             return getPathReference(targetPath, fileName);
         }
@@ -360,15 +361,16 @@
     }
 
     private void process(HttpServletRequest req, HttpServletResponse resp) {
+        FileInfo fileInfo = new FileInfo();
         String dParameter = getRequestParameter(req, PARAM_D, showedPath);
-        String fileParameter = basename(dParameter);
+        String fileParameter = fileInfo.basename(dParameter);
         String fileStatus = getRequestParameter(req, PARAM_ACTION);
         currentDirectory = dParameter;
 
         references = new LinkedHashMap<>();
         String referenceForSpecialPath = currentDirectory.substring(HOME_DIRECTORY.length());
         while(!referenceForSpecialPath.equals(unixSlash)) {
-            references.put(getPathReference(referenceForSpecialPath), basename(referenceForSpecialPath));
+            references.put(getPathReference(referenceForSpecialPath), fileInfo.basename(referenceForSpecialPath));
             referenceForSpecialPath = goUpside(referenceForSpecialPath);
         }
         references.put(getPathReference(unixSlash), "root");
@@ -470,6 +472,7 @@
           //      "background-color: lightgray; text-align: center; border-style: none; font-weight: 400; box-shadow: inset -7px -4px 7px 0px darkgrey, 5px 5px 10px;} </style>");
         try {
             if (path != null && fileStatus != null) {
+                FileInfo fileInfo = new FileInfo();
                if (fileStatus.equals(ACTION_CREATE)) {
                     String newFileName = getRequestParameter(request, PARAM_FILE);
 
@@ -586,7 +589,7 @@
 
                    startForm("POST", getFileReference(encodeValue(showedPath), ACTION_COPY));
                    wln("Скопировать файл (в конце и начале необходимо поставить слеши):");
-                   printInput("hidden", "", PARAM_FILE, "", basename(showedPath));
+                   printInput("hidden", "", PARAM_FILE, "", fileInfo.basename(showedPath));
                    printInput("text", "", PARAM_DIRECTORY, "Напишите папку", "");
                    printSubmit("Скопировать");
                    endForm();
@@ -608,7 +611,7 @@
 
                if(fileStatus.equals(ACTION_RENAME)) {
                    String newFileName = request.getParameter(PARAM_FILE);
-                   rename(basename(showedPath), newFileName);
+                   rename(fileInfo.basename(showedPath), newFileName);
                    response.sendRedirect(getFileReference(goUpside(showedPath) + newFileName, ACTION_VIEW));
                }
 
@@ -633,7 +636,7 @@
                    wln("");
                    wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
                    if(isViewActions(request)) {  // viewFileAsSomething(request, response, path);
-                   } else if(printImageFile(unixSlash + basename(path)) || printVideoFile(unixSlash + basename(path))) {
+                   } else if(printImageFile(unixSlash + fileInfo.basename(path)) || printVideoFile(unixSlash + fileInfo.basename(path))) {
                        printFormForAnyFile(showedPath, fileStatus);
                    } else {
                        try {
