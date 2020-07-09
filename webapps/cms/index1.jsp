@@ -1,19 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java"
          import="java.io.*"
          import="java.text.SimpleDateFormat"
+         import="org.eustrosoft.cms.Main"
          import="org.eustrosoft.providers.LogProvider"
-         import="name.fraser.neil.plaintext.diff_match_patch"
-         import="java.nio.charset.StandardCharsets"
-         import="java.io.UnsupportedEncodingException"
-         import="java.net.URLEncoder"
-         import="java.util.Map" %>
-<%@ page import="java.util.*" %>
-<%@ page import="java.nio.file.*" %>
-<%@ page import="java.nio.file.attribute.PosixFilePermission" %>
-<%@ page import="java.nio.file.attribute.PosixFilePermissions" %>
-<%@ page import="java.nio.file.attribute.FileAttribute" %>
-<%@ page import="javax.swing.text.html.HTML" %>
-<%!
+%>
+<%--
     // Page info
     class Main{
     private String CGI_NAME = "index1.jsp"; // Page domain name
@@ -935,7 +926,7 @@
     private void nLine() { wln("<br/>"); }
     }
     }
-%>
+--%>
 <% // этот блок инициализирующего кода выполняется уже в процессе обработки запроса, но в самом начале. я перенес его _до_ тела html документа
     Main main = new Main();
     Main.WARHCMS cms = main.getWARHCMSInstance();
