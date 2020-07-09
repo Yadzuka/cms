@@ -107,21 +107,6 @@
         return(sb.toString());
     }
 
-    // Check access
-    private boolean checkAccess(String path) throws IllegalAccessException {
-        Random rand = new Random();
-        double i = rand.nextDouble();
-        if(i < 0.3) {
-            throw new IllegalAccessException();
-        } else {
-            return true;
-        }
-    }
-
-    private void reserveVersion(String path) throws IllegalAccessException {
-        checkAccess(path);
-    }
-
     class FileInfo {
     // Get file name
     private String basename(String path) {
@@ -144,9 +129,32 @@
         return Files.isExecutable(pathToFile);
     }
 
+    private boolean isImage(String path) {
+        for(int i = 0; i < IMAGE_DEFINITIONS.length; i++)
+            if (path.toLowerCase().endsWith(IMAGE_DEFINITIONS[i]))
+                return true;
+            return false;
+    }
+    private boolean isVideo(String path) {
+        for(int i = 0; i < VIDEO_DEFINITIONS.length; i++)
+            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i]))
+                return true;
+            return false;
+    }
+
     private boolean isDir(String path) {
         Path pathToFile = Paths.get(path);
         return Files.isDirectory(pathToFile);
+    }
+    // Check access
+    private boolean checkAccess(String path) throws IllegalAccessException {
+        Random rand = new Random();
+        double i = rand.nextDouble();
+        if(i < 0.3) {
+            throw new IllegalAccessException();
+        } else {
+            return true;
+        }
     }
     }
     private boolean checkShellInjection(String param){ return param.contains(".."); }
@@ -188,7 +196,23 @@
         return value;
     }
 
-    private String goToFile(String showedPath, String fileName) { // SIC! Только для папок - не знаю зачем тут проверка ( на всякий случай), но может потом надо убрать вообще
+    // Path reference with 'a' tags
+    private String getPathReference(String path, String value) {
+        return "<a href='" + CGI_NAME + "?" + PARAM_D +"="+ path + "'>" + value + "</a>";
+    }
+    // Path reference
+    private String getPathReference(String path) {
+        return CGI_NAME + "?" + PARAM_D +"="+ path;
+    }
+    // SIC! Ссылки снизу поменять либо на path + file, либо заменить на один параметр
+    // File reference with action
+    private String getFileReference(String path, String cmd) {
+        return CGI_NAME + "?" + PARAM_D + "=" + path + "&" + PARAM_ACTION + "=" + cmd;
+        // return CGI_NAME + "?" + PARAM_PATH + "=" + path + file + "&" + PARAM_ACTION + "=" + cmd;
+    }
+
+    class FileOperations {
+    private String goToFile(String showedPath, String fileName) {
         FileInfo fileInfo = new FileInfo();
         if(fileInfo.isDir(currentDirectory + fileName)) {
             String targetPath = encodeValue(showedPath + fileName + unixSlash);
@@ -199,23 +223,6 @@
 
     private String openFile(String value){ return value; }
 
-
-    // Path reference with 'a' tags
-    private String getPathReference(String path, String value) {
-        return "<a href='" + CGI_NAME + "?" + PARAM_D +"="+ path + "'>" + value + "</a>";
-    }
-    // Path reference
-    private String getPathReference(String path) {
-        return CGI_NAME + "?" + PARAM_D +"="+ path;
-    }
-
-    // SIC! Ссылки снизу поменять либо на path + file, либо заменить на один параметр
-
-    // File reference with action
-    private String getFileReference(String path, String cmd) {
-        return CGI_NAME + "?" + PARAM_D + "=" + path + "&" + PARAM_ACTION + "=" + cmd;
-        // return CGI_NAME + "?" + PARAM_PATH + "=" + path + file + "&" + PARAM_ACTION + "=" + cmd;
-    }
 
     // Go to the top directory
     private String goUpside(String folderName) { // SIC! Тут отрезается только если есть слеш в конце -> если его нет, то ничего не режет (воде починил, но проблем с этим пока не возникало)
@@ -331,6 +338,11 @@
         } catch (Exception ex) { return false;}
     }
 
+    private void reserveVersion(String path) throws IllegalAccessException {
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.checkAccess(path);
+    }
+
     private void setPermissionsForFile(File file) {
         try {
             Set<PosixFilePermission> perms = new HashSet<>();
@@ -359,9 +371,18 @@
         } catch (IOException ex) {
         }
     }
-
+    private void saveFile(String path, HttpServletRequest request) throws IOException {
+        BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
+                (new FileOutputStream(path, false), StandardCharsets.UTF_8));
+        wln("Saved");
+        String fileText = request.getParameter(FILE_TEXTAREA_NAME);
+        bufferedWriter.write(fileText);
+        bufferedWriter.flush();
+        bufferedWriter.close();
+    }
+    }
     private void process(HttpServletRequest req, HttpServletResponse resp) {
-        FileInfo fileInfo = new FileInfo();
+        FileInfo fileInfo = new FileInfo(); FileOperations fileOperations = new FileOperations();
         String dParameter = getRequestParameter(req, PARAM_D, showedPath);
         String fileParameter = fileInfo.basename(dParameter);
         String fileStatus = getRequestParameter(req, PARAM_ACTION);
@@ -371,7 +392,7 @@
         String referenceForSpecialPath = currentDirectory.substring(HOME_DIRECTORY.length());
         while(!referenceForSpecialPath.equals(unixSlash)) {
             references.put(getPathReference(referenceForSpecialPath), fileInfo.basename(referenceForSpecialPath));
-            referenceForSpecialPath = goUpside(referenceForSpecialPath);
+            referenceForSpecialPath = fileOperations.goUpside(referenceForSpecialPath);
         }
         references.put(getPathReference(unixSlash), "root");
 
@@ -385,7 +406,7 @@
     }
 
     private void printMainBlock(HttpServletRequest request) {
-        File actual = null;
+        File actual = null; FileOperations fileOperations = new FileOperations();
         try {
             if(!showedPath.endsWith(unixSlash))
                 showedPath = showedPath + unixSlash;
@@ -395,7 +416,7 @@
             startTBody("");
             if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
                 startTr();
-                printTd("row", "viewer", "", getA(getI(".&nbsp;.&nbsp;.", "icon-share"), getPathReference(goUpside(showedPath))));
+                printTd("row", "viewer", "", getA(getI(".&nbsp;.&nbsp;.", "icon-share"), getPathReference(fileOperations.goUpside(showedPath))));
                 endTr();
             }
 
@@ -438,6 +459,7 @@
     }
 
     private void printFileInTable(File f) {
+        FileOperations fileOperations = new FileOperations();
         String ico = "";
         String readwrite = "";
         if (f.isDirectory() & !f.isFile()) {
@@ -457,7 +479,7 @@
         if(f.isFile()&f.canRead()) {
             printA(ico+" "+f.getName(), getFileReference(encodeValue(showedPath + f.getName()) , ACTION_VIEW));
         } else {
-            wln(ico + " " + goToFile(showedPath, f.getName()));
+            wln(ico + " " + fileOperations.goToFile(showedPath, f.getName()));
         }
         endTd();
         printTd("row", "", "right", String.format("%d",f.length()));
@@ -472,16 +494,16 @@
           //      "background-color: lightgray; text-align: center; border-style: none; font-weight: 400; box-shadow: inset -7px -4px 7px 0px darkgrey, 5px 5px 10px;} </style>");
         try {
             if (path != null && fileStatus != null) {
-                FileInfo fileInfo = new FileInfo();
+                FileInfo fileInfo = new FileInfo(); FileOperations fileOperations = new FileOperations();
                if (fileStatus.equals(ACTION_CREATE)) {
                     String newFileName = getRequestParameter(request, PARAM_FILE);
 
                     if(request.getParameter(ACTION_MKDIR) != null) {
-                        mkdir(path + newFileName);
+                        fileOperations.mkdir(path + newFileName);
                         response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     }
                     else if(request.getParameter(ACTION_CREATE) != null) {
-                        touch(path + newFileName);
+                        fileOperations.touch(path + newFileName);
                         response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     } else {
                         wln("Не удалось создать файл!");
@@ -491,12 +513,12 @@
                }
 
                if (request.getParameter(ACTION_SAVE) != null) {
-                    saveFile(path, request);
+                    fileOperations.saveFile(path, request);
                }
 
                if (fileStatus.equals(ACTION_MKDIR)) {
                     String newDirName = getRequestParameter(request, PARAM_FILE);
-                    if(mkdir(path + newDirName)) response.sendRedirect(getPathReference(encodeValue(showedPath)));
+                    if(fileOperations.mkdir(path + newDirName)) response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     else {
                         wln("Ошибка в создании директории!");
                         printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
@@ -505,9 +527,8 @@
 
                if (fileStatus.equals(ACTION_DELETE_DIR)) {
                    if(request.getParameter("yes_delete") != null) {
-                       wln(showedPath);
-                       rmdir(path);
-                       response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                       fileOperations.rmdir(path);
+                       response.sendRedirect(getPathReference(encodeValue(fileOperations.goUpside(showedPath))));
                    } else if(request.getParameter("no_delete") != null) {
                        response.sendRedirect(getPathReference(encodeValue(showedPath)));
                    } else {
@@ -519,11 +540,11 @@
                    //SIC!
                    if(request.getParameter("yes_delete") != null) {
                        wln(showedPath);
-                       rm(path);
-                       response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                       fileOperations.rm(path);
+                       response.sendRedirect(getPathReference(encodeValue(fileOperations.goUpside(showedPath))));
                    } else if(request.getParameter("no_delete") != null) {
                        response.sendRedirect(getFileReference(encodeValue(showedPath), ACTION_VIEW));
-                       response.sendRedirect(getPathReference(encodeValue(goUpside(showedPath))));
+                       response.sendRedirect(getPathReference(encodeValue(fileOperations.goUpside(showedPath))));
                    } else {
                        acceptDeleteFile("файл", ACTION_DELETE);
                    }
@@ -569,7 +590,7 @@
                    endDiv();
                    endDiv();
                    wln("");
-                   wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(goUpside(showedPath))) + "\"'>Назад</button>");
+                   wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(fileOperations.goUpside(showedPath))) + "\"'>Назад</button>");
                    printA("Скачать", "download?d=" + encodeValue(showedPath)); // SIC! maybe download can be framed in constant
                    printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
                    printA("Удалить", getFileReference(encodeValue(showedPath), ACTION_DELETE));
@@ -594,7 +615,7 @@
                    printSubmit("Скопировать");
                    endForm();
 
-                   if(!isVideo(path) && !isImage(path)) {
+                   if(!fileInfo.isVideo(path) && !fileInfo.isImage(path)) {
                        nLine();
                        FileReader fileReader = new FileReader(path);
                        BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -611,14 +632,14 @@
 
                if(fileStatus.equals(ACTION_RENAME)) {
                    String newFileName = request.getParameter(PARAM_FILE);
-                   rename(fileInfo.basename(showedPath), newFileName);
-                   response.sendRedirect(getFileReference(goUpside(showedPath) + newFileName, ACTION_VIEW));
+                   fileOperations.rename(fileInfo.basename(showedPath), newFileName);
+                   response.sendRedirect(getFileReference(fileOperations.goUpside(showedPath) + newFileName, ACTION_VIEW));
                }
 
                if(fileStatus.equals(ACTION_COPY)) {
                    String targetPath = request.getParameter(PARAM_DIRECTORY) + request.getParameter(PARAM_FILE);
                    String targetDir = currentDirectory.substring(0, currentDirectory.substring(showedPath.length()).length());
-                   cp(currentDirectory, targetDir + targetPath);
+                   fileOperations.cp(currentDirectory, targetDir + targetPath);
                    response.sendRedirect(getFileReference(showedPath, ACTION_VIEW));
                }
 
@@ -691,7 +712,6 @@
         //  Категории: 1. текст 2. вики текст 3. хтмл (это все текст - показывать по разному
         // 4. картинка 5 видео 6. бинарный файл 7. csv-файл 8. tcsv
         endDiv();
-
     }
 
     private boolean isViewActions(HttpServletRequest request) {
@@ -704,20 +724,9 @@
             return true;
     }
 
-    private boolean isImage(String path) {
-        for(int i = 0; i < IMAGE_DEFINITIONS.length; i++)
-            if (path.toLowerCase().endsWith(IMAGE_DEFINITIONS[i])) return true;
-        return false;
-    }
-
-    private boolean isVideo(String path) {
-        for(int i = 0; i < VIDEO_DEFINITIONS.length; i++)
-            if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i])) return true;
-        return false;
-    }
-
     private boolean printImageFile(String path)  {
-        if (isImage(path)) {
+        FileInfo fileInfo = new FileInfo();
+        if (fileInfo.isImage(path)) {
             printImage(path, 680, 400);
             return true;
         } else {
@@ -726,7 +735,8 @@
     }
 
     private boolean printVideoFile(String path)  {
-        if(isVideo(path)) {
+        FileInfo fileInfo = new FileInfo();
+        if(fileInfo.isVideo(path)) {
             printVideo(path, 680, 400);
             return true;
         } else {
@@ -774,23 +784,6 @@
         }catch(IOException ex) {
             wln("Не удалось показать таблицу.");
         }
-    }
-
-    private void saveFile(String path, HttpServletRequest request) throws IOException, IllegalAccessException {
-        BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter
-                (new FileOutputStream(path, false), StandardCharsets.UTF_8));
-        wln("Saved");
-        String fileText = request.getParameter(FILE_TEXTAREA_NAME);
-        bufferedWriter.write(fileText);
-        bufferedWriter.flush();
-        bufferedWriter.close();
-    }
-
-    private void createFile(String pathParam,  HttpServletResponse response) throws IOException {
-        File newFile = new File(pathParam);
-        if(!newFile.exists())
-            newFile.createNewFile();
-        response.sendRedirect(getPathReference(encodeValue(currentDirectory)));
     }
 
     private void printFileEditButtons() {
