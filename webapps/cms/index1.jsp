@@ -381,6 +381,7 @@
         bufferedWriter.close();
     }
     }
+
     private void process(HttpServletRequest req, HttpServletResponse resp) {
         FileInfo fileInfo = new FileInfo(); FileOperations fileOperations = new FileOperations();
         String dParameter = getRequestParameter(req, PARAM_D, showedPath);
@@ -407,17 +408,18 @@
 
     private void printMainBlock(HttpServletRequest request) {
         File actual = null; FileOperations fileOperations = new FileOperations();
+        HTMLElements html = new HTMLElements();
         try {
             if(!showedPath.endsWith(unixSlash))
                 showedPath = showedPath + unixSlash;
             actual = new File(currentDirectory);
 
             printTableHead(request);
-            startTBody("");
+            html.startTBody("");
             if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
-                startTr();
-                printTd("row", "viewer", "", getA(getI(".&nbsp;.&nbsp;.", "icon-share"), getPathReference(fileOperations.goUpside(showedPath))));
-                endTr();
+                html.startTr();
+                html.printTd("row", "viewer", "", html.getA(html.getI(".&nbsp;.&nbsp;.", "icon-share"), getPathReference(fileOperations.goUpside(showedPath))));
+                html.endTr();
             }
 
             File [] directories = actual.listFiles(File::isDirectory);
@@ -433,39 +435,40 @@
             wln("попробуйте другую операцию" );
         }
         finally{ }
-        endTBody();
-        endTable();
+        html.endTBody();
+        html.endTable();
     }
 
     // SIC! тут в формах тоже надо менять ссылки (currentDirectory), соответственно это либо в сервлетах надо учитывать либо ещё что
     private void printServerButton()  {
-        startDiv("col", "", "right");
-        startDiv("dropright");
-        printButton("btn btn-light btn-lg dropdown-toggle", "button", "dropdownMenuButton", "dropdown", "true", "false", getI("   Сервер", "icon-folder-open") );
-        startDiv("dropdown-menu", "", "", "dropdownMenuButton");
-        printH("Обращение к серверу", "dropdown-header", 5);
-        startDiv("dropdown-divider"); endDiv();
+        HTMLElements html = new HTMLElements();
+        html.startDiv("col", "", "right");
+        html.startDiv("dropright");
+        html.printButton("btn btn-light btn-lg dropdown-toggle", "button", "dropdownMenuButton", "dropdown", "true", "false", html.getI("   Сервер", "icon-folder-open") );
+        html.startDiv("dropdown-menu", "", "", "dropdownMenuButton");
+        html.printH("Обращение к серверу", "dropdown-header", 5);
+        html.startDiv("dropdown-divider"); html.endDiv();
 
-        startForm("POST", "upload", "multipart/form-data");
-        printInput("hidden", "", PARAM_D , "", showedPath);
-        printInput(PARAM_FILE, "dropdown-item", PARAM_FILE, "", true);
-        printSubmit("Загрузить", "dropdown-item");
-        endForm();
+        html.startForm("POST", "upload", "multipart/form-data");
+        html.printInput("hidden", "", PARAM_D , "", showedPath);
+        html.printInput(PARAM_FILE, "dropdown-item", PARAM_FILE, "", true);
+        html.printSubmit("Загрузить", "dropdown-item");
+        html.endForm();
 
-        startDiv("dropdown-divider"); endDiv();
-        endDiv();
-        endDiv();
-        endDiv();
+        html.startDiv("dropdown-divider"); html.endDiv();
+        html.endDiv();
+        html.endDiv();
+        html.endDiv();
     }
 
     private void printFileInTable(File f) {
-        FileOperations fileOperations = new FileOperations();
+        FileOperations fileOperations = new FileOperations(); HTMLElements html = new HTMLElements();
         String ico = "";
         String readwrite = "";
         if (f.isDirectory() & !f.isFile()) {
-            ico = getI("", "icon-folder");
+            ico = html.getI("", "icon-folder");
         } else if (!f.isDirectory() & f.isFile()) {
-            ico = getI("", "icon-file-text2");
+            ico = html.getI("", "icon-file-text2");
         } else ico = "<i class=\"icon-link\" ></i>";
         if (f.canWrite() & f.canRead()) {
             readwrite = "чтение/запись";
@@ -474,18 +477,18 @@
         } else {
             readwrite = " ";
         }
-        startTr();
-        startTd("viewer", "row");
+        html.startTr();
+        html.startTd("viewer", "row");
         if(f.isFile()&f.canRead()) {
-            printA(ico+" "+f.getName(), getFileReference(encodeValue(showedPath + f.getName()) , ACTION_VIEW));
+            html.printA(ico+" "+f.getName(), getFileReference(encodeValue(showedPath + f.getName()) , ACTION_VIEW));
         } else {
             wln(ico + " " + fileOperations.goToFile(showedPath, f.getName()));
         }
-        endTd();
-        printTd("row", "", "right", String.format("%d",f.length()));
-        printTd("row", "", "", readwrite);
-        printTd("row", "", "center", new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified()));
-        endTr();
+        html.endTd();
+        html.printTd("row", "", "right", String.format("%d",f.length()));
+        html.printTd("row", "", "", readwrite);
+        html.printTd("row", "", "center", new SimpleDateFormat("dd.MM.yy HH:mm").format(f.lastModified()));
+        html.endTr();
     }
 
     // path here means FULL/real path - be careful with this | showedPath path, in turn, means showed path and it could be use for showing for the client
@@ -495,6 +498,7 @@
         try {
             if (path != null && fileStatus != null) {
                 FileInfo fileInfo = new FileInfo(); FileOperations fileOperations = new FileOperations();
+                HTMLElements html = new HTMLElements();
                if (fileStatus.equals(ACTION_CREATE)) {
                     String newFileName = getRequestParameter(request, PARAM_FILE);
 
@@ -507,7 +511,7 @@
                         response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     } else {
                         wln("Не удалось создать файл!");
-                        printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
+                        html.printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
                     }
 
                }
@@ -521,7 +525,7 @@
                     if(fileOperations.mkdir(path + newDirName)) response.sendRedirect(getPathReference(encodeValue(showedPath)));
                     else {
                         wln("Ошибка в создании директории!");
-                        printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
+                        html.printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
                     };
                }
 
@@ -554,11 +558,11 @@
                     wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
                     BufferedReader br = new BufferedReader(new FileReader(path));
                     String bufferString = "";
-                    nLine();
+                    html.nLine();
                     while ((bufferString = br.readLine()) != null) {
                         bufferString = translate_tokens(bufferString, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
                         wln(bufferString);
-                        nLine();
+                        html.nLine();
                     }
                     br.close();
                }
@@ -580,51 +584,51 @@
 
                if(fileStatus.equals(ACTION_VIEW)) {
                    wln("<style> #left_block { } input { margin: 5px; } .col { max-width: max-content; } </style>");
-                   startDiv("block", "left_block", "left");
-                   startDiv("row");
-                   startDiv("col");
-                   printH("Документ: ", 5);
-                   endDiv();
-                   startDiv("col");
+                   html.startDiv("block", "left_block", "left");
+                   html.startDiv("row");
+                   html.startDiv("col");
+                   html.printH("Документ: ", 5);
+                   html.endDiv();
+                   html.startDiv("col");
                    printHeadPath(request);
-                   endDiv();
-                   endDiv();
+                   html.endDiv();
+                   html.endDiv();
                    wln("");
                    wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(fileOperations.goUpside(showedPath))) + "\"'>Назад</button>");
-                   printA("Скачать", "download?d=" + encodeValue(showedPath)); // SIC! maybe download can be framed in constant
-                   printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
-                   printA("Удалить", getFileReference(encodeValue(showedPath), ACTION_DELETE));
+                   html.printA("Скачать", "download?d=" + encodeValue(showedPath)); // SIC! maybe download can be framed in constant
+                   html.printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                   html.printA("Удалить", getFileReference(encodeValue(showedPath), ACTION_DELETE));
                    wln("Посмотреть как: ");
-                   printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
-                   printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
-                   printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
-                   printA("Таблицу", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TABLE));
-                   nLine(); nLine(); printFileMeta(path);
-                   nLine();
+                   html.printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
+                   html.printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
+                   html.printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
+                   html.printA("Таблицу", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TABLE));
+                   html.nLine(); html.nLine(); printFileMeta(path);
+                   html.nLine();
 
-                   startForm("POST", getFileReference(encodeValue(showedPath), ACTION_RENAME));
+                   html.startForm("POST", getFileReference(encodeValue(showedPath), ACTION_RENAME));
                    wln("Переименовать файл: ");
-                   printInput("text", "", PARAM_FILE, "Напишите имя файла", "");
-                   printSubmit("Переименовать");
-                   endForm();
+                   html.printInput("text", "", PARAM_FILE, "Напишите имя файла", "");
+                   html.printSubmit("Переименовать");
+                   html.endForm();
 
-                   startForm("POST", getFileReference(encodeValue(showedPath), ACTION_COPY));
+                   html.startForm("POST", getFileReference(encodeValue(showedPath), ACTION_COPY));
                    wln("Скопировать файл (в конце и начале необходимо поставить слеши):");
-                   printInput("hidden", "", PARAM_FILE, "", fileInfo.basename(showedPath));
-                   printInput("text", "", PARAM_DIRECTORY, "Напишите папку", "");
-                   printSubmit("Скопировать");
-                   endForm();
+                   html.printInput("hidden", "", PARAM_FILE, "", fileInfo.basename(showedPath));
+                   html.printInput("text", "", PARAM_DIRECTORY, "Напишите папку", "");
+                   html.printSubmit("Скопировать");
+                   html.endForm();
 
                    if(!fileInfo.isVideo(path) && !fileInfo.isImage(path)) {
-                       nLine();
+                       html.nLine();
                        FileReader fileReader = new FileReader(path);
                        BufferedReader bufferedReader = new BufferedReader(fileReader);
-                       wln("Первые 100 строк файла:"); nLine();
+                       wln("Первые 100 строк файла:"); html.nLine();
                        String buff = "";
                        int numOfStrings = 0;
                        while(numOfStrings != 100 && (buff = bufferedReader.readLine()) != null) {
                            buff = translate_tokens(buff, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
-                           wln(buff); nLine();
+                           wln(buff); html.nLine();
                            numOfStrings++;
                        }
                    }
@@ -648,17 +652,17 @@
                    String fileBuffer = "";
 
                    wln("<style>  #left_block { } input { margin: 5px; }</style>");
-                   startDiv("block", "left_block", "left");
-                   startDiv("row");
-                   startDiv("col");
-                   printH("Документ: " + showedPath, 5);
-                   endDiv();
-                   endDiv();
+                   html.startDiv("block", "left_block", "left");
+                   html.startDiv("row");
+                   html.startDiv("col");
+                   html.printH("Документ: " + showedPath, 5);
+                   html.endDiv();
+                   html.endDiv();
                    wln("");
                    wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
                    if(isViewActions(request)) {  // viewFileAsSomething(request, response, path);
                    } else if(printImageFile(unixSlash + fileInfo.basename(path)) || printVideoFile(unixSlash + fileInfo.basename(path))) {
-                       printFormForAnyFile(showedPath, fileStatus);
+                       html.printFormForAnyFile(showedPath, fileStatus);
                    } else {
                        try {
                            FileReader fileReader = new FileReader(path);
@@ -672,7 +676,7 @@
                        } catch (Exception ex) {
                            wln("Cant read file");
                        }
-                       printFileForm(showedPath, fileStatus, sb.toString());
+                       html.printFileForm(showedPath, fileStatus, sb.toString());
                    }
                }
                wln("</div>");
@@ -685,23 +689,25 @@
 
     // File DELETING (ACCEPT) (could be as file and directory as well)
     private void acceptDeleteFile(String deleteWhat, String ACTION) {
+        HTMLElements html = new HTMLElements();
         wln("Точно хотите удалить " + deleteWhat + "?");
         if(ACTION.equals(ACTION_DELETE))
-            startForm("POST", getFileReference(showedPath, ACTION_DELETE));
+            html.startForm("POST", getFileReference(showedPath, ACTION_DELETE));
         else if(ACTION.equals(ACTION_DELETE_DIR))
-            startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
+            html.startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
         else
             return;
         wln("<input type='submit' name='yes_delete' value='Да'/>");
         wln("<input type='submit' name='no_delete' value='Нет'/>");
-        endForm();
+        html.endForm();
     }
 
     private void printFileMeta(String file) {
+        HTMLElements html = new HTMLElements();
         File showingFile = new File(file);
         // SIC! All metadata goes here
-        startDiv("");
-        wln("Размер: " + showingFile.length() + " байт."); nLine();
+        html.startDiv("");
+        wln("Размер: " + showingFile.length() + " байт."); html.nLine();
         // Права: (чтение, запись)
         wln("Права на: " + (showingFile.canRead() ? " чтение" : "") + (showingFile.canWrite() ? " запись" : ""));
         boolean isFileType = false;
@@ -711,7 +717,7 @@
         // Тип документа: метод по которому угадываю что это
         //  Категории: 1. текст 2. вики текст 3. хтмл (это все текст - показывать по разному
         // 4. картинка 5 видео 6. бинарный файл 7. csv-файл 8. tcsv
-        endDiv();
+        html.endDiv();
     }
 
     private boolean isViewActions(HttpServletRequest request) {
@@ -761,26 +767,27 @@
 
     private void printTable(String path) {
         try {
+            HTMLElements html = new HTMLElements();
             BufferedReader br = new BufferedReader(new FileReader(path));
             String singleLine = "";
             String dilimiter = ";";
             String[] cells;
             wln("<br/>");
-            startTable("table table-borderedce ");
-            startTBody("");
+            html.startTable("table table-borderedce ");
+            html.startTBody("");
             while ((singleLine = br.readLine()) != null) {
                 cells = singleLine.split(dilimiter);
-                startTr();
+                html.startTr();
                 for (int i = 0; i < cells.length; i++) {
-                    startTd("");
+                    html.startTd("");
                     cells[i] = translate_tokens(cells[i], HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
                     wln(cells[i]);
-                    endTd();
+                    html.endTd();
                 }
-                endTr();
+                html.endTr();
             }
-            endTBody();
-            endTable();
+            html.endTBody();
+            html.endTable();
         }catch(IOException ex) {
             wln("Не удалось показать таблицу.");
         }
@@ -799,48 +806,49 @@
     }
     private void wln(String s){ w(s);w("\n");}
     private void wln(){w("\n");}
-    private void setReference(String reference, String insides) { wln("<a href=\""+reference+"\">"); wln(insides); wln("</a>"); }
 
     private void printTableHead(HttpServletRequest request) {
-        startDiv("row");
-        startDiv("col");
-        printH("Содержание директории: ", 5);
+        HTMLElements html = new HTMLElements();
+        html.startDiv("row");
+        html.startDiv("col");
+        html.printH("Содержание директории: ", 5);
 
         if(!showedPath.equals(unixSlash)) {
-            startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
-            printSubmit("Удалить директорию");
-            endForm();
+            html.startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
+            html.printSubmit("Удалить директорию");
+            html.endForm();
         }
-        endDiv();
-        startDiv("col");
+        html.endDiv();
+        html.startDiv("col");
         printHeadPath(request);
-        startForm("POST", CGI_NAME + "?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
-        printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
+        html.startForm("POST", CGI_NAME + "?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
+        html.printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
         wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
         wln("<input type=\"submit\" name=\""+ACTION_MKDIR+"\" value=\"Создать директорию\"/>&nbsp;");
-        endForm();
-        endDiv();
+        html.endForm();
+        html.endDiv();
         printServerButton();
-        endDiv();
-        startTable("table");
-        startTHead("thead-light");
-        startTr();
-        printTh("col", "Имя");
-        printTh("col", "Размер, байт");
-        printTh("col", "Права");
-        printTh("col", "Последняя модификация");
-        endTr();
-        endTHead();
+        html.endDiv();
+        html.startTable("table");
+        html.startTHead("thead-light");
+        html.startTr();
+        html.printTh("col", "Имя");
+        html.printTh("col", "Размер, байт");
+        html.printTh("col", "Права");
+        html.printTh("col", "Последняя модификация");
+        html.endTr();
+        html.endTHead();
     }
 
     private void printHeadPath(HttpServletRequest request) {
+        HTMLElements html = new HTMLElements();
         List<String> allKeys = new ArrayList<>(references.keySet());
         Collections.reverse(allKeys);
         Boolean is_view = getRequestParameter(request, PARAM_ACTION, null) != null;
         int size = allKeys.size();
         if(is_view) size--;
         for(int i = 0; i < size; i++) {
-            printA("/" + references.get(allKeys.get(i)), allKeys.get(i));
+            html.printA("/" + references.get(allKeys.get(i)), allKeys.get(i));
         }
     }
 
@@ -850,7 +858,7 @@
         wln("Version: " + VERSION);
         wln("</footer>");
     }
-
+    class HTMLElements {
     private void printInput(String type, String classN, String name, String placeholder, boolean multiple)  {
         if(multiple) wln("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"' multiple/>");
         else wln("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"'/>");
@@ -917,6 +925,7 @@
             wln("</textarea>");
     }
     private void nLine() { wln("<br/>"); }
+    }
     }
 %>
 <% // этот блок инициализирующего кода выполняется уже в процессе обработки запроса, но в самом начале. я перенес его _до_ тела html документа
