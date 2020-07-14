@@ -17,8 +17,8 @@ import java.util.*;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermission;
 
-public class Main extends HttpServlet {
-    public String CGI_NAME = "index1.jsEustroCMS (3)p"; // Page domain name
+public class Main {
+    public String CGI_NAME = "index1.jsp"; // Page domain name
     private String VERSION = "0.1";
     private final String CGI_TITLE = "CMS system"; // Upper page info
     private final String JSP_VERSION = "$id$"; // Id for jsp version
@@ -77,7 +77,7 @@ public class Main extends HttpServlet {
     public void initUser(HttpServletRequest request) {
         HTMLElements html = new HTMLElements();
         userIP = request.getRemoteAddr();
-        HOME_DIRECTORY = getServletConfig().getServletContext().getInitParameter("root") + getServletConfig().getServletContext().getInitParameter("user");
+        HOME_DIRECTORY = request.getServletContext().getInitParameter("root") + request.getServletContext().getInitParameter("user");
         showedPath = "/";
         currentDirectory = HOME_DIRECTORY;
         try {

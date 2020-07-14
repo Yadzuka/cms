@@ -5,7 +5,7 @@ JARFILE=EustroCMS.jar
 PACKAGE=${PWD}/sources/src/main/java/
 WEBINFLIB=webapps/cms/WEB-INF/lib/
 CLIBS=${PWD}/contrib/lib/
-LIBS=${CATALINA_HOME}/lib/servlet-api.jar:${CLIBS}/commons-fileupload-1.4.jar:${CLIBS}/commons-io-2.6.jar:${CLIBS}/DiffPatchMatch.jar:${PACKAGE}
+LIBS=${CATALINA_HOME}/lib/servlet-api.jar:${CATALINA_HOME}/lib/jsp-api.jar:${CLIBS}/commons-fileupload-1.4.jar:${CLIBS}/commons-io-2.6.jar:${CLIBS}/DiffPatchMatch.jar:${PACKAGE}
 
 usage:
 	@echo "This project is the base platform for all services that we have and will have"
@@ -22,8 +22,9 @@ jar:
 	javac -cp ${LIBS} ${SOURCES}/servlets/DownloadServlet.java
 	javac -cp ${LIBS} ${SOURCES}/servlets/UploadServlet.java
 	javac -cp ${LIBS} ${SOURCES}/servlets/UploadServletV3.java
+	javac -cp ${LIBS} ${SOURCES}/cms/Main.java
 	cd ${PACKAGE} && awk 'BEGIN{print("Manifest-Version: 1.0"); print("Created-By: 1.6.0_19 (Sun Microsystems Inc.)");}' > manifest.mf
-	cd ${PACKAGE} && jar cvmf manifest.mf ${JARFILE} org
+	cd ${PACKAGE} && jar c0mf manifest.mf ${JARFILE} org
 	cp ${PACKAGE}/${JARFILE} ${WEBINFLIB}
 	cp ${CLIBS}/commons-fileupload-1.4.jar ${WEBINFLIB}
 	cp ${CLIBS}/commons-io-2.6.jar ${WEBINFLIB}
