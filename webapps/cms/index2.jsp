@@ -1,6 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java"
          import="java.util.*"
          import="java.io.*"
+         import="org.eustrosoft.cms.Main"
+         import="org.eustrosoft.providers.LogProvider"
 %>
 <%!
     private static final String CGI_MAIN = "index2.jsp";
@@ -323,18 +325,29 @@
     closeMenuNavBar();
 
 %>
-<div id="main">
-    <!--jsp:include page="index1.jsp" flush="true"/-->
+<div class="container" id="main_block">
 <%
     RequestDispatcher dispatcher =null;
     if("dogen".equals(request.getParameter("action"))){
         dispatcher = request.getRequestDispatcher("forma.jsp");
-    }else {
-        dispatcher = request.getRequestDispatcher("index1.jsp");
+    } else {
+        Main main = new Main();
+        Main.WARHCMS cms = main.getWARHCMSInstance();
+        main.CGI_NAME = "index2.jsp";
+        main.out = out;
+        main.initUser(request);
+        request.setCharacterEncoding("UTF-8");
+        main.log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
+        cms.process(request, response);
+    }
+
+    /*else {
+            dispatcher = request.getRequestDispatcher("index1.jsp");
     }
     out.flush();
     request.setAttribute("FORWARD_REQUEST", Boolean.TRUE);
-    dispatcher.include(request, response);
+    dispatcher.include(request, response);*/
+
 %>
 </div>
 <script type="text/javascript">
@@ -346,9 +359,6 @@
         let parent = event.target.parentElement;
         let child = event.target.parentElement.nextElementSibling;
         if (shown.length>1 && parent.className=='nav-item dropdown') for(let show of shown) show.classList.remove('show');
-        //if (event.target.nodeName != 'A') return;
-        // event.preventDefault();
-        // event.stopPropagation();
         parent.classList.toggle('show');
         child.classList.toggle('show');
         if (parent.className.indexOf('nav-item dropdown')!=-1){
@@ -360,7 +370,6 @@
             child.style.left=menu_left;
             child.style.top=menu_top;
         }
-
     };
 </script>
 </body>

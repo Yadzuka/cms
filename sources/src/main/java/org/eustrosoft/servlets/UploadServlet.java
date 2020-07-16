@@ -11,6 +11,8 @@ import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
@@ -30,6 +32,7 @@ public class UploadServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
      List filesCollection;
+     String redirectedPath = "";
      String realPath = ""; // real here means that it is the way, where customer wants to upload his file
      String className = "";
      String UPLOAD_PATH = "";
@@ -38,6 +41,7 @@ public class UploadServlet extends HttpServlet {
             log = new LogProvider(getServletContext().getInitParameter("logFilePath"));
             className = this.getClass().getName();
             user = request.getRemoteAddr();
+            redirectedPath = getRedirectPath(request);
             response.setContentType("text/html;charset=UTF-8");
             request.setCharacterEncoding("UTF-8");
             out = response.getWriter();
@@ -70,14 +74,15 @@ public class UploadServlet extends HttpServlet {
 
                     log.i(f.getName() + " was uploaded by " + user + " to " + realPath);
                 }
-                response.sendRedirect("index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
+                response.sendRedirect(redirectedPath +"?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()), StandardCharsets.UTF_8.toString()));
             } catch (FileExistsException ex) {
                 out.print("Файл уже существует!");
                 out.print("Скоро здесь появится возможность загрузить его новую версию!");
+                out.println("<button onclick='window.location.href=\"" + redirectedPath +"?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()))+"\"'>Назад</button>");
             }
         }catch (FileNotFoundException ex) {
             out.print("Файл(ы) не был(и) выбран(ы).");
-            out.print("<button onclick='window.location.href=\"index1.jsp?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()))+"\"'>Назад</button>");
+            out.print("<button onclick='window.location.href=\""+redirectedPath+"?d=" + URLEncoder.encode(realPath.substring(UPLOAD_PATH.length()))+"\"'>Назад</button>");
             out.flush();
             log.e(ex + " user:" + user + ".");
         } catch (Exception e){
@@ -86,6 +91,18 @@ public class UploadServlet extends HttpServlet {
             log.e(e + " user:" + user + ".");
         } finally {
 
+        }
+    }
+
+    private String getRedirectPath(HttpServletRequest request) throws URISyntaxException {
+        String responseContext = new URI(request.getHeader("referer")).getPath();
+
+        if(responseContext.contains("index1.jsp")) {
+            return "index1.jsp";
+        } else if(responseContext.contains("index2.jsp")) {
+            return "index2.jsp";
+        } else {
+            return null;
         }
     }
 
