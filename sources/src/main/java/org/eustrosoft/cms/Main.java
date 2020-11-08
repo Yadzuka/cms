@@ -8,6 +8,7 @@ import javax.servlet.jsp.JspWriter;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import org.eustrosoft.providers.LogProvider;
+import org.eustrosoft.tools.AWKTranslator;
 import name.fraser.neil.plaintext.diff_match_patch;
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
@@ -55,6 +56,7 @@ public class Main {
     private final String ACTION_VIEW_AS_VIDEO = "video_view";
     private final String ACTION_VIEW_AS_TEXT = "text_view";
     private final String ACTION_VIEW_AS_TABLE = "table_view";
+    private final String ACTION_VIEW_AS_WIKI = "wiki_view";
 
     private final int MAX_FILE_READ_SIZE = 10_000_000;
 
@@ -588,6 +590,11 @@ public class Main {
                         printTable(path);
                     }
 
+                    if(fileStatus.equals(ACTION_VIEW_AS_WIKI)) {
+                        html.wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
+                        printWiki(path);
+                    }
+
                     if(fileStatus.equals(ACTION_VIEW)) {
                         html.wln("<style> #left_block { } input { margin: 5px; } .col { max-width: max-content; } </style>");
                         html.startDiv("block", "left_block", "left");
@@ -609,6 +616,7 @@ public class Main {
                         html.printA("Картинку", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_IMG));
                         html.printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
                         html.printA("Таблицу", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TABLE));
+                        html.printA("Посмотреть в вики формате", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_WIKI));
                         html.nLine(); html.nLine(); printFileMeta(path);
                         html.nLine();
 
@@ -754,6 +762,18 @@ public class Main {
             } else {
                 return false;
             }
+        }
+
+        private void printWiki(String path) {
+            HTMLElements html = new HTMLElements();
+            String str = null;
+            try {
+                AWKTranslator awk = new AWKTranslator();
+                str = "Вывод после dowiki: " + "<br/>" + awk.doWiki(path);
+            } catch(IOException ex) {
+                str = "Произошла ошибка!";
+            }
+            html.wln(str);
         }
 
         private void printVideo(String path, int width, int height)  {

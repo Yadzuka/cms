@@ -19,6 +19,7 @@ jar:
 	@echo "Creating .class file"
 	javac ${SOURCES}/tools/ZLog.java
 	javac -cp ${LIBS} ${SOURCES}/providers/LogProvider.java
+	javac -cp ${LIBS} ${SOURCES}/tools/AWKTranslator.java
 	javac -cp ${LIBS} ${SOURCES}/servlets/DownloadServlet.java
 	javac -cp ${LIBS} ${SOURCES}/servlets/UploadServlet.java
 	javac -cp ${LIBS} ${SOURCES}/servlets/UploadServletV3.java

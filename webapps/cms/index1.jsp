@@ -15,6 +15,7 @@
 
     boolean is_forwarded = false;
     main.CGI_NAME = "index2.jsp";
+    
     try { is_forwarded = (boolean) request.getAttribute("FORWARD_REQUEST"); }
     catch (Exception ex) { is_forwarded = false; main.CGI_NAME = "index1.jsp"; }
 
