@@ -16,7 +16,7 @@ apache-commons:
 	cd ${WORKDIR} && ${FETCH} http://mirror.linux-ia64.org/apache//commons/fileupload/binaries/commons-fileupload-1.4-bin.zip
 	cd ${WORKDIR} && unzip commons-fileupload-1.4-bin.zip
 	cd ${WORKDIR} && cp commons-fileupload-1.4-bin/commons-fileupload-1.4.jar ../lib/
-	cd ${WORKDIR} && ${FETCH} https://apache-mirror.rbc.ru/pub/apache/commons/io/binaries/commons-io-2.6-bin.zip
+	cd ${WORKDIR} && ${FETCH} https://archive.apache.org/dist/commons/io/binaries/commons-io-2.6-bin.zip
 	cd ${WORKDIR} && unzip commons-io-2.6-bin.zip
 	cd ${WORKDIR} && cp commons-io-2.6/commons-io-2.6.jar ../lib/
 clean:

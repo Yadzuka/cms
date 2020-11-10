@@ -5,15 +5,15 @@
 		  http://java.sun.com/xml/ns/javaee/web-app_4_0.xsd"
            version="3.0">
 <!-- START QREdit section -->
-    <display-name>QREdit</display-name>
+    <display-name>EustroCMS</display-name>
     <context-param>
      <param-name>QRDB_PATH</param-name>
-     <param-value>/s/qrdb/EXAMPLESD/</param-value>
+     <param-value>/var/c1/</param-value>
     </context-param>
 
     <security-constraint>
       <web-resource-collection>
-         <web-resource-name>QREdit/Common user interface</web-resource-name>
+         <web-resource-name>EustroCMS/Common user interface</web-resource-name>
          <!-- Define the context-relative URL(s) to be protected -->
          <url-pattern>/*</url-pattern>
          <!-- If you list http methods, only those methods are protected -->
@@ -26,17 +26,17 @@
       </web-resource-collection>
       <auth-constraint>
          <!-- Anyone with one of the listed roles may access this area -->
-         <role-name>tisc</role-name>
+         <role-name>yadzukacms</role-name>
       </auth-constraint>
     </security-constraint>
     <login-config>
       <auth-method>BASIC</auth-method>
-      <realm-name>QREdit/Common user interface</realm-name>
+      <realm-name>EustroCMS/Common user interface</realm-name>
     </login-config>
 
     <!-- Security roles referenced by this web application -->
     <security-role>
-      <role-name>tisc</role-name>
+      <role-name>yadzukacms</role-name>
     </security-role>
 <!-- END QREdit section -->
 
@@ -71,22 +71,19 @@
     <!-- PARAMETER FOR ROOT DIRECTORY -->
     <context-param>
         <param-name>root</param-name>
-        <param-value>/s/tmpdata/qrdb/</param-value>
+        <param-value>/var/c1/</param-value>
     </context-param>
 
     <!-- PARAMETER FOR USER's DIRECTORY (Path - /s/usersdb/(user)/) -->
     <context-param>
         <param-name>user</param-name>
-        <param-value>QR.QXYZ.RU/members/EXAMPLESD</param-value>
-<!--
-        <param-value>QR.QXYZ.RU</param-value>
--->
+        <param-value>yadzukacms.data</param-value>
     </context-param>
 
     <!-- PARAMETER FOR LOGGING (file path) -->
     <context-param>
         <param-name>logFilePath</param-name>
-        <param-value>/var/log/EustroCMS/cms.log</param-value>
+        <param-value>/var/c1/yadzukacms.data/var/log/cms.log</param-value>
     </context-param>
     
     <welcome-file-list>

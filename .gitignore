@@ -2,6 +2,7 @@
 out/
 .idea
 webapps/cms/WEB-INF/lib
+webapps/cms/WEB-INF/web.xml
 target
 contrib/lib/DiffPatchMatch.jar
 contrib/lib/commons-fileupload-1.4.jar
@@ -13,4 +14,5 @@ contrib/work/
 work/
 RCS/
 
+log/
 
