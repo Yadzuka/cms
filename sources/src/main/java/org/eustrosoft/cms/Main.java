@@ -719,8 +719,10 @@ public class Main {
         private void printFileMeta(String file) {
             HTMLElements html = new HTMLElements();
             File showingFile = new File(file);
+            FileInfo fi = new FileInfo();
             // SIC! All metadata goes here
             html.startDiv("");
+            html.wln("Имя файла: " + fi.basename(showingFile.toString())); html.nLine();
             html.wln("Размер: " + showingFile.length() + " байт."); html.nLine();
             // Права: (чтение, запись)
             html.wln("Права на: " + (showingFile.canRead() ? " чтение" : "") + (showingFile.canWrite() ? " запись" : ""));
