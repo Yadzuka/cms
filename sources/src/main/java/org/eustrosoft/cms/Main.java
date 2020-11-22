@@ -50,6 +50,7 @@ public class Main {
     private final String ACTION_MKDIR = "mkdir";
     private final String ACTION_DELETE_DIR = "rmdir";
     private final String ACTION_RENAME = "rename";
+    private final String ACTION_RENAME_DIR = "renamedir";
 
     private final String ACTION_EDIT = "edit";
     private final String ACTION_VIEW_AS_IMG = "image_view";
@@ -268,6 +269,15 @@ public class Main {
                 return false;
         }
 
+        private boolean renamedir(String newDirName) {
+            File file = new File(currentDirectory);
+            File dest = new File(goUpside(currentDirectory) + newDirName);
+            if(file.renameTo(dest))
+                return true;
+            else
+                return false;
+        }
+
         // Make directory
         private boolean mkdir(String path/*, String [] params*/) {
             // checkAccess(user); SIC! Тут пока что так, как можно, потому что ограничений никаких нет
@@ -423,7 +433,6 @@ public class Main {
                 if(!showedPath.endsWith(unixSlash))
                     showedPath = showedPath + unixSlash;
                 actual = new File(currentDirectory);
-
                 printTableHead(request);
                 html.startTBody("");
                 if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
@@ -517,6 +526,10 @@ public class Main {
                         else if(request.getParameter(ACTION_CREATE) != null) {
                             fileOperations.touch(path + newFileName);
                             response.sendRedirect(getPathReference(encodeValue(showedPath)));
+                        } else if(request.getParameter(ACTION_RENAME_DIR) != null) {
+                            html.wln("I'm in the rmdir section (request)");
+                            fileOperations.renamedir(newFileName);
+                            response.sendRedirect(getPathReference(encodeValue(fileOperations.goUpside(showedPath) + newFileName + unixSlash)));
                         } else {
                             html.wln("Не удалось создать файл!");
                             html.printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
@@ -653,6 +666,12 @@ public class Main {
                         fileOperations.rename(fileInfo.basename(showedPath), newFileName);
                         response.sendRedirect(getFileReference(fileOperations.goUpside(showedPath) + newFileName, ACTION_VIEW));
                     }
+
+                    /*if(fileStatus.equals(ACTION_RENAME_DIR)) {
+                        String newDirName = request.getParameter();
+                        fileOperations.renamedir(fileInfo.dirname(showedPath), newFirName);
+                        response.sendRedirect(getFileReference(fileOperations.goUpside(showedPath), ACTION_VIEW));
+                    }*/
 
                     if(fileStatus.equals(ACTION_COPY)) {
                         String targetPath = request.getParameter(PARAM_DIRECTORY) + request.getParameter(PARAM_FILE);
@@ -840,12 +859,17 @@ public class Main {
                 html.startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
                 html.printSubmit("Удалить директорию");
                 html.endForm();
+                
+                html.startForm("POST", CGI_NAME + "?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
+                html.printInput("text", "dropdown-item", PARAM_FILE, "Название новой директории", false);
+                html.wln("<input type=\"submit\" name=\""+ACTION_RENAME_DIR+"\" value=\"Переименовать директорию\"/>&nbsp;");
+                html.endForm();
             }
             html.endDiv();
             html.startDiv("col");
             printHeadPath(request);
             html.startForm("POST", CGI_NAME + "?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
-            html.printInput("text", "dropdown-item", PARAM_FILE, "Введите имя", false);
+            html.printInput("text", "dropdown-item", PARAM_FILE, "Название создаваемого файла/директории", false);
             html.wln("<input type=\"submit\" name=\""+ACTION_CREATE+"\" value=\"Создать файл\"/>&nbsp;");
             html.wln("<input type=\"submit\" name=\""+ACTION_MKDIR+"\" value=\"Создать директорию\"/>&nbsp;");
             html.endForm();
