@@ -1,6 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java"
          import="java.util.*"
          import="java.io.*"
+         import="org.eustrosoft.cms.Main"
+         import="org.eustrosoft.providers.LogProvider"
 %>
 <%!
 static final String MT_DROPDOWN = "D";
@@ -233,14 +235,14 @@ boolean is_error = false;
 void setMenuOut(JspWriter m_out) {out = m_out;}
 
 %>
-
 <!DOCTYPE html>
 <html lang="ru">
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+    <link rel="stylesheet" href="contrib/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">  <!-- SIC! external-ref (см выше) -->
+    <link href="css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <title>Menu JSP </title>
   </head>
@@ -271,6 +273,20 @@ switch(lang){
 beginMenuNavBar();
 printMenuPage();
 closeMenuNavBar();
+
+    //************************************************************
+    // org.eustrosoft.cms.Main - Class for printing all CMS stuff!
+    //************************************************************
+    Main main = new Main();
+    Main.WARHCMS cms = main.getWARHCMSInstance();
+    main.out = out;
+    long enter_time = System.currentTimeMillis();
+    main.initUser(request);
+    request.setCharacterEncoding("UTF-8");
+    main.log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
+    main.CGI_NAME = "index3.jsp";
+    cms.process(request, response);
+    //*************************************************************
 %>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
