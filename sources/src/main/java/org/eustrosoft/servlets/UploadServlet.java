@@ -97,13 +97,7 @@ public class UploadServlet extends HttpServlet {
     private String getRedirectPath(HttpServletRequest request) throws URISyntaxException {
         String responseContext = new URI(request.getHeader("referer")).getPath();
 
-        if(responseContext.contains("index1.jsp")) {
-            return "index1.jsp";
-        } else if(responseContext.contains("index2.jsp")) {
-            return "index2.jsp";
-        } else {
-            return null;
-        }
+        return responseContext;
     }
 
     private List initializeRepository(HttpServletRequest request, String UPLOAD_PATH) {
