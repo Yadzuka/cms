@@ -69,6 +69,8 @@ public class DownloadServlet extends HttpServlet {
     }
 
     private boolean checkForInjection(String path) {
+        if(path.contains("..")) //             SIC! к вопросу ниже! 
+            return false;
         if(path.startsWith(HOME_DIRECTORY)) // SIC! /s/userdb/yadzuka/../../../etc/passwd
             return true;
         else
