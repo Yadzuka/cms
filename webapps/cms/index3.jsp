@@ -58,7 +58,7 @@ null,null,null,null,null,null,null,null,null, // this item ignored
 "--", "move", Y, MT_CMD,null, "Move","Переместить","XX",null,
 "--", "rename", Y, MT_CMD,null, "Rename","Переименовать","XX",null,
 "--", "create", Y, MT_CMD,null, "Create","Создать","XX",null,
-"--", "delete", Y, MT_CMD,null, "Delete","Удалить","XX",null,
+"--", "rmdir", Y, MT_CMD,null, "Delete","Удалить","XX",null,
 "--", "block", Y, MT_CMD,null, "Block","Заблокировать","XX",null,
 "--", "unblock", Y, MT_CMD,null, "Unblock","Разблокиовать","XX",null,
 "--", "create", Y, MT_CMD,null, "#Create#","#Cоздать#","XX",null,
@@ -182,18 +182,20 @@ continue;}
 }
 //set of WASkin methods for creating menu
 public void print_MenuItem(String id,String type,String action, String caption){
-if(action==null)action="#";
-w("        <a id='" + id + "' ");
+if(action==null) action="#";
 if(MT_DROPDOWN.equals(type)) {
+w("        <a id='" + id + "' ");
 w("class='nav-link dropdown-toggle' href='#' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'");
+w(">");
+w(caption);
+w("</a>\n");
 }else{
-	w("class='dropdown-item' href='");
-	w(action);
-  w("'");
+    w("<form action='" + action + "' method='POST' ");
+	w("class='dropdown-item'");
+    w(">");
+    w("<input type='submit' value='"+caption+"'/>");
+    w("</form>");
 }
-	w(">");
-  w(caption);
-  w("</a>\n");
 }
 
 public void print_beginMenu(){
@@ -233,7 +235,6 @@ boolean is_error = false;
   //  private void wln(String s){ w(s);w("\n");}
   //  private void wln(){w("\n");}
 void setMenuOut(JspWriter m_out) {out = m_out;}
-
 %>
 <!DOCTYPE html>
 <html lang="ru">
