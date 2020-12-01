@@ -196,9 +196,8 @@ w(caption);
 w("</a>\n");
 }else{
     w("<form action='" + CGI_NAME + "?" + PARAM_D + "="+d+"&cmd=" + action + "' method='POST' ");
-	w("class='dropdown-item'");
     w(">");
-    w("<input type='submit' value='"+caption+"'/>");
+    w("<input class='dropdown-item' type='submit' value='"+caption+"'/>");
     w("</form>");
 }
 }
