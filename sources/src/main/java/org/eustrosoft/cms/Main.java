@@ -20,7 +20,7 @@ import java.nio.file.attribute.PosixFilePermission;
 
 public class Main {
     public String CGI_NAME = "index1.jsp"; // Page domain name
-    private String VERSION = "0.1";
+    private String VERSION = "0.2";
     private final String CGI_TITLE = "CMS system"; // Upper page info
     private final String JSP_VERSION = "$id$"; // Id for jsp version
     public JspWriter out;
@@ -71,7 +71,7 @@ public class Main {
     private String userIP;
     private String HOME_DIRECTORY;
     private String currentDirectory = HOME_DIRECTORY;
-    private String showedPath;
+    public String showedPath;
     private final String unixSlash = "/";
 
     Map<String, String> references;
@@ -458,7 +458,6 @@ public class Main {
             html.endTable();
         }
 
-        // SIC! тут в формах тоже надо менять ссылки (currentDirectory), соответственно это либо в сервлетах надо учитывать либо ещё что
         private void printServerButton()  {
             HTMLElements html = new HTMLElements();
             html.startDiv("col", "", "right");
