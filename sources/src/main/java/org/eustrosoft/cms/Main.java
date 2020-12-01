@@ -20,7 +20,7 @@ import java.nio.file.attribute.PosixFilePermission;
 
 public class Main {
     public String CGI_NAME = "index1.jsp"; // Page domain name
-    private String VERSION = "0.2";
+    private String VERSION = "0.2.1";
     private final String CGI_TITLE = "CMS system"; // Upper page info
     private final String JSP_VERSION = "$id$"; // Id for jsp version
     public JspWriter out;
@@ -855,10 +855,6 @@ public class Main {
             html.printH("Содержание директории: ", 5);
 
             if(!showedPath.equals(unixSlash)) {
-                html.startForm("POST", getFileReference(showedPath, ACTION_DELETE_DIR));
-                html.printSubmit("Удалить директорию");
-                html.endForm();
-                
                 html.startForm("POST", CGI_NAME + "?" + PARAM_D + "=" + encodeValue(showedPath) + "&" + PARAM_ACTION + "=" + ACTION_CREATE);
                 html.printInput("text", "dropdown-item", PARAM_FILE, "Название новой директории", false);
                 html.wln("<input type=\"submit\" name=\""+ACTION_RENAME_DIR+"\" value=\"Переименовать директорию\"/>&nbsp;");
