@@ -195,10 +195,16 @@ w(">");
 w(caption);
 w("</a>\n");
 }else{
-    w("<a href='" + CGI_NAME + "?" + PARAM_D + "=" + d + action + "' class='dropdown-item'>");
+    if(MT_CMD.equals(type) || MT_LANG.equals(type)) {
+        w("<a href='" + CGI_NAME + "?" + PARAM_D + "=" + d + action + "' class='dropdown-item'>");
+
+    } else {
+        w("<a href='" + action + "' class='dropdown-item'>");
+
+    }
     w(caption);
     w("</a>");
-}
+    }
 }
 
 public void print_beginMenu(){
@@ -238,42 +244,21 @@ boolean is_error = false;
   //  private void wln(String s){ w(s);w("\n");}
   //  private void wln(){w("\n");}
 void setMenuOut(JspWriter m_out) {out = m_out;}
-%>
-<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="contrib/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">  <!-- SIC! external-ref (см выше) -->
-    <link href="css/style.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <title>Menu JSP </title>
-  </head>
-  <body>
-<%
-setMenuOut(out);
-String lang = LANG_RU;
-try {lang = request.getParameter("lang");
-switch(lang){
-    case LANG_RU:
-    MENU_II_CAPTION = CAPTION_RU;
-    break;
-    case LANG_EN:
-    MENU_II_CAPTION = CAPTION_EN;
-    break;
-    case LANG_ZH:
-    MENU_II_CAPTION = CAPTION_ZH;
-    break;
-    case LANG_CUSTOM:
-    MENU_II_CAPTION = CAPTION_RU;
-    break;
-    default:
-    MENU_II_CAPTION = CAPTION_RU;
-}
-}catch (Exception e){
-    MENU_II_CAPTION = CAPTION_RU;
-}
+%><%
+    setMenuOut(out);
+    String lang = LANG_RU;
+    try {
+        lang = request.getParameter("lang");
+        switch(lang) {
+            case LANG_RU:
+            case LANG_CUSTOM:
+                          MENU_II_CAPTION = CAPTION_RU; break;
+            case LANG_EN: MENU_II_CAPTION = CAPTION_EN; break;
+            case LANG_ZH: MENU_II_CAPTION = CAPTION_ZH; break;
+            default:      MENU_II_CAPTION = CAPTION_RU;
+        }
+    }
+    catch (Exception e){ MENU_II_CAPTION = CAPTION_RU; }
     //************************************************************
     // org.eustrosoft.cms.Main - Class for printing all CMS stuff!
     //************************************************************
@@ -288,15 +273,29 @@ switch(lang){
     //*************************************************************
     String d = request.getParameter(PARAM_D);
     if(d == null) d = "/";
-
+%>
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="contrib/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">  <!-- SIC! external-ref (см выше) -->
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <title>Menu JSP </title>
+  </head>
+  <body>
+<%
+    // Upside menu
     beginMenuNavBar();
     printMenuPage(d);
     closeMenuNavBar();
-
+    //****************
 
     // org.eustrosoft.cms.Main process
     cms.process(request, response);
-    //*************************************************************
+    //********************************
 %>
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
