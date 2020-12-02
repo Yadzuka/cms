@@ -196,12 +196,13 @@ w(caption);
 w("</a>\n");
 }else{
     if(MT_CMD.equals(type) || MT_LANG.equals(type)) {
-        w("<a href='" + CGI_NAME + "?" + PARAM_D + "=" + d + action + "' class='dropdown-item'>");
+        w("<a href='" + CGI_NAME + "?" + PARAM_D + "=" + d + action + "&token=" + getRandomToken());
 
     } else {
-        w("<a href='" + action + "' class='dropdown-item'>");
+        w("<a href='" + action);
 
     }
+    w("' class='dropdown-item'>");
     w(caption);
     w("</a>");
     }
@@ -244,6 +245,15 @@ boolean is_error = false;
   //  private void wln(String s){ w(s);w("\n");}
   //  private void wln(){w("\n");}
 void setMenuOut(JspWriter m_out) {out = m_out;}
+
+private String getRandomToken() {
+    long mills = System.nanoTime();
+    return Long.toHexString(mills);
+}
+
+//*****************************
+// START SERVICE METHOD SECTION
+//*****************************
 %><%
     setMenuOut(out);
     String lang = LANG_RU;
