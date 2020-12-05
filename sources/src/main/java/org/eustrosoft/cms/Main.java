@@ -20,7 +20,7 @@ import java.nio.file.attribute.PosixFilePermission;
 
 public class Main {
     public String CGI_NAME = "index1.jsp"; // Page domain name
-    private String VERSION = "0.2.1";
+    private String VERSION = "0.2.2";
     private final String CGI_TITLE = "CMS system"; // Upper page info
     private final String JSP_VERSION = "$id$"; // Id for jsp version
     public JspWriter out;
@@ -211,11 +211,9 @@ public class Main {
     private String getPathReference(String path) {
         return CGI_NAME + "?" + PARAM_D +"="+ path;
     }
-    // SIC! Ссылки снизу поменять либо на path + file, либо заменить на один параметр
     // File reference with action
     private String getFileReference(String path, String cmd) {
         return CGI_NAME + "?" + PARAM_D + "=" + path + "&" + PARAM_ACTION + "=" + cmd;
-        // return CGI_NAME + "?" + PARAM_PATH + "=" + path + file + "&" + PARAM_ACTION + "=" + cmd;
     }
 
     public class FileOperations {
@@ -563,7 +561,6 @@ public class Main {
                     if (fileStatus.equals(ACTION_DELETE)) {
                         //SIC!
                         if(request.getParameter("yes_delete") != null) {
-                            html.wln(showedPath);
                             fileOperations.rm(path);
                             response.sendRedirect(getPathReference(encodeValue(fileOperations.goUpside(showedPath))));
                         } else if(request.getParameter("no_delete") != null) {
