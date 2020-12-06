@@ -24,6 +24,7 @@ jar:
 	javac -cp ${LIBS} ${SOURCES}/servlets/UploadServlet.java
 	javac -cp ${LIBS} ${SOURCES}/servlets/UploadServletV3.java
 	javac -cp ${LIBS} ${SOURCES}/cms/Main.java
+	javac -cp ${LIBS} ${SOURCES}/htmlmenu/Menu.java
 	cd ${PACKAGE} && awk 'BEGIN{print("Manifest-Version: 1.0"); print("Created-By: 1.6.0_19 (Sun Microsystems Inc.)");}' > manifest.mf
 	cd ${PACKAGE} && jar c0mf manifest.mf ${JARFILE} org
 	cp ${PACKAGE}/${JARFILE} ${WEBINFLIB}

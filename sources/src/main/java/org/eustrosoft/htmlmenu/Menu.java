@@ -256,4 +256,30 @@ public class Menu {
         return Long.toHexString(mills);
     }
 
+    public void printMenu(String lang, String d) {
+        try {
+            switch (lang) {
+                case LANG_RU:
+                case LANG_CUSTOM:
+                    MENU_II_CAPTION = CAPTION_RU;
+                    break;
+                case LANG_EN:
+                    MENU_II_CAPTION = CAPTION_EN;
+                    break;
+                case LANG_ZH:
+                    MENU_II_CAPTION = CAPTION_ZH;
+                    break;
+                default:
+                    MENU_II_CAPTION = CAPTION_RU;
+            }
+        } catch (Exception e){ MENU_II_CAPTION = CAPTION_RU; }
+        beginMenuNavBar();
+        printMenuPage(d);
+        closeMenuNavBar();
+    }
+
+    public Menu(JspWriter writer) {
+        setMenuOut(writer);
+    }
+
 }
