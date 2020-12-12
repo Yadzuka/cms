@@ -9,6 +9,7 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import org.eustrosoft.providers.LogProvider;
 import org.eustrosoft.tools.AWKTranslator;
+import org.eustrosoft.htmlmenu.Menu;
 import name.fraser.neil.plaintext.diff_match_patch;
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
@@ -37,6 +38,7 @@ public class Main {
     private final String PARAM_ACTION = "cmd";
     private final String PARAM_FILE = "file";
     private final String PARAM_DIRECTORY = "directory";
+    private final String PARAM_LANG = "lang";
     private final String FILE_TEXTAREA_NAME = "file_text";
 
 
@@ -75,7 +77,16 @@ public class Main {
     private final String unixSlash = "/";
 
     Map<String, String> references;
+    Menu upsideMenu;
 
+
+    private void printUpsideMenu(HttpServletRequest request) {
+        upsideMenu = new Menu(this.out);
+        upsideMenu.CGI_NAME = this.CGI_NAME;
+        String lang = getRequestParameter(request, PARAM_LANG, "ru");
+        String d = getRequestParameter(request, PARAM_D, unixSlash).substring(HOME_DIRECTORY.length());
+        upsideMenu.printMenu(lang, d);
+    }
 
     public void initUser(HttpServletRequest request) {
         HTMLElements html = new HTMLElements();
@@ -401,6 +412,8 @@ public class Main {
     }
     public class WARHCMS {
         public void process(HttpServletRequest req, HttpServletResponse resp) {
+            upsideMenu = new Menu(out);
+
             FileInfo fileInfo = new FileInfo(); FileOperations fileOperations = new FileOperations();
             String dParameter = getRequestParameter(req, PARAM_D, showedPath);
             String fileParameter = fileInfo.basename(dParameter);
@@ -415,6 +428,7 @@ public class Main {
             }
             references.put(getPathReference(unixSlash), "root");
 
+            printUpsideMenu(req);
             boolean isFileAction = fileStatus != null;
             if (isFileAction) {
                 processFileRequest(dParameter, fileStatus, req, resp);
@@ -431,6 +445,7 @@ public class Main {
                 if(!showedPath.endsWith(unixSlash))
                     showedPath = showedPath + unixSlash;
                 actual = new File(currentDirectory);
+
                 printTableHead(request);
                 html.startTBody("");
                 if (!currentDirectory.equals(HOME_DIRECTORY + "/")) {
@@ -846,6 +861,7 @@ public class Main {
         }
 
         private void printTableHead(HttpServletRequest request) {
+
             HTMLElements html = new HTMLElements();
             html.startDiv("row");
             html.startDiv("col");
