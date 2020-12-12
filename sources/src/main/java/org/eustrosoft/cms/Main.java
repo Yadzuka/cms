@@ -428,11 +428,11 @@ public class Main {
             }
             references.put(getPathReference(unixSlash), "root");
 
-            printUpsideMenu(req);
             boolean isFileAction = fileStatus != null;
             if (isFileAction) {
                 processFileRequest(dParameter, fileStatus, req, resp);
             } else {
+                printUpsideMenu(req);
                 printMainBlock(req);
             }
             printFooter();
@@ -620,6 +620,7 @@ public class Main {
                     }
 
                     if(fileStatus.equals(ACTION_VIEW)) {
+                        printUpsideMenu(request);
                         html.wln("<style> #left_block { } input { margin: 5px; } .col { max-width: max-content; } </style>");
                         html.startDiv("block", "left_block", "left");
                         html.startDiv("row");
