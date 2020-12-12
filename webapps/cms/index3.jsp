@@ -12,6 +12,8 @@ static final String PARAM_D = "d"; // d - file or directory path
 private JspWriter out;
 
 %><%
+    request.setCharacterEncoding("UTF-8");
+    response.setCharacterEncoding("UTF-8");
     //setMenuOut(out);
     String lang = null;
     lang = request.getParameter("lang");
