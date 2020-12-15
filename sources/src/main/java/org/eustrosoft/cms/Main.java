@@ -991,4 +991,52 @@ public class Main {
         }
         private void nLine() { wln("<br/>"); }
     }
+
+    class FilesHistory {
+
+        private final String HISTORY_DIR_NAME = ".cms";
+        private final String HISTORY_FILE_NAME = "master.list.csv";
+
+        public FilesHistory(String path) throws IOException {
+            setup(path);
+        }
+
+        public void setup(String path) throws IOException {
+            Path historyDir = Paths.get(path + HISTORY_DIR_NAME + unixSlash);
+            Path historyFile = Paths.get(historyDir + HISTORY_FILE_NAME);
+            File directory = historyDir.toFile();
+            if(!directory.exists()) {
+                Files.createDirectory(historyDir);
+                Files.createFile(historyFile);
+            }
+            else { if(!Files.exists(historyFile)) Files.createFile(historyFile); }
+        }
+
+        public void saveFileState(String path) throws IOException {
+            FileOperations operations = new FileOperations();
+            String historyFilepath = operations.goUpside(path) + HISTORY_DIR_NAME + unixSlash + HISTORY_FILE_NAME;
+            String fileState = getFileStateString(path);
+
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(
+                            new FileOutputStream(historyFilepath)));
+            writer.write(fileState);
+            writer.write("\n");
+            writer.close();
+        }
+
+        private String getFileStateString(String path) {
+            File directory = new File(path);
+            String dirName = directory.getName();
+            String lastModified = new SimpleDateFormat("dd.MM.yy HH:mm").format(directory.lastModified());
+            String space = String.format("%d", directory.length());
+            String rights = (directory.canExecute() ? "x" : "-") +
+                            (directory.canRead() ? "r" : "-") +
+                            (directory.canWrite() ? "w" : "-");
+            boolean isDirectory = directory.isDirectory();
+            return String.format("%s;%s;%s;%s;%s", dirName, String.valueOf(isDirectory), rights, lastModified, space);
+        }
+
+    }
+
 }
