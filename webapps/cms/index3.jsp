@@ -14,15 +14,6 @@ private JspWriter out;
 %><%
     request.setCharacterEncoding("UTF-8");
     response.setCharacterEncoding("UTF-8");
-    //setMenuOut(out);
-    //String lang = null;
-    //lang = request.getParameter("lang");
-
-    //*************************************************************
-    /*Menu menu = new Menu(out);
-    menu.CGI_NAME = CGI_NAME;
-    String d = request.getParameter(PARAM_D);
-    if(d == null) d = "/";*/
 
     //************************************************************
     // org.eustrosoft.cms.Main - Class for printing all CMS stuff!
@@ -32,7 +23,6 @@ private JspWriter out;
     main.out = out;
     long enter_time = System.currentTimeMillis();
     main.initUser(request);
-    request.setCharacterEncoding("UTF-8");
     main.log = new LogProvider(this.getServletContext().getInitParameter("logFilePath"));
     main.CGI_NAME = CGI_NAME;
 
@@ -50,10 +40,6 @@ private JspWriter out;
   </head>
   <body>
 <%
-    //menu.printMenu(lang, d);
-
-    //printAssertSection();
-
     // org.eustrosoft.cms.Main process
     cms.process(request, response);
     //********************************
