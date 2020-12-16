@@ -11,6 +11,7 @@ import org.eustrosoft.providers.LogProvider;
 import org.eustrosoft.tools.AWKTranslator;
 import org.eustrosoft.htmlmenu.Menu;
 import name.fraser.neil.plaintext.diff_match_patch;
+
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -21,7 +22,7 @@ import java.nio.file.attribute.PosixFilePermission;
 
 public class Main {
     public String CGI_NAME = "index1.jsp"; // Page domain name
-    private String VERSION = "0.2.2";
+    private String VERSION = "0.2.3";
     private final String CGI_TITLE = "CMS system"; // Upper page info
     private final String JSP_VERSION = "$id$"; // Id for jsp version
     public JspWriter out;
@@ -588,15 +589,17 @@ public class Main {
 
                     if(fileStatus.equals(ACTION_VIEW_AS_TEXT)) {
                         html.wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
-                        BufferedReader br = new BufferedReader(new FileReader(path));
+                        BufferedReader bufferedReader = new BufferedReader(
+                                new InputStreamReader(
+                                        new FileInputStream(path), StandardCharsets.UTF_8));
                         String bufferString = "";
                         html.nLine();
-                        while ((bufferString = br.readLine()) != null) {
+                        while ((bufferString = bufferedReader.readLine()) != null) {
                             bufferString = translate_tokens(bufferString, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
                             html.wln(bufferString);
                             html.nLine();
                         }
-                        br.close();
+                        bufferedReader.close();
                     }
 
                     if(fileStatus.equals(ACTION_VIEW_AS_IMG)) {
@@ -660,8 +663,9 @@ public class Main {
 
                         if(!fileInfo.isVideo(path) && !fileInfo.isImage(path)) {
                             html.nLine();
-                            FileReader fileReader = new FileReader(path);
-                            BufferedReader bufferedReader = new BufferedReader(fileReader);
+                            BufferedReader bufferedReader = new BufferedReader(
+                                    new InputStreamReader(
+                                            new FileInputStream(path), StandardCharsets.UTF_8));
                             html.wln("Первые 100 строк файла:"); html.nLine();
                             String buff = "";
                             int numOfStrings = 0;
@@ -670,6 +674,7 @@ public class Main {
                                 html.wln(buff); html.nLine();
                                 numOfStrings++;
                             }
+                            bufferedReader.close();
                         }
                     }
 
@@ -709,17 +714,19 @@ public class Main {
                         } else if(printImageFile(unixSlash + fileInfo.basename(path)) || printVideoFile(unixSlash + fileInfo.basename(path))) {
                             printFormForAnyFile(showedPath, fileStatus);
                         } else {
+                            BufferedReader bufferedReader = null;
                             try {
-                                FileReader fileReader = new FileReader(path);
-                                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                                bufferedReader = new BufferedReader(
+                                        new InputStreamReader(
+                                                new FileInputStream(path), StandardCharsets.UTF_8));
                                 String readString;
                                 while ((readString = bufferedReader.readLine()) != null) {
                                     sb.append(readString).append("\n");
                                 }
-                                fileReader.close();
-                                bufferedReader.close();
                             } catch (Exception ex) {
                                 html.wln("Cant read file");
+                            } finally {
+                                try { bufferedReader.close(); } catch (Exception ex) { }
                             }
                             printFileForm(showedPath, fileStatus, sb.toString());
                         }
@@ -828,15 +835,18 @@ public class Main {
 
         private void printTable(String path) {
             HTMLElements html = new HTMLElements();
+            BufferedReader bufferedReader = null;
             try {
-                BufferedReader br = new BufferedReader(new FileReader(path));
+                bufferedReader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream(path), StandardCharsets.UTF_8));
                 String singleLine = "";
                 String dilimiter = ";";
                 String[] cells;
                 html.wln("<br/>");
                 html.startTable("table table-borderedce ");
                 html.startTBody("");
-                while ((singleLine = br.readLine()) != null) {
+                while ((singleLine = bufferedReader.readLine()) != null) {
                     cells = singleLine.split(dilimiter);
                     html.startTr();
                     for (int i = 0; i < cells.length; i++) {
@@ -851,6 +861,8 @@ public class Main {
                 html.endTable();
             }catch(IOException ex) {
                 html.wln("Не удалось показать таблицу.");
+            } finally {
+                try { bufferedReader.close(); } catch (Exception ex) { }
             }
         }
 
