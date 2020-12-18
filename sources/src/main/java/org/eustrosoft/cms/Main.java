@@ -311,8 +311,10 @@ public class Main {
 
         // Delete directory (with no files)
         private boolean rmdir(String path) {
+            FileInfo info = new FileInfo();
             File directory = new File(path);
-            if(directory.listFiles().length == 0)
+            if(directory.listFiles().length == 0
+                    && !info.basename(path).equals(".cms"))
                 return directory.delete();
             return false;
         }
@@ -528,13 +530,26 @@ public class Main {
             HTMLElements html = new HTMLElements();
             try {
                 if (path != null && fileStatus != null) {
+
+                    //*************************************************
+                    //  Function to view user rights to create/read/delete and other
+                    //  checkUserRights(HttpServletRequest request, String userLogin|ip)
+                    //*************************************************
+
                     FileInfo fileInfo = new FileInfo(); FileOperations fileOperations = new FileOperations();
                     if (fileStatus.equals(ACTION_CREATE)) {
                         String newFileName = getRequestParameter(request, PARAM_FILE);
 
                         if(request.getParameter(ACTION_MKDIR) != null) {
-                            fileOperations.mkdir(path + newFileName);
-                            response.sendRedirect(getPathReference(encodeValue(showedPath)));
+                            String newDirName = path + newFileName;
+                            fileOperations.mkdir(newDirName);
+                            try {
+                                FilesHistory history0 = new FilesHistory(path);
+                                history0.saveFileState(newDirName);
+                                FilesHistory history1 = new FilesHistory(newDirName);
+                            }
+                            catch (IOException ex ) { html.w(ex.getMessage()); }
+                            finally { response.sendRedirect(getPathReference(encodeValue(showedPath))); }
                         }
                         else if(request.getParameter(ACTION_CREATE) != null) {
                             fileOperations.touch(path + newFileName);
@@ -552,15 +567,6 @@ public class Main {
 
                     if (request.getParameter(ACTION_SAVE) != null) {
                         fileOperations.saveFile(path, request);
-                    }
-
-                    if (fileStatus.equals(ACTION_MKDIR)) {
-                        String newDirName = getRequestParameter(request, PARAM_FILE);
-                        if(fileOperations.mkdir(path + newDirName)) response.sendRedirect(getPathReference(encodeValue(showedPath)));
-                        else {
-                            html.wln("Ошибка в создании директории!");
-                            html.printA("Вернуться назад", getPathReference(encodeValue(showedPath)));
-                        };
                     }
 
                     if (fileStatus.equals(ACTION_DELETE_DIR)) {
@@ -1014,14 +1020,17 @@ public class Main {
         }
 
         public void setup(String path) throws IOException {
-            Path historyDir = Paths.get(path + HISTORY_DIR_NAME + unixSlash);
-            Path historyFile = Paths.get(historyDir + HISTORY_FILE_NAME);
+            Path historyDir = Paths.get(path + unixSlash + HISTORY_DIR_NAME);
+            Path historyFile = Paths.get(historyDir + unixSlash + HISTORY_FILE_NAME);
             File directory = historyDir.toFile();
+            HTMLElements html = new HTMLElements();
             if(!directory.exists()) {
                 Files.createDirectory(historyDir);
                 Files.createFile(historyFile);
             }
-            else { if(!Files.exists(historyFile)) Files.createFile(historyFile); }
+            else {
+                if(!Files.exists(historyFile)) Files.createFile(historyFile);
+            }
         }
 
         public void saveFileState(String path) throws IOException {
@@ -1031,7 +1040,7 @@ public class Main {
 
             BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(
-                            new FileOutputStream(historyFilepath)));
+                            new FileOutputStream(historyFilepath, true), StandardCharsets.UTF_8));
             writer.write(fileState);
             writer.write("\n");
             writer.close();
