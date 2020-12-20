@@ -413,6 +413,7 @@ public class Main {
             fh.setup(fi.dirname(path));
             fh.makeDirForAllFiles(fi.dirname(path));
             fh.backupFile(path);
+            fh.saveFileState(path);
         }
     }
 
@@ -1066,7 +1067,6 @@ public class Main {
             try {
                 FileOperations fo = new FileOperations();
                 FileInfo fi = new FileInfo();
-                String historyDir = path.endsWith(unixSlash) ? path + HISTORY_DIR_NAME : path + unixSlash + HISTORY_DIR_NAME;
                 File[] allFilesInDirectory = new File(path).listFiles();
                 Path dirToFile;
                 for (int i = 0; i < allFilesInDirectory.length; i++) {
