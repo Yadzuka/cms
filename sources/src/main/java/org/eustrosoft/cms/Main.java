@@ -1023,7 +1023,6 @@ public class Main {
             Path historyDir = Paths.get(path + unixSlash + HISTORY_DIR_NAME);
             Path historyFile = Paths.get(historyDir + unixSlash + HISTORY_FILE_NAME);
             File directory = historyDir.toFile();
-            HTMLElements html = new HTMLElements();
             if(!directory.exists()) {
                 Files.createDirectory(historyDir);
                 Files.createFile(historyFile);
@@ -1031,6 +1030,8 @@ public class Main {
             else {
                 if(!Files.exists(historyFile)) Files.createFile(historyFile);
             }
+
+            makeDirForAllFiles(path);
         }
 
         public void saveFileState(String path) throws IOException {
@@ -1044,6 +1045,34 @@ public class Main {
             writer.write(fileState);
             writer.write("\n");
             writer.close();
+        }
+
+        private void makeDirForAllFiles(String path) {
+            HTMLElements el = new HTMLElements();
+            try {
+                FileOperations fo = new FileOperations();
+                String historyDir = path.endsWith(unixSlash) ? path + HISTORY_DIR_NAME : path + unixSlash + HISTORY_DIR_NAME;
+                File[] allFilesInDirectory = new File(path).listFiles();
+                el.w("Path: " + path);
+                el.w(String.valueOf(allFilesInDirectory.length));
+                el.w("History dir: " + historyDir + " ");
+                Path dirToFile;
+                for (int i = 0; i < allFilesInDirectory.length; i++) {
+                    dirToFile = Paths.get(historyDir + unixSlash + allFilesInDirectory[i].getName());
+                    el.w("Element " + String.valueOf(i) + " " + dirToFile + "<br/>");
+                    if (!Files.exists(dirToFile)
+                            && !new File(allFilesInDirectory[i].toURI()).isDirectory()
+                            && !dirToFile.endsWith(HISTORY_DIR_NAME)) {
+                        Files.createDirectory(Paths.get(dirToFile.toUri()));
+                        el.w("Directory created!");
+                        //fo.cp(allFilesInDirectory[i].getPath(), dirToFile.toString() + unixSlash);
+                    } else {
+                        el.w("Directory not created");
+                    }
+                }
+            } catch (IOException ex) {
+                el.wln(ex.getMessage());
+            }
         }
 
         private String getFileStateString(String path) {
