@@ -407,6 +407,12 @@ public class Main {
             bufferedWriter.write(fileText);
             bufferedWriter.flush();
             bufferedWriter.close();
+
+            FileInfo fi = new FileInfo();
+            FilesHistory fh = new FilesHistory();
+            fh.setup(fi.dirname(path));
+            fh.makeDirForAllFiles(fi.dirname(path));
+            fh.backupFile(path);
         }
     }
 
@@ -544,9 +550,12 @@ public class Main {
                             String newDirName = path + newFileName;
                             fileOperations.mkdir(newDirName);
                             try {
-                                FilesHistory history0 = new FilesHistory(path);
+                                FilesHistory history0 = new FilesHistory();
+                                history0.setup(path);
                                 history0.saveFileState(newDirName);
-                                FilesHistory history1 = new FilesHistory(newDirName);
+                                history0.makeDirForAllFiles(path);
+                                FilesHistory history1 = new FilesHistory();
+                                history1.setup(newDirName);
                             }
                             catch (IOException ex ) { html.w(ex.getMessage()); }
                             finally { response.sendRedirect(getPathReference(encodeValue(showedPath))); }
@@ -1015,8 +1024,8 @@ public class Main {
         private final String HISTORY_DIR_NAME = ".cms";
         private final String HISTORY_FILE_NAME = "master.list.csv";
 
-        public FilesHistory(String path) throws IOException {
-            setup(path);
+        public FilesHistory() {
+
         }
 
         public void setup(String path) throws IOException {
@@ -1030,8 +1039,6 @@ public class Main {
             else {
                 if(!Files.exists(historyFile)) Files.createFile(historyFile);
             }
-
-            makeDirForAllFiles(path);
         }
 
         public void saveFileState(String path) throws IOException {
@@ -1047,32 +1054,34 @@ public class Main {
             writer.close();
         }
 
-        private void makeDirForAllFiles(String path) {
-            HTMLElements el = new HTMLElements();
+        public void backupFile(String path) {
+            FileOperations fo = new FileOperations();
+            FileInfo fi = new FileInfo();
+            String dateStamp = getTimeNow();
+            String backupFileName = getHistoryFilePath(path);
+            fo.cp(path, backupFileName + unixSlash + fi.basename(path) + "_" + dateStamp);
+        }
+
+        public void makeDirForAllFiles(String path) {
             try {
                 FileOperations fo = new FileOperations();
+                FileInfo fi = new FileInfo();
                 String historyDir = path.endsWith(unixSlash) ? path + HISTORY_DIR_NAME : path + unixSlash + HISTORY_DIR_NAME;
                 File[] allFilesInDirectory = new File(path).listFiles();
-                el.w("Path: " + path);
-                el.w(String.valueOf(allFilesInDirectory.length));
-                el.w("History dir: " + historyDir + " ");
                 Path dirToFile;
                 for (int i = 0; i < allFilesInDirectory.length; i++) {
-                    dirToFile = Paths.get(historyDir + unixSlash + allFilesInDirectory[i].getName());
-                    el.w("Element " + String.valueOf(i) + " " + dirToFile + "<br/>");
+                    dirToFile = Paths.get(getHistoryFilePath(allFilesInDirectory[i].getPath()));
                     if (!Files.exists(dirToFile)
                             && !new File(allFilesInDirectory[i].toURI()).isDirectory()
                             && !dirToFile.endsWith(HISTORY_DIR_NAME)) {
                         Files.createDirectory(Paths.get(dirToFile.toUri()));
-                        el.w("Directory created!");
-                        //fo.cp(allFilesInDirectory[i].getPath(), dirToFile.toString() + unixSlash);
-                    } else {
-                        el.w("Directory not created");
+                        String dateStamp = getTimeNow();
+                        fo.cp(allFilesInDirectory[i].getPath(),
+                                getHistoryFilePath(allFilesInDirectory[i].getPath()) +
+                                        unixSlash + fi.basename(allFilesInDirectory[i].getPath()) + "_" + dateStamp);
                     }
                 }
-            } catch (IOException ex) {
-                el.wln(ex.getMessage());
-            }
+            } catch (IOException ex) { } //SIC!
         }
 
         private String getFileStateString(String path) {
@@ -1085,6 +1094,15 @@ public class Main {
                             (directory.canWrite() ? "w" : "-");
             boolean isDirectory = directory.isDirectory();
             return String.format("%s;%s;%s;%s;%s", dirName, String.valueOf(isDirectory), rights, lastModified, space);
+        }
+
+        private String getTimeNow() {
+            return new Date().toString();
+        }
+
+        private String getHistoryFilePath(String path) {
+            FileInfo fi = new FileInfo();
+            return new String(fi.dirname(path) + unixSlash + HISTORY_DIR_NAME + unixSlash + fi.basename(path));
         }
 
     }
