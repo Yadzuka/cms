@@ -54,6 +54,7 @@ public class Main {
     private final String ACTION_DELETE_DIR = "rmdir";
     private final String ACTION_RENAME = "rename";
     private final String ACTION_RENAME_DIR = "renamedir";
+    private final String ACTION_SEE_HISTORY = "seehistory";
 
     private final String ACTION_EDIT = "edit";
     private final String ACTION_VIEW_AS_IMG = "image_view";
@@ -654,6 +655,7 @@ public class Main {
                         html.wln("<button onclick='window.location.href=\"" + getPathReference(encodeValue(fileOperations.goUpside(showedPath))) + "\"'>Назад</button>");
                         html.printA("Скачать", "download?d=" + encodeValue(showedPath)); // SIC! maybe download can be framed in constant
                         html.printA("Редактировать", getFileReference(encodeValue(showedPath), ACTION_EDIT));
+                        html.printA("Посмотреть историю изменений", getFileReference(encodeValue(showedPath), ACTION_SEE_HISTORY));
                         html.printA("Удалить", getFileReference(encodeValue(showedPath), ACTION_DELETE));
                         html.wln("Посмотреть как: ");
                         html.printA("Текст", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TEXT));
@@ -700,11 +702,21 @@ public class Main {
                         response.sendRedirect(getFileReference(fileOperations.goUpside(showedPath) + newFileName, ACTION_VIEW));
                     }
 
-                    /*if(fileStatus.equals(ACTION_RENAME_DIR)) {
-                        String newDirName = request.getParameter();
-                        fileOperations.renamedir(fileInfo.dirname(showedPath), newFirName);
-                        response.sendRedirect(getFileReference(fileOperations.goUpside(showedPath), ACTION_VIEW));
-                    }*/
+                    if(fileStatus.equals(ACTION_SEE_HISTORY)) {
+                        HTMLElements el = new HTMLElements();
+                        FileOperations fo = new FileOperations();
+                        FileInfo fi = new FileInfo();
+                        String historyPath = fo.goUpside(path) + ".cms" + unixSlash + fi.basename(path) + unixSlash;
+                        try {
+                            File[] allHistoryFiles = new File(historyPath).listFiles();
+                            for (int i = 0; i < allHistoryFiles.length; i++) {
+                                el.wln(fi.basename(allHistoryFiles[i].toString()));
+                                el.wln("<br/>");
+                            }
+                        } catch (Exception ex) {
+                            el.wln("Нет сохранённых файлов в истории.");
+                        }
+                    }
 
                     if(fileStatus.equals(ACTION_COPY)) {
                         String targetPath = request.getParameter(PARAM_DIRECTORY) + request.getParameter(PARAM_FILE);
