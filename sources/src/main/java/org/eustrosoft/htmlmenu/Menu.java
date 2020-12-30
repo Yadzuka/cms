@@ -220,8 +220,7 @@ public class Menu {
     }
     public void print_beginMenuNavBar(){
         w("<nav class='navbar navbar-expand-lg navbar-light' style='background-color: #e3f2fd;'>\n");
-//w("<a class='navbar-brand' href='#'>Navbar</a>");
-        w("<button class='navbar-toggler' type='button' data-toggle='show' data-target='#navbarSupportedContent' aria-controls='navbarSupportedContent' aria-expanded='false' aria-label='Toggle navigation'>\n");
+        w("<button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarSupportedContent\" aria-controls=\"navbarSupportedContent\" aria-expanded=\"false\" aria-label=\"Toggle navigation\"'>");
         w("<span class='navbar-toggler-icon'></span>\n");
         w("</button>\n");
         w("<div class='collapse navbar-collapse' id='navbarSupportedContent'>\n");
