@@ -5,12 +5,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspWriter;
+import org.w3c.dom.Document;
+import javax.xml.parsers.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import org.eustrosoft.providers.LogProvider;
 import org.eustrosoft.tools.AWKTranslator;
 import org.eustrosoft.htmlmenu.Menu;
 import name.fraser.neil.plaintext.diff_match_patch;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
@@ -22,7 +26,7 @@ import java.nio.file.attribute.PosixFilePermission;
 
 public class Main {
     public String CGI_NAME = "index1.jsp"; // Page domain name
-    private String VERSION = "0.2.3";
+    private String VERSION = "0.2.4";
     private final String CGI_TITLE = "CMS system"; // Upper page info
     private final String JSP_VERSION = "$id$"; // Id for jsp version
     public JspWriter out;
@@ -62,11 +66,13 @@ public class Main {
     private final String ACTION_VIEW_AS_TEXT = "text_view";
     private final String ACTION_VIEW_AS_TABLE = "table_view";
     private final String ACTION_VIEW_AS_WIKI = "wiki_view";
+    private final String ACTION_VIEW_AS_XML = "xml_view";
 
     private final int MAX_FILE_READ_SIZE = 10_000_000;
 
     private final String [] IMAGE_DEFINITIONS = { "jpg", "jpeg", "png", "svg", "tiff", "bmp", "bat", "odg", "xps" };
     private final String [] VIDEO_DEFINITIONS = { "ogg", "mp4", "webm" };
+    private final String [] XML_DEFINITIONS = { "xml", "yml" };
     private final String CSV_FORMAT = "csv";
     // File differences class
     private final diff_match_patch diffMatchPatch = new diff_match_patch();
@@ -77,10 +83,12 @@ public class Main {
     private String currentDirectory = HOME_DIRECTORY;
     public String showedPath;
     private final String unixSlash = "/";
+    private final static String TAB = "\t";
 
     Map<String, String> references;
     Menu upsideMenu;
 
+    public HTMLElements getHTMLElements() { return new HTMLElements(); }
 
     private void printUpsideMenu(HttpServletRequest request) {
         upsideMenu = new Menu(this.out);
@@ -155,9 +163,17 @@ public class Main {
                     return true;
             return false;
         }
+
         private boolean isVideo(String path) {
             for(int i = 0; i < VIDEO_DEFINITIONS.length; i++)
                 if (path.toLowerCase().endsWith(VIDEO_DEFINITIONS[i]))
+                    return true;
+            return false;
+        }
+
+        private boolean isXML(String path) {
+            for(int i = 0; i < XML_DEFINITIONS.length; i++)
+                if (path.toLowerCase().endsWith(XML_DEFINITIONS[i]))
                     return true;
             return false;
         }
@@ -486,10 +502,12 @@ public class Main {
             HTMLElements html = new HTMLElements();
             html.startDiv("col", "", "right");
             html.startDiv("dropright");
-            html.printButton("btn btn-light btn-lg dropdown-toggle", "button", "dropdownMenuButton", "dropdown", "true", "false", html.getI("   Сервер", "icon-folder-open") );
+            html.printButton("btn btn-light btn-lg dropdown-toggle", "button", "dropdownMenuButton",
+                    "dropdown", "true", "false", html.getI("   Сервер", "icon-folder-open"));
             html.startDiv("dropdown-menu", "", "", "dropdownMenuButton");
             html.printH("Обращение к серверу", "dropdown-header", 5);
-            html.startDiv("dropdown-divider"); html.endDiv();
+            html.startDiv("dropdown-divider");
+            html.endDiv();
 
             html.startForm("POST", "upload", "multipart/form-data");
             html.printInput("hidden", "", PARAM_D , "", showedPath);
@@ -639,6 +657,11 @@ public class Main {
                         printWiki(path);
                     }
 
+                    if(fileStatus.equals(ACTION_VIEW_AS_XML)) {
+                        html.wln("<button onclick='window.location.href=\"" + getFileReference(encodeValue(showedPath), ACTION_VIEW) + "\"'>Назад</button>");
+                        printXML(path);
+                    }
+
                     if(fileStatus.equals(ACTION_VIEW)) {
                         printUpsideMenu(request);
                         html.wln("<style> #left_block { } input { margin: 5px; } .col { max-width: max-content; } </style>");
@@ -663,6 +686,8 @@ public class Main {
                         html.printA("Видео", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_VIDEO));
                         html.printA("Таблицу", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_TABLE));
                         html.printA("Посмотреть в вики формате", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_WIKI));
+                        if(fileInfo.isXML(path))
+                            html.printA("Посмотреть в формате XML", getFileReference(encodeValue(showedPath), ACTION_VIEW_AS_XML));
                         html.nLine(); html.nLine(); printFileMeta(path);
                         html.nLine();
 
@@ -844,6 +869,28 @@ public class Main {
             html.wln(str);
         }
 
+        private void printXML(String path) {
+            HTMLElements html = new HTMLElements();
+            try {
+                DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
+                Document document = builder.parse(new File(path));
+                Element element = document.getDocumentElement();
+
+                for(int i = 0; i < element.getChildNodes().getLength(); i++) {
+                    html.wln(element.getChildNodes().item(i).toString());
+                    html.wln();
+                }
+
+                FileInfo info = new FileInfo();
+                html.wln("Document name: " + info.basename(showedPath));
+
+            } catch (ParserConfigurationException | IOException | SAXException ex) {
+                html.wln("Exception occured!: " + ex.getMessage());
+            }
+        }
+
+
         private void printVideo(String path, int width, int height)  {
             HTMLElements html = new HTMLElements();
             html.wln("<video width='" + width + "' height='" + height + "' controls='controls'>" +
@@ -971,57 +1018,57 @@ public class Main {
         }
     }
     public class HTMLElements {
-        private void w(String s) {
+        public void w(String s) {
             boolean is_error = false;
             try { out.print(s); }
             catch (Exception e) { is_error = true; }
         }
-        private void wln(String s){ w(s);w("\n");}
-        private void wln(){w("\n");}
-        private void printInput(String type, String classN, String name, String placeholder, boolean multiple)  {
+        public void wln(String s){ w(s);w("\n");}
+        public void wln(){w("\n");}
+        public void printInput(String type, String classN, String name, String placeholder, boolean multiple)  {
             if(multiple) wln("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"' multiple/>");
             else wln("<input type='" + type + "' class='" + classN + "' name='" + name + "' placeholder='" + placeholder +"'/>");
         }
-        private void printInput(String type, String classN, String name, String placeholder, String value)  {
+        public void printInput(String type, String classN, String name, String placeholder, String value)  {
             wln("<input type='" + type + "' class='" + classN + "' name='" + name + "' value='" + value + "' placeholder='" + placeholder +"'/>");
         }
-        private void printSubmit(String text)  { wln("<input type='submit' value='" + text + "'/>");}
-        private void printSubmit(String text, String classN)  { wln("<input type='submit' class='"+classN+"' value='" + text + "'/>");}
-        private void startDiv(String classN)  { wln("<div class='" + classN + "'>"); }
-        private void startDiv(String classN, String id) { wln("<div class='" + classN + "' id='"+id+"'>"); }
-        private void startDiv(String classN, String id, String align)  { wln("<div class='" + classN + "' id='"+id+"' align='" + align + "'>"); }
-        private void startDiv(String classN, String id, String align, String aria_labelledby) { wln("<div class='" + classN + "' id='"+id+"' align='" + align + "' aria-labelledby='" + aria_labelledby + "'>"); }
-        private void endDiv()  { wln("</div>"); }
+        public void printSubmit(String text)  { wln("<input type='submit' value='" + text + "'/>");}
+        public void printSubmit(String text, String classN)  { wln("<input type='submit' class='"+classN+"' value='" + text + "'/>");}
+        public void startDiv(String classN)  { wln("<div class='" + classN + "'>"); }
+        public void startDiv(String classN, String id) { wln("<div class='" + classN + "' id='"+id+"'>"); }
+        public void startDiv(String classN, String id, String align)  { wln("<div class='" + classN + "' id='"+id+"' align='" + align + "'>"); }
+        public void startDiv(String classN, String id, String align, String aria_labelledby) { wln("<div class='" + classN + "' id='"+id+"' align='" + align + "' aria-labelledby='" + aria_labelledby + "'>"); }
+        public void endDiv()  { wln("</div>"); }
 
-        private void startTable(String classN)  { wln("<table class='" + classN + "'>"); }
-        private void endTable()  { wln("</table>"); }
-        private void startTHead(String classN)  { wln("<thead class='" + classN + "'>"); }
-        private void endTHead()  { wln("</thead>"); }
-        private void startTBody(String classN)  { wln("<tbody class='" + classN + "'>"); }
-        private void endTBody()  { wln("</tbody>"); }
-        private void startTr()  { wln("<tr>");}
-        private void endTr()  { wln("</tr>");}
-        private void printTh(String scope, String text)  { wln("<th scope='"+scope+"'>" + text + "</th>");}
-        private void startTd(String classN)  { wln("<td class='"+classN+"'>");}
-        private void startTd(String classN, String scope)  { wln("<td class='"+classN+"' scope='" + scope + "'>");}
-        private void endTd()  { wln("</td>");}
-        private void printTd(String scope, String classN, String align, String text) { wln("<td align='" + align + "' class='" + classN + "' scope='"+scope+"'>" + text + "</td>");}
+        public void startTable(String classN)  { wln("<table class='" + classN + "'>"); }
+        public void endTable()  { wln("</table>"); }
+        public void startTHead(String classN)  { wln("<thead class='" + classN + "'>"); }
+        public void endTHead()  { wln("</thead>"); }
+        public void startTBody(String classN)  { wln("<tbody class='" + classN + "'>"); }
+        public void endTBody()  { wln("</tbody>"); }
+        public void startTr()  { wln("<tr>");}
+        public void endTr()  { wln("</tr>");}
+        public void printTh(String scope, String text)  { wln("<th scope='"+scope+"'>" + text + "</th>");}
+        public void startTd(String classN)  { wln("<td class='"+classN+"'>");}
+        public void startTd(String classN, String scope)  { wln("<td class='"+classN+"' scope='" + scope + "'>");}
+        public void endTd()  { wln("</td>");}
+        public void printTd(String scope, String classN, String align, String text) { wln("<td align='" + align + "' class='" + classN + "' scope='"+scope+"'>" + text + "</td>");}
 
-        private void printI(String text, String classN) { wln("<i class='" + classN + "'>" + text + "</i>"); }
-        private void printA(String text, String href) { wln("<a href='" + href + "'>" + text + "</a>"); }
-        private String getA(String text, String href) { return String.format("<a href='" + href + "'>" + text + "</a>"); }
-        private String getI(String text, String classN)  { return String.format("<i class='" + classN + "'>" + text + "</i>"); }
-        private void printH(String text, int size)  { wln("<h" + size + ">" + text + "</h" + size + ">"); }
-        private void printH(String text, String classN, int size) { wln("<h" + size + " class='"+classN+"'>" + text + "</h" + size + ">"); }
+        public void printI(String text, String classN) { wln("<i class='" + classN + "'>" + text + "</i>"); }
+        public void printA(String text, String href) { wln("<a href='" + href + "'>" + text + "</a>"); }
+        public String getA(String text, String href) { return String.format("<a href='" + href + "'>" + text + "</a>"); }
+        public String getI(String text, String classN)  { return String.format("<i class='" + classN + "'>" + text + "</i>"); }
+        public void printH(String text, int size)  { wln("<h" + size + ">" + text + "</h" + size + ">"); }
+        public void printH(String text, String classN, int size) { wln("<h" + size + " class='"+classN+"'>" + text + "</h" + size + ">"); }
 
-        private void printButton(String classN, String type, String id, String data_toggle, String aria_haspopup, String aria_expanded, String text)  {
+        public void printButton(String classN, String type, String id, String data_toggle, String aria_haspopup, String aria_expanded, String text)  {
             wln("<button class='"+classN+"' type='" + type + "' id='" + id + "' data-toggle='" + data_toggle + "' aria-haspopup='" + aria_haspopup + "' aria-expanded='"+aria_expanded+ "'>" + text + "</button>");
         }
 
-        private void startForm(String method, String action)  { wln("<form method='" + method +"' action='"+action + "'>"); }
-        private void startForm(String method, String action, String enctype)  { wln("<form method='" + method +"' action='"+action + "' enctype='"+enctype+"'>"); }
-        private void endForm() { wln("</form>");  }
-        private void printText(String name, int cols, int rows, String innerText) {
+        public void startForm(String method, String action)  { wln("<form method='" + method +"' action='"+action + "'>"); }
+        public void startForm(String method, String action, String enctype)  { wln("<form method='" + method +"' action='"+action + "' enctype='"+enctype+"'>"); }
+        public void endForm() { wln("</form>");  }
+        public void printText(String name, int cols, int rows, String innerText) {
             wln("<style> textarea { resize: both; } </style>");
             innerText = translate_tokens(innerText, HTML_UNSAFE_CHARACTERS, HTML_UNSAFE_CHARACTERS_SUBST);
             w("<textarea name='" + name + "' cols=" + cols + " rows=" + rows + ">");
@@ -1029,7 +1076,7 @@ public class Main {
                 w(innerText);
             wln("</textarea>");
         }
-        private void nLine() { wln("<br/>"); }
+        public void nLine() { wln("<br/>"); }
     }
 
     class FilesHistory {
